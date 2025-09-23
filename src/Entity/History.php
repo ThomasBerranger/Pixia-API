@@ -5,14 +5,16 @@ namespace App\Entity;
 use App\Enum\GameDifficulty;
 use App\Repository\HistoryRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: HistoryRepository::class)]
 class History
 {
     #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column]
-    private ?int $id = null;
+    #[ORM\Column(type: 'uuid', unique: true)]
+    #[ORM\GeneratedValue(strategy: 'CUSTOM')]
+    #[ORM\CustomIdGenerator(class: 'doctrine.uuid_generator')]
+    private ?Uuid $id = null;
 
     #[ORM\Column]
     private ?\DateTime $date = null;
@@ -28,7 +30,7 @@ class History
     #[ORM\JoinColumn(nullable: false)]
     private ?Game $game = null;
 
-    public function getId(): ?int
+    public function getId(): ?Uuid
     {
         return $this->id;
     }

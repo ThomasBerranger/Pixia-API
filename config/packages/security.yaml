@@ -13,8 +13,8 @@ security:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
 
-        login:
-            pattern: ^/login
+        auth:
+            pattern: ^/(login|register)
             stateless: true
             json_login:
                 check_path: /login
@@ -23,14 +23,10 @@ security:
                 success_handler: lexik_jwt_authentication.handler.authentication_success
                 failure_handler: lexik_jwt_authentication.handler.authentication_failure
 
-        api:
+        main:
             pattern: ^/
             stateless: true
             jwt: ~
-
-        main:
-            lazy: true
-            provider: app_user_provider
 
     access_control:
         - { path: ^/register, roles: PUBLIC_ACCESS }
