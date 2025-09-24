@@ -4,6 +4,7 @@ namespace App\Controller\Security;
 
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
+use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -12,6 +13,10 @@ use Symfony\Component\Routing\Attribute\Route;
 
 class AuthController extends AbstractController
 {
+    public function __construct(private readonly JWTTokenManagerInterface $JWTTokenManager)
+    {
+    }
+
     #[Route(path: '/register', name: 'register', methods: ['POST'])]
     public function register(
         Request $request,
@@ -27,6 +32,8 @@ class AuthController extends AbstractController
         $em->persist($user);
         $em->flush();
 
-        return $this->json(['message' => 'User created'], 201);
+        $token = $this->JWTTokenManager->create($user);
+
+        return $this->json(['token' => $token], 201);
     }
 }

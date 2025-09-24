@@ -32,7 +32,7 @@ readonly class OpenApiService
     {
         $response = $this->httpClient->request('POST', 'https://api.openai.com/v1/chat/completions', [
             'headers' => $this->generateHeader(),
-            'json' => $this->generateJson($prompt)
+            'json' => $this->generatePromptJson($prompt)
         ]);
 
         return $response->toArray()['choices'][0]['message']['content'] ?? '';
@@ -46,7 +46,7 @@ readonly class OpenApiService
         ];
     }
 
-    private function generateJson(string $prompt): array
+    private function generatePromptJson(string $prompt): array
     {
         return [
             'model' => 'gpt-4',
@@ -54,6 +54,35 @@ readonly class OpenApiService
                 ['role' => 'user', 'content' => $this->promptService->formatPromptRequest($prompt)]
             ],
             'max_tokens' => 500
+        ];
+    }
+
+    /**
+     * @throws TransportExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws DecodingExceptionInterface
+     * @throws ClientExceptionInterface
+     */
+    public function requestGameImage(string $prompt): string
+    {
+        $response = $this->httpClient->request('POST', 'https://api.openai.com/v1/images/generations', [
+            'headers' => $this->generateHeader(),
+            'json' => $this->generateImageJson($prompt)
+        ]);
+
+        return $response->toArray()['data'][0]['url'] ?? '';
+    }
+
+    private function generateImageJson(string $prompt): array
+    {
+        return [
+            "model" => "dall-e-3",
+            "prompt" => $prompt,
+            "n" => 1,
+            "size" => "1792x1024",
+            "quality" => "standard",
+            "style" => "vivid"
         ];
     }
 }

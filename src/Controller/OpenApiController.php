@@ -2,7 +2,7 @@
 
 namespace App\Controller;
 
-use App\DTO\GameContentRequest;
+use App\DTO\OpenAiRequest;
 use App\Service\OpenApiService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -32,9 +32,25 @@ class OpenApiController extends AbstractController
     #[Route('/generate-content', name: 'generate_content', methods: ['POST'], format: 'json')]
     #[IsGranted('ROLE_ADMIN')]
     public function generateGameContent(
-        #[MapRequestPayload] GameContentRequest $request
+        #[MapRequestPayload] OpenAiRequest $request
     ): JsonResponse
     {
         return $this->json($this->openApiService->requestGameContent($request->prompt));
+    }
+
+    /**
+     * @throws TransportExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws DecodingExceptionInterface
+     * @throws ClientExceptionInterface
+     */
+    #[Route('/generate-image', name: 'generate_image', methods: ['POST'], format: 'json')]
+    #[IsGranted('ROLE_ADMIN')]
+    public function generateGameImage(
+        #[MapRequestPayload] OpenAiRequest $request
+    ): JsonResponse
+    {
+        return $this->json($this->openApiService->requestGameImage($request->prompt));
     }
 }
