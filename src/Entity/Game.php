@@ -7,7 +7,9 @@ use App\Enum\GameType;
 use App\Repository\GameRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Uid\Uuid;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: GameRepository::class)]
 class Game
@@ -16,21 +18,34 @@ class Game
     #[ORM\Column(type: 'uuid', unique: true)]
     #[ORM\GeneratedValue(strategy: 'CUSTOM')]
     #[ORM\CustomIdGenerator(class: 'doctrine.uuid_generator')]
+    #[Groups(['game:show'])]
     private ?Uuid $id = null;
 
     #[ORM\Column(enumType: GameType::class)]
-    private ?GameType $type = null;
+    private ?GameType $type = GameType::MULTIVERS;
 
+    #[Assert\NotBlank]
+    #[Assert\Length(min: 5, max: 255)]
     #[ORM\Column(length: 255)]
+    #[Groups(['game:create'])]
     private ?string $title = null;
 
+    #[Assert\NotBlank]
+    #[Assert\Length(min: 5, max: 255)]
     #[ORM\Column(length: 255)]
+    #[Groups(['game:create'])]
     private ?string $hint = null;
 
-    #[ORM\Column(length: 255)]
+    #[Assert\NotBlank]
+    #[Assert\Length(min: 5, max: 2000)]
+    #[ORM\Column(type: 'string', length: 2000)]
+    #[Groups(['game:create'])]
     private ?string $explanation = null;
 
+    #[Assert\NotNull]
+    #[Assert\Type(\DateTimeInterface::class)]
     #[ORM\Column(type: Types::DATE_MUTABLE)]
+    #[Groups(['game:create'])]
     private ?\DateTime $date = null;
 
     #[ORM\Column(enumType: GameDifficulty::class)]
@@ -40,7 +55,10 @@ class Game
     #[ORM\JoinColumn(nullable: false)]
     private ?User $author = null;
 
+    #[Assert\NotBlank]
+    #[Assert\Length(min: 5, max: 255)]
     #[ORM\Column(length: 255)]
+    #[Groups(['game:create'])]
     private ?string $image = null;
 
     public function getId(): ?Uuid
