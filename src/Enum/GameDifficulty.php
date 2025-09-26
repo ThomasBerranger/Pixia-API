@@ -4,9 +4,9 @@ namespace App\Enum;
 
 enum GameDifficulty: string
 {
-    case EASY = 'EASY';
-    case MEDIUM = 'MEDIUM';
-    case HARD = 'HARD';
+    case EASY = 'SIMPLE';
+    case MEDIUM = 'TORDU';
+    case HARD = 'DIABOLIQUE';
 
     public function getPoints(): int
     {

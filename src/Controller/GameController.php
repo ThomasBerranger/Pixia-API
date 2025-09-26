@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\DTO\GameAnswerRequest;
 use App\Entity\Game;
+use App\Service\GameAnswerService;
 use App\Service\GameService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -16,11 +17,15 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[Route('/games', name: 'game_')]
 final class GameController extends AbstractController
 {
-    public function __construct(private readonly EntityManagerInterface $entityManager, private readonly GameService $gameService)
+    public function __construct(
+        private readonly EntityManagerInterface $entityManager,
+        private readonly GameService            $gameService,
+        private readonly GameAnswerService      $gameAnswerService)
     {
     }
 
-    #[Route('', name: 'create', methods: ['POST'], format: 'json')]
+    #[
+        Route('', name: 'create', methods: ['POST'], format: 'json')]
     #[IsGranted('ROLE_ADMIN')]
     public function create(
         #[MapRequestPayload(
@@ -44,7 +49,7 @@ final class GameController extends AbstractController
         $game = $this->entityManager->getRepository(Game::class)->findOneBy([]);
 
         return $this->json(data: $game, context: [
-            'groups' => ['game:show']
+            'groups' => ['game:show', $this->gameService->hasAlreadyWin($game) ? 'game:solution' : null],
         ]);
     }
 
@@ -54,13 +59,15 @@ final class GameController extends AbstractController
         return $this->json(data: $game->getHint());
     }
 
-    #[Route('/{id}/verification', name: 'verification', methods: ['POST'], format: 'json')]
-    public function answer(
-        Game $game,
+    #[Route('/{id}/solution', name: 'solution', methods: ['POST'], format: 'json')]
+    public function solution(
+        Game                                   $game,
         #[MapRequestPayload] GameAnswerRequest $request
     ): JsonResponse
     {
-        return $this->json(data: $this->gameService->validateAnswer($game, $request->answer), context: [
+        $result = $this->gameAnswerService->validateAnswer($game, $request->answer);
+
+        return $this->json(data: $result, context: [
             'groups' => ['game:solution']
         ]);
     }
