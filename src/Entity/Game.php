@@ -27,7 +27,7 @@ class Game
     #[Assert\NotBlank]
     #[Assert\Length(min: 5, max: 255)]
     #[ORM\Column(length: 255)]
-    #[Groups(['game:create'])]
+    #[Groups(['game:solution', 'game:create'])]
     private ?string $title = null;
 
     #[Assert\NotBlank]
@@ -39,16 +39,17 @@ class Game
     #[Assert\NotBlank]
     #[Assert\Length(min: 5, max: 2000)]
     #[ORM\Column(type: 'string', length: 2000)]
-    #[Groups(['game:create'])]
+    #[Groups(['game:solution', 'game:create'])]
     private ?string $explanation = null;
 
     #[Assert\NotNull]
     #[Assert\Type(\DateTimeInterface::class)]
     #[ORM\Column(type: Types::DATE_MUTABLE)]
-    #[Groups(['game:create'])]
+    #[Groups(['game:show', 'game:create'])]
     private ?\DateTime $date = null;
 
     #[ORM\Column(enumType: GameDifficulty::class)]
+    #[Groups(['game:show'])]
     private ?GameDifficulty $difficulty = GameDifficulty::EASY;
 
     #[ORM\ManyToOne]
@@ -58,7 +59,7 @@ class Game
     #[Assert\NotBlank]
     #[Assert\Length(min: 5, max: 255)]
     #[ORM\Column(length: 255)]
-    #[Groups(['game:create'])]
+    #[Groups(['game:show', 'game:create'])]
     private ?string $image = null;
 
     public function getId(): ?Uuid

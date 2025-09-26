@@ -3,18 +3,21 @@
 namespace App\Service;
 
 use App\Entity\Game;
-use Symfony\Component\HttpFoundation\JsonResponse;
 
 class GameService
 {
-    public function validateAnswer(Game $game, string $answer): JsonResponse
+    public function validateAnswer(Game $game, string $answer): Game|false
     {
         // Normalisation des chaînes
         $expectedWords = $this->normalizeAndExtractWords($game->getTitle());
         $userWords = $this->normalizeAndExtractWords($answer);
 
-        // Vérification que tous les mots importants de la réponse attendue sont présents
-        return new JsonResponse([$this->wordsMatch($expectedWords, $userWords)]);
+        // Vérification 80% tous les mots importants de la réponse attendue sont présents
+        if ($this->wordsMatch($expectedWords, $userWords)) {
+            return $game;
+        }
+
+        return false;
     }
 
     private function normalizeAndExtractWords(string $text): array

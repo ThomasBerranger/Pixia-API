@@ -41,7 +41,7 @@ final class GameController extends AbstractController
     #[Route('', name: 'show', methods: ['GET'], format: 'json')]
     public function show(): JsonResponse
     {
-        $game = $this->entityManager->getRepository(Game::class)->findOneBy(['date' => new \DateTime('2025/10/01')]);
+        $game = $this->entityManager->getRepository(Game::class)->findOneBy([]);
 
         return $this->json(data: $game, context: [
             'groups' => ['game:show']
@@ -54,12 +54,14 @@ final class GameController extends AbstractController
         return $this->json(data: $game->getHint());
     }
 
-    #[Route('/{id}/answer', name: 'answer', methods: ['POST'], format: 'json')]
+    #[Route('/{id}/verification', name: 'verification', methods: ['POST'], format: 'json')]
     public function answer(
         Game $game,
         #[MapRequestPayload] GameAnswerRequest $request
     ): JsonResponse
     {
-        return $this->gameService->validateAnswer($game, $request->answer);
+        return $this->json(data: $this->gameService->validateAnswer($game, $request->answer), context: [
+            'groups' => ['game:solution']
+        ]);
     }
 }
