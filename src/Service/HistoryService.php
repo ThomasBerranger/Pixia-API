@@ -18,10 +18,8 @@ readonly class HistoryService
     {
     }
 
-    public function saveResult(Game $game): void
+    public function saveResult(Game $game): History
     {
-        $this->security->getUser();
-
         $history = new History();
 
         $history
@@ -32,5 +30,23 @@ readonly class HistoryService
 
         $this->entityManager->persist($history);
         $this->entityManager->flush();
+
+        return $history;
+    }
+
+    public function saveDifficultyVote(Game $game, GameDifficulty $difficulty): History
+    {
+        $currentUser = $this->security->getUser();
+
+        $history = $this->entityManager->getRepository(History::class)->findOneBy([
+            'game' => $game,
+            'user' => $currentUser,
+        ]);
+
+        $history->setDifficulty($difficulty);
+
+        $this->entityManager->flush();
+
+        return $history;
     }
 }

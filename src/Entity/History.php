@@ -5,9 +5,11 @@ namespace App\Entity;
 use App\Enum\GameDifficulty;
 use App\Repository\HistoryRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: HistoryRepository::class)]
+#[ORM\UniqueConstraint(name: 'unique_game_user', columns: ['game_id', 'user_id'])]
 class History
 {
     #[ORM\Id]
@@ -20,6 +22,7 @@ class History
     private ?\DateTime $date = null;
 
     #[ORM\Column(enumType: GameDifficulty::class)]
+    #[Groups(['game:solution'])]
     private ?GameDifficulty $difficulty = GameDifficulty::EASY;
 
     #[ORM\ManyToOne]

@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\Game;
+use App\Entity\User;
 
 readonly class GameAnswerService
 {
@@ -13,10 +14,10 @@ readonly class GameAnswerService
     public function validateAnswer(Game $game, string $answer): Game|false
     {
         // Normalisation des chaînes
-        $expectedWords = $this->normalizeAndExtractWords($game->getTitle());
+        $expectedWords = $this->normalizeAndExtractWords($game->getSolution());
         $userWords = $this->normalizeAndExtractWords($answer);
 
-        // Vérification 80% tous les mots importants de la réponse attendue sont présents
+        // Vérification que 80% des mots importants de la solution sont présents dans la réponse
         if ($this->wordsMatch($expectedWords, $userWords) >= 0.8) {
             $this->historyService->saveResult($game);
 

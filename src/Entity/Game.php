@@ -28,7 +28,7 @@ class Game
     #[Assert\Length(min: 5, max: 255)]
     #[ORM\Column(length: 255)]
     #[Groups(['game:solution', 'game:create'])]
-    private ?string $title = null;
+    private ?string $solution = null;
 
     #[Assert\NotBlank]
     #[Assert\Length(min: 5, max: 255)]
@@ -48,6 +48,8 @@ class Game
     #[Groups(['game:show', 'game:create'])]
     private ?\DateTime $date = null;
 
+    #[Assert\NotBlank(message: 'Difficulty is required')]
+    #[Assert\Type(type: GameDifficulty::class, message: 'Invalid difficulty value')]
     #[ORM\Column(enumType: GameDifficulty::class)]
     #[Groups(['game:show'])]
     private ?GameDifficulty $difficulty = GameDifficulty::EASY;
@@ -79,14 +81,14 @@ class Game
         return $this;
     }
 
-    public function getTitle(): ?string
+    public function getSolution(): ?string
     {
-        return $this->title;
+        return $this->solution;
     }
 
-    public function setTitle(string $title): static
+    public function setSolution(string $solution): static
     {
-        $this->title = $title;
+        $this->solution = $solution;
 
         return $this;
     }
