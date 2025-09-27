@@ -46,7 +46,7 @@ final class GameController extends BaseController
     #[Route('', name: 'show', methods: ['GET'], format: 'json')]
     public function show(): JsonResponse
     {
-        $game = $this->entityManager->getRepository(Game::class)->findOneBy([]);
+        $game = $this->entityManager->getRepository(Game::class)->findOneBy(['date' => new \DateTime('2025-10-01')]);
 
         $history = $this->entityManager->getrepository(History::class)->findOneBy([
             'game' => $game,
@@ -78,6 +78,7 @@ final class GameController extends BaseController
     }
 
     #[Route('/{id}/difficulty', name: 'difficulty', methods: ['POST'], format: 'json')]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
     public function difficulty(Game $game, #[MapRequestPayload] GameDifficultyRequest $difficultyRequest): JsonResponse
     {
         $history = $this->historyService->saveDifficultyVote($game, $difficultyRequest->difficulty);

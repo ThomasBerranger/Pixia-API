@@ -7,11 +7,11 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 abstract class BaseController extends AbstractController
 {
-    public function getCurrentUser(): User
+    public function getCurrentUser(): null|User
     {
         $user = $this->getUser();
 
-        if (!$user instanceof User) {
+        if ($user && !$user instanceof User) {
             throw new \LogicException('The user is not authenticated or is not a valid User entity.');
         }
 

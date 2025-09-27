@@ -4,10 +4,11 @@ namespace App\Service;
 
 use App\Entity\Game;
 use App\Entity\User;
+use Symfony\Bundle\SecurityBundle\Security;
 
 readonly class GameAnswerService
 {
-    public function __construct(private HistoryService $historyService)
+    public function __construct(private HistoryService $historyService, private Security $security)
     {
     }
 
@@ -19,7 +20,9 @@ readonly class GameAnswerService
 
         // Vérification que 80% des mots importants de la solution sont présents dans la réponse
         if ($this->wordsMatch($expectedWords, $userWords) >= 0.8) {
-            $this->historyService->saveResult($game);
+            if ($this->security->getUser()) {
+                $this->historyService->saveResult($game);
+            }
 
             return $game;
         }
