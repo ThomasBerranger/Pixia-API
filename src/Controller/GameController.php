@@ -46,7 +46,7 @@ final class GameController extends BaseController
     #[Route('', name: 'show', methods: ['GET'], format: 'json')]
     public function show(): JsonResponse
     {
-        $game = $this->entityManager->getRepository(Game::class)->findOneBy(['date' => new \DateTime('2025-10-01')]);
+        $game = $this->entityManager->getRepository(Game::class)->findDailyOrPreviousGame();
 
         $history = $this->entityManager->getrepository(History::class)->findOneBy([
             'game' => $game,
