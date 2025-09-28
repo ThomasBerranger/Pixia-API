@@ -3,7 +3,7 @@
 namespace App\Service;
 
 use App\Entity\Game;
-use App\Entity\History;
+use App\Entity\Achievement;
 use App\Enum\GameDifficulty;
 use App\Enum\GameType;
 use DateTime;
@@ -12,41 +12,41 @@ use Psr\Log\LoggerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
-readonly class HistoryService
+readonly class AchievementService
 {
     public function __construct(private Security $security, private EntityManagerInterface $entityManager)
     {
     }
 
-    public function saveResult(Game $game): History
+    public function saveResult(Game $game): Achievement
     {
-        $history = new History();
+        $achievement = new Achievement();
 
-        $history
+        $achievement
             ->setGame($game)
-            ->setUser($this->security->getUser())
+            ->setPlayer($this->security->getUser())
             ->setDate(new DateTime())
             ->setDifficulty(GameDifficulty::EASY);
 
-        $this->entityManager->persist($history);
+        $this->entityManager->persist($achievement);
         $this->entityManager->flush();
 
-        return $history;
+        return $achievement;
     }
 
-    public function saveDifficultyVote(Game $game, GameDifficulty $difficulty): History
+    public function saveDifficultyVote(Game $game, GameDifficulty $difficulty): Achievement
     {
         $currentUser = $this->security->getUser();
 
-        $history = $this->entityManager->getRepository(History::class)->findOneBy([
+        $achievement = $this->entityManager->getRepository(Achievement::class)->findOneBy([
             'game' => $game,
             'user' => $currentUser,
         ]);
 
-        $history->setDifficulty($difficulty);
+        $achievement->setDifficulty($difficulty);
 
         $this->entityManager->flush();
 
-        return $history;
+        return $achievement;
     }
 }

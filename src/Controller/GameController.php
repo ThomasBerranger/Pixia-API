@@ -4,13 +4,15 @@ namespace App\Controller;
 
 use App\DTO\GameAnswerRequest;
 use App\DTO\GameDifficultyRequest;
+use App\DTO\GameShowRequest;
 use App\Entity\Game;
-use App\Entity\History;
+use App\Entity\Achievement;
 use App\Service\GameAnswerService;
-use App\Service\HistoryService;
+use App\Service\AchievementService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -21,7 +23,7 @@ final class GameController extends BaseController
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly GameAnswerService      $gameAnswerService,
-        private readonly HistoryService         $historyService)
+        private readonly AchievementService     $achievementService)
     {
     }
 
@@ -44,17 +46,14 @@ final class GameController extends BaseController
     }
 
     #[Route('', name: 'show', methods: ['GET'], format: 'json')]
-    public function show(): JsonResponse
+    public function show(#[MapQueryString] GameShowRequest $request): JsonResponse
     {
-        $game = $this->entityManager->getRepository(Game::class)->findDailyOrPreviousGame();
+        $gameWithUserAchievement = $this->entityManager->getRepository(Game::class)->findGameWithUserAchievement(
+            $request->getDate(), $request->type, $this->getCurrentUser()
+        );
 
-        $history = $this->entityManager->getrepository(History::class)->findOneBy([
-            'game' => $game,
-            'user' => $this->getCurrentUser()
-        ]);
-
-        return $this->json(data: ['game' => $game, 'history' => $history], context: [
-            'groups' => ['game:show', $history ? 'game:solution' : null],
+        return $this->json(data: $gameWithUserAchievement, context: [
+            'groups' => ['game:show', $gameWithUserAchievement['achievement'] ? 'game:solution' : null],
         ]);
     }
 
@@ -81,7 +80,7 @@ final class GameController extends BaseController
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
     public function difficulty(Game $game, #[MapRequestPayload] GameDifficultyRequest $difficultyRequest): JsonResponse
     {
-        $history = $this->historyService->saveDifficultyVote($game, $difficultyRequest->difficulty);
+        $history = $this->achievementService->saveDifficultyVote($game, $difficultyRequest->difficulty);
 
         return $this->json(data: $history, context: ['groups' => ['game:solution']]);
     }

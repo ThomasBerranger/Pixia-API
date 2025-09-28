@@ -3,17 +3,18 @@
 namespace App\Entity;
 
 use App\Enum\GameDifficulty;
-use App\Repository\HistoryRepository;
+use App\Repository\AchievementRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Types\UuidType;
 use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Uid\Uuid;
 
-#[ORM\Entity(repositoryClass: HistoryRepository::class)]
-#[ORM\UniqueConstraint(name: 'unique_game_user', columns: ['game_id', 'user_id'])]
-class History
+#[ORM\Entity(repositoryClass: AchievementRepository::class)]
+#[ORM\UniqueConstraint(name: 'unique_game_player', columns: ['game_id', 'player_id'])]
+class Achievement
 {
     #[ORM\Id]
-    #[ORM\Column(type: 'uuid', unique: true)]
+    #[ORM\Column(type: UuidType::NAME, unique: true)]
     #[ORM\GeneratedValue(strategy: 'CUSTOM')]
     #[ORM\CustomIdGenerator(class: 'doctrine.uuid_generator')]
     private ?Uuid $id = null;
@@ -25,12 +26,12 @@ class History
     #[Groups(['game:solution'])]
     private ?GameDifficulty $difficulty = GameDifficulty::EASY;
 
-    #[ORM\ManyToOne]
-    #[ORM\JoinColumn(nullable: false)]
-    private ?User $user = null;
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(name: 'player_id', referencedColumnName: 'id', nullable: false)]
+    private User $player;
 
-    #[ORM\ManyToOne]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\ManyToOne(targetEntity: Game::class, inversedBy: 'histories')]
+    #[ORM\JoinColumn(name: 'game_id', referencedColumnName: 'id', nullable: false)]
     private ?Game $game = null;
 
     public function getId(): ?Uuid
@@ -62,14 +63,14 @@ class History
         return $this;
     }
 
-    public function getUser(): ?User
+    public function getPlayer(): ?User
     {
-        return $this->user;
+        return $this->player;
     }
 
-    public function setUser(?User $user): static
+    public function setPlayer(?User $player): static
     {
-        $this->user = $user;
+        $this->player = $player;
 
         return $this;
     }

@@ -8,7 +8,7 @@ use Symfony\Bundle\SecurityBundle\Security;
 
 readonly class GameAnswerService
 {
-    public function __construct(private HistoryService $historyService, private Security $security)
+    public function __construct(private AchievementService $historyService, private Security $security)
     {
     }
 

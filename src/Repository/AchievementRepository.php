@@ -2,18 +2,18 @@
 
 namespace App\Repository;
 
-use App\Entity\History;
+use App\Entity\Achievement;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * @extends ServiceEntityRepository<History>
+ * @extends ServiceEntityRepository<Achievement>
  */
-class HistoryRepository extends ServiceEntityRepository
+class AchievementRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
-        parent::__construct($registry, History::class);
+        parent::__construct($registry, Achievement::class);
     }
 
     //    /**
