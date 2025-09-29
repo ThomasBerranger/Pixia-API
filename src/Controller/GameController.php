@@ -69,7 +69,7 @@ final class GameController extends BaseController
         #[MapRequestPayload] GameAnswerRequest $request
     ): JsonResponse
     {
-        $result = $this->gameAnswerService->validateAnswer($game, $request->answer);
+        $result = $this->gameAnswerService->validateAnswer($game, $this->getCurrentUser(), $request->answer);
 
         return $this->json(data: $result, context: [
             'groups' => ['game:solution']

@@ -36,11 +36,9 @@ readonly class AchievementService
 
     public function saveDifficultyVote(Game $game, GameDifficulty $difficulty): Achievement
     {
-        $currentUser = $this->security->getUser();
-
         $achievement = $this->entityManager->getRepository(Achievement::class)->findOneBy([
             'game' => $game,
-            'user' => $currentUser,
+            'player' => $this->security->getUser(),
         ]);
 
         $achievement->setDifficulty($difficulty);

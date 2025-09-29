@@ -4,15 +4,16 @@ namespace App\Service;
 
 use App\Entity\Game;
 use App\Entity\User;
-use Symfony\Bundle\SecurityBundle\Security;
 
 readonly class GameAnswerService
 {
-    public function __construct(private AchievementService $historyService, private Security $security)
+    public function __construct(
+        private AchievementService $historyService,
+        private UserService        $userService)
     {
     }
 
-    public function validateAnswer(Game $game, string $answer): Game|false
+    public function validateAnswer(Game $game, ?User $user, string $answer): Game|false
     {
         // Normalisation des chaînes
         $expectedWords = $this->normalizeAndExtractWords($game->getSolution());
@@ -20,8 +21,9 @@ readonly class GameAnswerService
 
         // Vérification que 80% des mots importants de la solution sont présents dans la réponse
         if ($this->wordsMatch($expectedWords, $userWords) >= 0.8) {
-            if ($this->security->getUser()) {
+            if ($user) {
                 $this->historyService->saveResult($game);
+                $this->userService->addPoints($user, $game->getDifficulty());
             }
 
             return $game;

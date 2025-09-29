@@ -44,7 +44,7 @@ class GameRepository extends ServiceEntityRepository
                 ->addOrderBy('g.date', 'DESC')
                 ->setParameter('date', $date->format('Y-m-d'))
                 ->setParameter('type', $type)
-                ->setParameter('userId', $user->getId(), UuidType::NAME)
+                ->setParameter('userId', $user?->getId(), UuidType::NAME)
                 ->setMaxResults(1)
                 ->getQuery()
                 ->getResult();
