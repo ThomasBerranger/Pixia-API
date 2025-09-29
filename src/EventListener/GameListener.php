@@ -20,6 +20,10 @@ readonly class GameListener
     {
         $game->setAuthor($this->security->getUser());
 
-        $game->setImage($this->imageService->downloadAndStore($game->getDate(), $game->getType(), $game->getImage()));
+        $game->setImage(
+            $game->getImage() ?
+                $this->imageService->downloadAndStore($game->getDate(), $game->getType(), $game->getImage()) :
+                ''
+        );
     }
 }

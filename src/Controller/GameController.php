@@ -6,7 +6,6 @@ use App\DTO\GameAnswerRequest;
 use App\DTO\GameDifficultyRequest;
 use App\DTO\GameShowRequest;
 use App\Entity\Game;
-use App\Entity\Achievement;
 use App\Service\GameAnswerService;
 use App\Service\AchievementService;
 use Doctrine\ORM\EntityManagerInterface;
