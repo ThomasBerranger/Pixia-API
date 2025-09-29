@@ -52,13 +52,13 @@ class GameRepository extends ServiceEntityRepository
         return isset($gameWithUserAchievement[0]) ? [
             'game' => $gameWithUserAchievement[0][0],
             'achievement' => $gameWithUserAchievement[1][0],
-            'has_previous' => $gameWithUserAchievement[1]['previous_game_date'],
-            'next_previous' => $gameWithUserAchievement[1]['next_game_date'],
+            'previousGameDate' => $gameWithUserAchievement[1]['previous_game_date'],
+            'nextGameDate' => $gameWithUserAchievement[1]['next_game_date'],
         ] : [
             'game' => null,
             'achievement' => null,
-            'previous_game_date' => false,
-            'next_game_date' => false,
+            'previousGameDate' => false,
+            'nextGameDate' => false,
         ];
     }
 }
