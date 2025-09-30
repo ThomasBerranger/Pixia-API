@@ -61,4 +61,14 @@ class GameRepository extends ServiceEntityRepository
             'nextGameDate' => false,
         ];
     }
+
+    public function findGamesWithAuthor(): array
+    {
+        return $this->createQueryBuilder('g')
+            ->leftJoin('g.author', 'a')
+            ->addSelect('a')
+            ->orderBy('g.date', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 }

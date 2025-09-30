@@ -44,8 +44,8 @@ final class GameController extends BaseController
         ]);
     }
 
-    #[Route('', name: 'show', methods: ['GET'], format: 'json')]
-    public function show(#[MapQueryString] GameShowRequest $request): JsonResponse
+    #[Route('/daily', name: 'daily', methods: ['GET'], format: 'json')]
+    public function daily(#[MapQueryString] GameShowRequest $request): JsonResponse
     {
         $gameWithUserAchievement = $this->entityManager->getRepository(Game::class)->findGameWithUserAchievement(
             $request->getDate(), $request->type, $this->getCurrentUser()
@@ -54,6 +54,15 @@ final class GameController extends BaseController
         return $this->json(data: $gameWithUserAchievement, context: [
             'groups' => ['game:show', $gameWithUserAchievement['achievement'] ? 'game:solution' : null],
         ]);
+    }
+
+    #[Route('', name: 'index', methods: ['GET'], format: 'json')]
+    #[IsGranted('ROLE_ADMIN')]
+    public function index(): JsonResponse
+    {
+        $games = $this->entityManager->getRepository(Game::class)->findGamesWithAuthor();
+
+        return $this->json(data: $games, context: ['groups' => 'game:admin']);
     }
 
     #[Route('/{id}/hint', name: 'hint', methods: ['GET'], format: 'json')]

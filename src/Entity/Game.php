@@ -21,51 +21,52 @@ class Game
     #[ORM\Column(type: UuidType::NAME, unique: true)]
     #[ORM\GeneratedValue(strategy: 'CUSTOM')]
     #[ORM\CustomIdGenerator(class: 'doctrine.uuid_generator')]
-    #[Groups(['game:show'])]
+    #[Groups(['game:show', 'game:admin'])]
     private ?Uuid $id = null;
 
     #[ORM\Column(enumType: GameType::class)]
-    #[Groups(['game:show'])]
+    #[Groups(['game:show', 'game:admin'])]
     private ?GameType $type = GameType::MULTIVERS;
 
     #[Assert\NotBlank]
     #[Assert\Length(min: 5, max: 255)]
     #[ORM\Column(length: 255)]
-    #[Groups(['game:solution', 'game:create'])]
+    #[Groups(['game:solution', 'game:admin', 'game:create'])]
     private ?string $solution = null;
 
     #[Assert\NotBlank]
     #[Assert\Length(min: 5, max: 255)]
     #[ORM\Column(length: 255)]
-    #[Groups(['game:create'])]
+    #[Groups(['game:admin', 'game:create'])]
     private ?string $hint = null;
 
     #[Assert\NotBlank]
     #[Assert\Length(min: 5, max: 2000)]
     #[ORM\Column(type: 'string', length: 2000)]
-    #[Groups(['game:solution', 'game:create'])]
+    #[Groups(['game:solution', 'game:admin', 'game:create'])]
     private ?string $explanation = null;
 
     #[Assert\NotNull]
     #[Assert\Type(\DateTimeInterface::class)]
     #[ORM\Column(type: Types::DATE_MUTABLE)]
-    #[Groups(['game:show', 'game:create'])]
+    #[Groups(['game:show', 'game:admin', 'game:create'])]
     private ?\DateTime $date = null;
 
     #[Assert\NotBlank(message: 'Difficulty is required')]
     #[Assert\Type(type: GameDifficulty::class, message: 'Invalid difficulty value')]
     #[ORM\Column(enumType: GameDifficulty::class)]
-    #[Groups(['game:show'])]
+    #[Groups(['game:show', 'game:admin'])]
     private ?GameDifficulty $difficulty = GameDifficulty::EASY;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['game:admin'])]
     private ?User $author = null;
 
     #[Assert\NotBlank]
     #[Assert\Length(min: 5, max: 255)]
     #[ORM\Column(length: 255)]
-    #[Groups(['game:show', 'game:create'])]
+    #[Groups(['game:show', 'game:admin', 'game:create'])]
     private ?string $image = null;
 
     public function __construct()
