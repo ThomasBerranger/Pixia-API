@@ -5,16 +5,26 @@ namespace App\Controller;
 use App\DTO\GameAnswerRequest;
 use App\DTO\GameDifficultyRequest;
 use App\DTO\GameShowRequest;
+use App\DTO\GameUpdateRequest;
 use App\Entity\Game;
 use App\Service\GameAnswerService;
 use App\Service\AchievementService;
+use App\Service\ImageService;
+use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
+use Symfony\Component\ObjectMapper\ObjectMapperInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Serializer\Exception\ExceptionInterface;
+use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Validator\Exception\ValidationFailedException;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/games', name: 'game_')]
 final class GameController extends BaseController
@@ -22,7 +32,8 @@ final class GameController extends BaseController
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly GameAnswerService      $gameAnswerService,
-        private readonly AchievementService     $achievementService)
+        private readonly AchievementService     $achievementService,
+        private readonly ImageService           $imageService)
     {
     }
 
@@ -54,6 +65,13 @@ final class GameController extends BaseController
         return $this->json(data: $gameWithUserAchievement, context: [
             'groups' => ['game:show', $gameWithUserAchievement['achievement'] ? 'game:solution' : null],
         ]);
+    }
+
+    #[Route('/{id}', name: 'show', methods: ['GET'], format: 'json')]
+    #[IsGranted('view', subject: 'game')]
+    public function show(Game $game): JsonResponse
+    {
+        return $this->json(data: $game, context: ['groups' => ['game:admin']]);
     }
 
     #[Route('', name: 'index', methods: ['GET'], format: 'json')]
@@ -92,4 +110,19 @@ final class GameController extends BaseController
 
         return $this->json(data: $history, context: ['groups' => ['game:solution']]);
     }
-}
+
+    #[Route('/{id}', name: 'update', methods: ['PATCH'], format: 'json')]
+    #[IsGranted('edit', subject: 'game')]
+    public function update(Game $game, #[MapRequestPayload] GameUpdateRequest $updatedGame): JsonResponse
+    {
+        $game->setSolution($updatedGame->solution);
+        $game->setHint($updatedGame->hint);
+        $game->setDate($updatedGame->date);
+        $game->setDifficulty($updatedGame->difficulty);
+        $game->setExplanation($updatedGame->explanation);
+
+        $this->entityManager->flush();
+
+        return $this->json(data: $game, context: ['groups' => ['game:admin']]);
+    }
+ }

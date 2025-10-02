@@ -5,8 +5,6 @@ namespace App\Entity;
 use App\Enum\GameDifficulty;
 use App\Enum\GameType;
 use App\Repository\GameRepository;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Types\UuidType;
@@ -15,6 +13,7 @@ use Symfony\Component\Uid\Uuid;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: GameRepository::class)]
+#[ORM\UniqueConstraint(name: 'unique_type_date', columns: ['type', 'date'])]
 class Game
 {
     #[ORM\Id]
@@ -63,9 +62,8 @@ class Game
     #[Groups(['game:admin'])]
     private ?User $author = null;
 
-    #[Assert\NotBlank]
     #[Assert\Length(min: 5, max: 255)]
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, nullable: true)]
     #[Groups(['game:show', 'game:admin', 'game:create'])]
     private ?string $image = null;
 

@@ -16,7 +16,7 @@ use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 
 #[Route('/open-api', name: 'open_api_')]
-class OpenApiController extends AbstractController
+final class OpenApiController extends AbstractController
 {
     public function __construct(private readonly OpenApiService $openApiService)
     {

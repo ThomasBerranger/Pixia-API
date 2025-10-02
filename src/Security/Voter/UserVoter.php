@@ -20,7 +20,7 @@ final class UserVoter extends Voter
     {
         $currentUser = $token->getUser();
 
-        if (!$currentUser instanceof UserInterface) {
+        if (!$currentUser instanceof User) {
             return false;
         }
 
@@ -33,9 +33,9 @@ final class UserVoter extends Voter
         };
     }
 
-    private function canView(UserInterface $currentUser, User $targetUser): bool
+    private function canView(User $currentUser, User $targetUser): bool
     {
-        if (in_array('ROLE_ADMIN', $currentUser->getRoles())) {
+        if ($currentUser->isAdmin()) {
             return true;
         }
 

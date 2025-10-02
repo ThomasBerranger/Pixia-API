@@ -5,7 +5,6 @@ namespace App\Repository;
 use App\Entity\Achievement;
 use App\Entity\Game;
 use App\Entity\User;
-use App\Enum\GameDifficulty;
 use App\Enum\GameType;
 use DateTime;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;

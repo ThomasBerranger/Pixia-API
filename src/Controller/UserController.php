@@ -11,7 +11,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[Route('/users', name: 'user_')]
 final class UserController extends BaseController
 {
-    public function __construct(private EntityManagerInterface $entityManager)
+    public function __construct(private readonly EntityManagerInterface $entityManager)
     {
     }
 
