@@ -1,33 +1,36 @@
-# Étape 1 : base Apache + PHP 8.3
-FROM php:8.3-apache
+FROM php:8.3-fpm
 
-# Dossier de travail
-WORKDIR /var/www/html
+WORKDIR /app
 
-# Installer les extensions PHP nécessaires à Symfony
+# Extensions PHP
 RUN apt-get update && apt-get install -y \
-    git unzip libicu-dev libzip-dev libpq-dev libonig-dev zip \
-    && docker-php-ext-install intl pdo pdo_mysql opcache zip \
-    && a2enmod rewrite
+    libicu-dev libzip-dev zip unzip git nginx \
+    && docker-php-ext-install intl pdo_mysql opcache zip \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Installer Composer depuis l’image officielle
+# Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Copier les fichiers de ton projet
-COPY . .
-
-# Installer les dépendances Symfony sans dev
+# Copier et installer dépendances
+COPY composer.json composer.lock ./
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# Donner les bons droits d’accès
-RUN chown -R www-data:www-data var
+# Copier le reste
+COPY . .
 
-# Symfony utilise /public comme racine web
-ENV APACHE_DOCUMENT_ROOT /var/www/html/public
-RUN sed -ri -e 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf
+# Permissions
+RUN chown -R www-data:www-data /app/var
 
-# Expose le port par défaut
-EXPOSE 80
+# Config nginx
+COPY nginx.conf /etc/nginx/nginx.conf
 
-# Démarre Apache
-CMD ["apache2-foreground"]
+# Variables d'env (à surcharger sur Render)
+ENV APP_ENV=prod
+ENV APP_DEBUG=0
+
+EXPOSE 8080
+
+# Script de démarrage
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
+CMD ["/start.sh"]
