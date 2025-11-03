@@ -1,26 +1,22 @@
 FROM php:8.3-fpm
 
-# Dépendances
 RUN apt-get update && apt-get install -y \
-    git unzip libzip-dev libpq-dev nginx && \
+    git unzip libzip-dev libpq-dev nginx gettext-base && \
     docker-php-ext-install pdo pdo_mysql pdo_pgsql zip opcache && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# Code
 COPY . .
 
-# Installation
 RUN composer install --no-dev --optimize-autoloader --no-interaction && \
     chown -R www-data:www-data /var/www/html/var
 
-# Config Nginx
+# Template Nginx (sera remplacé au runtime)
 RUN echo 'server {\n\
-    listen $PORT;\n\
+    listen ${PORT};\n\
     root /var/www/html/public;\n\
     location / {\n\
         try_files $uri /index.php$is_args$args;\n\
@@ -32,10 +28,10 @@ RUN echo 'server {\n\
         fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;\n\
         internal;\n\
     }\n\
-}' > /etc/nginx/sites-available/default
+}' > /etc/nginx/sites-available/default.template
 
-# Script de démarrage
 RUN echo '#!/bin/bash\n\
+envsubst '\''$PORT'\'' < /etc/nginx/sites-available/default.template > /etc/nginx/sites-available/default\n\
 php bin/console doctrine:migrations:migrate --no-interaction\n\
 php-fpm -D\n\
 nginx -g "daemon off;"' > /start.sh && chmod +x /start.sh
