@@ -1,36 +1,43 @@
 FROM php:8.3-fpm
 
-WORKDIR /app
-
-# Extensions PHP
+# Dépendances
 RUN apt-get update && apt-get install -y \
-    libicu-dev libzip-dev zip unzip git nginx \
-    && docker-php-ext-install intl pdo_mysql opcache zip \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    git unzip libzip-dev libpq-dev nginx && \
+    docker-php-ext-install pdo pdo_mysql pdo_pgsql zip opcache && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Composer
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Copier et installer dépendances
-COPY composer.json composer.lock ./
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+WORKDIR /var/www/html
 
-# Copier le reste
+# Code
 COPY . .
 
-# Permissions
-RUN chown -R www-data:www-data /app/var
+# Installation
+RUN composer install --no-dev --optimize-autoloader --no-interaction && \
+    chown -R www-data:www-data /var/www/html/var
 
-# Config nginx
-COPY nginx.conf /etc/nginx/nginx.conf
-
-# Variables d'env (à surcharger sur Render)
-ENV APP_ENV=prod
-ENV APP_DEBUG=0
-
-EXPOSE 8080
+# Config Nginx
+RUN echo 'server {\n\
+    listen $PORT;\n\
+    root /var/www/html/public;\n\
+    location / {\n\
+        try_files $uri /index.php$is_args$args;\n\
+    }\n\
+    location ~ ^/index\.php(/|$) {\n\
+        fastcgi_pass 127.0.0.1:9000;\n\
+        fastcgi_split_path_info ^(.+\.php)(/.*)$;\n\
+        include fastcgi_params;\n\
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;\n\
+        internal;\n\
+    }\n\
+}' > /etc/nginx/sites-available/default
 
 # Script de démarrage
-COPY start.sh /start.sh
-RUN chmod +x /start.sh
+RUN echo '#!/bin/bash\n\
+php bin/console doctrine:migrations:migrate --no-interaction\n\
+php-fpm -D\n\
+nginx -g "daemon off;"' > /start.sh && chmod +x /start.sh
+
 CMD ["/start.sh"]
