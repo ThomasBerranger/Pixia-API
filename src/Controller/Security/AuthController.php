@@ -2,12 +2,12 @@
 
 namespace App\Controller\Security;
 
-use App\Entity\User;
+use App\DTO\RegisterRequest;
 use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
@@ -19,15 +19,12 @@ class AuthController extends AbstractController
 
     #[Route(path: '/register', name: 'register', methods: ['POST'])]
     public function register(
-        Request $request,
-        UserPasswordHasherInterface $hasher,
-        EntityManagerInterface $em
-    ): JsonResponse {
-        $data = json_decode($request->getContent(), true);
-
-        $user = new User();
-        $user->setEmail($data['email']);
-        $user->setPassword($hasher->hashPassword($user, $data['password']));
+        #[MapRequestPayload] RegisterRequest $registerRequest,
+        UserPasswordHasherInterface          $hasher,
+        EntityManagerInterface               $em,
+    ): JsonResponse
+    {
+        $user = $registerRequest->toUser($hasher);
 
         $em->persist($user);
         $em->flush();

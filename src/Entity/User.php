@@ -33,7 +33,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private array $roles = [];
 
     /**
-     * @var string The hashed password
+     * @var string|null The hashed password
      */
     #[ORM\Column]
     private ?string $password = null;
@@ -41,6 +41,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     #[Groups(['user:read'])]
     private int $score = 0;
+
+    #[ORM\Column(length: 255)]
+    #[Groups(['user:read', 'game:admin'])]
+    private ?string $username = null;
 
     public function getId(): ?Uuid
     {
@@ -138,5 +142,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function isAdmin(): bool
     {
         return in_array('ROLE_ADMIN', $this->getRoles(), true);
+    }
+
+    public function getUsername(): ?string
+    {
+        return $this->username;
+    }
+
+    public function setUsername(string $username): static
+    {
+        $this->username = $username;
+
+        return $this;
     }
 }

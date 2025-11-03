@@ -6,6 +6,7 @@ use App\Entity\Game;
 use App\Enum\GameType;
 use DateTime;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 readonly class ImageService
@@ -20,11 +21,23 @@ readonly class ImageService
 
         $imageContent = $this->getImage($url);
 
-        $fullFilePath = $directoryPath . '/' . $date->format('d') . '.jpg';
+        $fullFilePath = $directoryPath . '/' . $date->getTimestamp() . '.jpg';
 
         file_put_contents($fullFilePath, $imageContent);
 
         return $fullFilePath;
+    }
+
+    public function store(DateTime $date, GameType $gameType, UploadedFile $image): string
+    {
+        $directoryPath = $this->createRepository($date, $gameType);
+
+        $filename = $date->getTimestamp() . '.jpg';
+
+        // todo: créer une méthode pour move et stocker la précédente dans un autre dossier
+        $image->move($directoryPath, $filename);
+
+        return $directoryPath . '/' . $filename;
     }
 
     private function createRepository(DateTime $date, GameType $gameType): string

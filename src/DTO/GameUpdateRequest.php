@@ -30,6 +30,6 @@ class GameUpdateRequest
     #[Assert\NotNull(message: 'Difficulty is required')]
     public GameDifficulty $difficulty = GameDifficulty::EASY;
 
-    #[Assert\Length(min: 5, max: 255)]
-    public ?string $image = null;
+//    #[Assert\Length(min: 5, max: 255)]
+//    public ?string $image = null;
 }

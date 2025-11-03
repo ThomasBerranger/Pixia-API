@@ -5,25 +5,20 @@ namespace App\Controller;
 use App\DTO\GameAnswerRequest;
 use App\DTO\GameDifficultyRequest;
 use App\DTO\GameShowRequest;
+use App\DTO\GameUpdateImageRequest;
 use App\DTO\GameUpdateRequest;
 use App\Entity\Game;
 use App\Service\GameAnswerService;
 use App\Service\AchievementService;
 use App\Service\ImageService;
-use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
-use Exception;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
-use Symfony\Component\ObjectMapper\ObjectMapperInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Symfony\Component\Serializer\Exception\ExceptionInterface;
-use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\Validator\Exception\ValidationFailedException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/games', name: 'game_')]
@@ -125,4 +120,26 @@ final class GameController extends BaseController
 
         return $this->json(data: $game, context: ['groups' => ['game:admin']]);
     }
- }
+
+    #[Route('/{id}/image', name: 'update_image', methods: ['POST'], format: 'json')]
+    #[IsGranted('edit', subject: 'game')]
+    public function updateImage(Game $game, Request $request, ValidatorInterface $validator): JsonResponse
+    {
+        $dto = new GameUpdateImageRequest();
+        $dto->image = $request->files->get('image');
+
+        $errors = $validator->validate($dto);
+
+        if (count($errors) > 0) {
+            return $this->json(['errors' => (string)$errors], 400);
+        }
+
+        $image = $this->imageService->store($game->getDate(), $game->getType(), $dto->image);
+
+        $game->setImage($image);
+
+        $this->entityManager->flush();
+
+        return $this->json(data: $game, context: ['groups' => ['game:admin']]);
+    }
+}
