@@ -5,7 +5,6 @@ namespace App\Controller;
 use App\DTO\GameAnswerRequest;
 use App\DTO\GameDifficultyRequest;
 use App\DTO\GameShowRequest;
-use App\DTO\GameUpdateImageRequest;
 use App\DTO\GameUpdateRequest;
 use App\Entity\Game;
 use App\Service\GameAnswerService;
@@ -19,7 +18,6 @@ use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/games', name: 'game_')]
 final class GameController extends BaseController
@@ -123,23 +121,20 @@ final class GameController extends BaseController
 
     #[Route('/{id}/image', name: 'update_image', methods: ['POST'], format: 'json')]
     #[IsGranted('edit', subject: 'game')]
-    public function updateImage(Game $game, Request $request, ValidatorInterface $validator): JsonResponse
+    public function updateImage(Game $game, Request $request): JsonResponse
     {
-        $dto = new GameUpdateImageRequest();
-        $dto->image = $request->files->get('image');
+        $newImageFile = $request->files->get('image');
 
-        $errors = $validator->validate($dto);
-
-        if (count($errors) > 0) {
-            return $this->json(['errors' => (string)$errors], 400);
+        if (!$this->imageService->validate($newImageFile)) {
+            return $this->json('Image non validée.', Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        $image = $this->imageService->store($game->getDate(), $game->getType(), $dto->image);
+        $imageName = $this->imageService->store($game->getType(), $game->getDate(), $newImageFile);
 
-        $game->setImage($image);
+        $game->setImage($imageName);
 
         $this->entityManager->flush();
 
-        return $this->json(data: $game, context: ['groups' => ['game:admin']]);
+        return $this->json(data: $game->getImage(), context: ['groups' => ['game:admin']]);
     }
 }

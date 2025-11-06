@@ -67,6 +67,9 @@ class Game
     #[Groups(['game:show', 'game:admin', 'game:create'])]
     private ?string $image = null;
 
+    #[Groups(['game:create'])]
+    private ?string $imageUrl = null;
+
     public function __construct()
     {
     }
@@ -168,6 +171,18 @@ class Game
     public function setImage(string $image): static
     {
         $this->image = $image;
+
+        return $this;
+    }
+
+    public function getImageUrl(): ?string
+    {
+        return $this->imageUrl;
+    }
+
+    public function setImageUrl(string $imageUrl): static
+    {
+        $this->imageUrl = $imageUrl;
 
         return $this;
     }

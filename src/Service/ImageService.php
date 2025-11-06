@@ -2,12 +2,13 @@
 
 namespace App\Service;
 
-use App\Entity\Game;
+use App\DTO\GameUpdateImageRequest;
 use App\Enum\GameType;
 use DateTime;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 readonly class ImageService
@@ -16,45 +17,52 @@ readonly class ImageService
         private HttpClientInterface $httpClient,
         private LoggerInterface     $logger,
         #[Autowire('%env(UPLOAD_IMAGES_DIR)%')]
-        private string              $uploadImagesDir
+        private string              $uploadImagesDir,
+        private ValidatorInterface  $validator
     )
     {
     }
 
-    public function downloadAndStore(DateTime $date, GameType $gameType, string $url): string
+    public function downloadAndStore(GameType $gameType, DateTime $date, string $imageUrl): ?string
     {
-        $directoryPath = $this->createRepository($date, $gameType);
+        if (!filter_var($imageUrl, FILTER_VALIDATE_URL)) {
+            return null;
+        }
 
-        $imageContent = $this->getImage($url);
+        $directoryPath = $this->createRepository($gameType, $date);
 
-        $fullFilePath = $directoryPath . '/' . $date->getTimestamp() . '.jpg';
+        $imageName = $this->generateImageName();
 
-        file_put_contents($fullFilePath, $imageContent);
+        file_put_contents($directoryPath . '/' . $imageName, $this->getImage($imageUrl));
 
-        return $fullFilePath;
+        return $imageName;
     }
 
-    public function store(DateTime $date, GameType $gameType, UploadedFile $image): string
+    public function store(GameType $gameType, DateTime $date, UploadedFile $image): string
     {
-        $directoryPath = $this->createRepository($date, $gameType);
+        $directoryPath = $this->createRepository($gameType, $date);
 
-        $filename = $date->getTimestamp() . '.jpg';
+        $filename = $this->generateImageName();
 
-        // todo: créer une méthode pour move et stocker la précédente dans un autre dossier
         $image->move($directoryPath, $filename);
 
-        return $directoryPath . '/' . $filename;
+        return $filename;
     }
 
-    private function createRepository(DateTime $date, GameType $gameType): string
+    private function createRepository(GameType $gameType, DateTime $date): string
     {
-        $directoryPath = $this->uploadImagesDir . '/' . $gameType->value . '/' . $date->format('Y/m');
+        $directoryPath = $this->getDirectoryPath($gameType, $date);
 
         if (!is_dir($directoryPath)) {
             mkdir($directoryPath, 0755, true);
         }
 
         return $directoryPath;
+    }
+
+    public function getDirectoryPath(GameType $gameType, DateTime $date): string
+    {
+        return $this->uploadImagesDir . '/' . $gameType->value . '/' . $date->format('Y/m');
     }
 
     private function getImage(string $url): string
@@ -71,5 +79,24 @@ readonly class ImageService
 
             return '';
         }
+    }
+
+    private function generateImageName(): string
+    {
+        return uniqid() . '.jpg';
+    }
+
+    public function validate(UploadedFile $image): bool
+    {
+        $gameUpdateRequest = new GameUpdateImageRequest();
+        $gameUpdateRequest->image = $image;
+
+        $errors = $this->validator->validate($gameUpdateRequest);
+
+        if (count($errors) > 0) {
+            return false;
+        }
+
+        return true;
     }
 }
