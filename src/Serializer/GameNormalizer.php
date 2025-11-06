@@ -3,36 +3,41 @@
 namespace App\Serializer;
 
 use App\Entity\Game;
+use App\Enum\GameType;
 use App\Service\ImageService;
+use DateTime;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
-use Symfony\Component\Serializer\Normalizer\NormalizerAwareInterface;
-use Symfony\Component\Serializer\Normalizer\NormalizerAwareTrait;
 
-class GameNormalizer implements NormalizerInterface, NormalizerAwareInterface
+class GameNormalizer implements NormalizerInterface
 {
-    use NormalizerAwareTrait;
-
     private const ALREADY_CALLED = 'GAME_NORMALIZER_ALREADY_CALLED';
 
-    public function __construct(private readonly ImageService $imageService)
+    public function __construct(
+        #[Autowire(service: 'serializer.normalizer.object')]
+        private readonly NormalizerInterface $objectNormalizer,
+        private readonly ImageService        $imageService
+    )
     {
     }
 
-    public function normalize($data, ?string $format = null, array $context = []): array
+    public function normalize(mixed $object, ?string $format = null, array $context = []): array
     {
         $context[self::ALREADY_CALLED] = true;
 
-        /** @var Game $data */
-        $array = $this->normalizer->normalize($data, $format, $context);
+        $data = $this->objectNormalizer->normalize($object, $format, $context);
 
-        if (isset($array['image']) && $array['image']) {
-            $array['image'] = $this->imageService->getDirectoryPath($array['type'], $array['date']) . '/' . $array['image'];
+        if (isset($data['image'], $data['type'], $data['date']) && $data['image']) {
+            $data['image'] = $this->imageService->getDirectoryPath(
+                    GameType::from($data['type']),
+                    new DateTime($data['date'])
+                ) . '/' . $data['image'];
         }
 
-        return $array;
+        return $data;
     }
 
-    public function supportsNormalization($data, ?string $format = null, array $context = []): bool
+    public function supportsNormalization(mixed $data, ?string $format = null, array $context = []): bool
     {
         return $data instanceof Game && !isset($context[self::ALREADY_CALLED]);
     }

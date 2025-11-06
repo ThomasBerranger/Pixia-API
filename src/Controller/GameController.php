@@ -129,12 +129,15 @@ final class GameController extends BaseController
             return $this->json('Image non validée.', Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        $imageName = $this->imageService->store($game->getType(), $game->getDate(), $newImageFile);
+        $imageName = $this->imageService->store($game->getType(), $game->getDate(), $game->getImage(), $newImageFile);
 
         $game->setImage($imageName);
 
         $this->entityManager->flush();
 
-        return $this->json(data: $game->getImage(), context: ['groups' => ['game:admin']]);
+        return $this->json(
+            data: $this->imageService->getDirectoryPath($game->getType(), $game->getDate()) . '/' . $game->getImage(),
+            context: ['groups' => ['game:admin']]
+        );
     }
 }

@@ -38,13 +38,17 @@ readonly class ImageService
         return $imageName;
     }
 
-    public function store(GameType $gameType, DateTime $date, UploadedFile $image): string
+    public function store(GameType $gameType, DateTime $date, ?string $image, UploadedFile $newImage): string
     {
         $directoryPath = $this->createRepository($gameType, $date);
 
+        if ($image && file_exists($directoryPath . '/' . $image)) {
+            unlink($directoryPath . '/' . $image);
+        }
+
         $filename = $this->generateImageName();
 
-        $image->move($directoryPath, $filename);
+        $newImage->move($directoryPath, $filename);
 
         return $filename;
     }
