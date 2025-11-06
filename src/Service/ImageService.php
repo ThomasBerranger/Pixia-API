@@ -6,12 +6,18 @@ use App\Entity\Game;
 use App\Enum\GameType;
 use DateTime;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 readonly class ImageService
 {
-    public function __construct(private HttpClientInterface $httpClient, private LoggerInterface $logger)
+    public function __construct(
+        private HttpClientInterface $httpClient,
+        private LoggerInterface     $logger,
+        #[Autowire('%env(UPLOAD_IMAGES_DIR)%')]
+        private string              $uploadImagesDir
+    )
     {
     }
 
@@ -42,7 +48,7 @@ readonly class ImageService
 
     private function createRepository(DateTime $date, GameType $gameType): string
     {
-        $directoryPath = 'images/' . $gameType->value . '/' . $date->format('Y/m');
+        $directoryPath = $this->uploadImagesDir . '/' . $gameType->value . '/' . $date->format('Y/m');
 
         if (!is_dir($directoryPath)) {
             mkdir($directoryPath, 0755, true);

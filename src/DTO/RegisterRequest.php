@@ -25,7 +25,7 @@ class RegisterRequest
 
     #[Assert\NotBlank(message: 'Un pseudo est requis.')]
     #[Assert\Length(min: 2, max: 255, minMessage: 'Ton pseudo doit faire au moins {{ limit }} caractères.')]
-    #[Assert\Regex(pattern: '/^[a-zA-Z0-9_-]+$/', message: "Ce pseudo n'est pas valide.")]
+    #[Assert\Regex(pattern: '/^[a-zA-Z0-9_\-\s\p{L}]+$/u', message: "Ce pseudo n'est pas valide.")]
     public ?string $username = null;
 
     public function toUser(UserPasswordHasherInterface $userPasswordHasher): User
