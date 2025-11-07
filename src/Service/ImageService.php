@@ -68,7 +68,7 @@ readonly class ImageService
 
     public function getDirectoryPath(GameType $gameType, DateTime $date, $isWriteOperation = false): string
     {
-        return $isWriteOperation ? $this->uploadImagesDir : $this->publicImagesDir . '/' . $gameType->value . '/' . $date->format('Y/m');
+        return ($isWriteOperation ? $this->uploadImagesDir : $this->publicImagesDir) . '/' . $gameType->value . '/' . $date->format('Y/m');
     }
 
     private function getImage(string $url): string
