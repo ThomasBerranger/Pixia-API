@@ -18,8 +18,6 @@ readonly class ImageService
         private LoggerInterface     $logger,
         #[Autowire('%env(UPLOAD_IMAGES_DIR)%')]
         private string              $uploadImagesDir,
-        #[Autowire('%env(PUBLIC_IMAGES_DIR)%')]
-        private string              $publicImagesDir,
         private ValidatorInterface  $validator
     )
     {
@@ -68,7 +66,9 @@ readonly class ImageService
 
     public function getDirectoryPath(GameType $gameType, DateTime $date, $isWriteOperation = false): string
     {
-        return ($isWriteOperation ? $this->uploadImagesDir : $this->publicImagesDir) . '/' . $gameType->value . '/' . $date->format('Y/m');
+        $baseDir = $isWriteOperation ? $this->uploadImagesDir : '/images';
+
+        return $baseDir . '/' . $gameType->value . '/' . $date->format('Y/m');
     }
 
     private function getImage(string $url): string
