@@ -53,7 +53,7 @@ readonly class OpenApiService
             'messages' => [
                 ['role' => 'user', 'content' => $this->promptService->formatPromptRequest($prompt)]
             ],
-            'max_tokens' => 500
+            'max_tokens' => 1000
         ];
     }
 
