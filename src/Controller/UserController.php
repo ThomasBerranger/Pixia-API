@@ -28,7 +28,7 @@ final class UserController extends BaseController
         return $this->json(data: $user, context: ['groups' => 'user:read']);
     }
 
-    #[Route('/', name: 'index', methods: ['GET'])]
+    #[Route(name: 'index', methods: ['GET'])]
     #[IsGranted('ROLE_ADMIN')]
     public function index(): Response
     {

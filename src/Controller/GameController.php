@@ -67,7 +67,7 @@ final class GameController extends BaseController
         return $this->json(data: $game, context: ['groups' => ['game:admin']]);
     }
 
-    #[Route('', name: 'index', methods: ['GET'], format: 'json')]
+    #[Route(name: 'index', methods: ['GET'], format: 'json')]
     #[IsGranted('ROLE_ADMIN')]
     public function index(): JsonResponse
     {
