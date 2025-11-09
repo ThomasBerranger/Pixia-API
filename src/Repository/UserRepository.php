@@ -33,28 +33,25 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         $this->getEntityManager()->flush();
     }
 
-    //    /**
-    //     * @return User[] Returns an array of User objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('u')
-    //            ->andWhere('u.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('u.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+    public function findOrderedByScores(int $max = 0): array
+    {
+        return $this->createQueryBuilder('u')
+            ->select('u.username, u.score')
+            ->setMaxResults($max)
+            ->orderBy('u.score', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 
-    //    public function findOneBySomeField($value): ?User
-    //    {
-    //        return $this->createQueryBuilder('u')
-    //            ->andWhere('u.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+    public function getRank(User $user): int
+    {
+        return $this->createQueryBuilder('u')
+            ->select('COUNT(DISTINCT u2.id) + 1')
+            ->from(User::class, 'u2')
+            ->where('u2.score > :userScore OR (u2.score = :userScore AND u2.createdAt < :userCreatedAt)')
+            ->setParameter('userScore', $user->getScore())
+            ->setParameter('userCreatedAt', $user->getCreatedAt())
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
 }
