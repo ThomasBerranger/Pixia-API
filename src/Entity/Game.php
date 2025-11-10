@@ -39,12 +39,6 @@ class Game
     #[Groups(['game:admin', 'game:create'])]
     private ?string $hint = null;
 
-    #[Assert\NotBlank]
-    #[Assert\Length(min: 5, max: 2000)]
-    #[ORM\Column(type: 'string', length: 2000)]
-    #[Groups(['game:solution', 'game:admin', 'game:create'])]
-    private ?string $explanation = null;
-
     #[Assert\NotNull]
     #[Assert\Type(\DateTimeInterface::class)]
     #[ORM\Column(type: Types::DATE_MUTABLE)]
@@ -111,18 +105,6 @@ class Game
     public function setHint(string $hint): static
     {
         $this->hint = $hint;
-
-        return $this;
-    }
-
-    public function getExplanation(): ?string
-    {
-        return $this->explanation;
-    }
-
-    public function setExplanation(string $explanation): static
-    {
-        $this->explanation = $explanation;
 
         return $this;
     }

@@ -19,10 +19,6 @@ class GameUpdateRequest
     #[Assert\Length(min: 5, max: 255)]
     public string $hint;
 
-    #[Assert\NotBlank]
-    #[Assert\Length(min: 5, max: 2000)]
-    public string $explanation;
-
     #[Assert\NotNull]
     #[Assert\Type(\DateTimeInterface::class)]
     public \DateTime $date;

@@ -112,7 +112,6 @@ final class GameController extends BaseController
         $game->setHint($updatedGame->hint);
         $game->setDate($updatedGame->date);
         $game->setDifficulty($updatedGame->difficulty);
-        $game->setExplanation($updatedGame->explanation);
 
         $this->entityManager->flush();
 
