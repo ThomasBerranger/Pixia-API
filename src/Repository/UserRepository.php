@@ -43,8 +43,12 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
             ->getResult();
     }
 
-    public function getRank(User $user): int
+    public function getRank(?User $user): ?int
     {
+        if (!$user instanceof User) {
+            return null;
+        }
+
         return $this->createQueryBuilder('u')
             ->select('COUNT(DISTINCT u2.id) + 1')
             ->from(User::class, 'u2')
