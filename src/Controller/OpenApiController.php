@@ -4,8 +4,10 @@ namespace App\Controller;
 
 use App\DTO\OpenAiRequest;
 use App\Service\OpenApiService;
+use Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -22,20 +24,19 @@ final class OpenApiController extends AbstractController
     {
     }
 
-    /**
-     * @throws TransportExceptionInterface
-     * @throws ServerExceptionInterface
-     * @throws RedirectionExceptionInterface
-     * @throws DecodingExceptionInterface
-     * @throws ClientExceptionInterface
-     */
     #[Route('/generate-content', name: 'generate_content', methods: ['POST'], format: 'json')]
     #[IsGranted('ROLE_ADMIN')]
     public function generateGameContent(
         #[MapRequestPayload] OpenAiRequest $request
     ): JsonResponse
     {
-        return $this->json($this->openApiService->requestGameContent($request->prompt));
+        try {
+            $gameContent = $this->openApiService->requestGameContent($request->prompt);
+
+            return $this->json($gameContent);
+        } catch (Exception|DecodingExceptionInterface|RedirectionExceptionInterface|ClientExceptionInterface|ServerExceptionInterface|TransportExceptionInterface $error) {
+            return $this->json($error->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     /**
