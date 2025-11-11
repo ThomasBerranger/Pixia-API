@@ -1,0 +1,32 @@
+# config/packages/rate_limiter.yaml
+framework:
+    rate_limiter:
+        # Routes publiques générales (/, /game/today, etc.)
+        # Usage: navigation normale, 100-500 req/jour
+        game_public:
+            policy: 'sliding_window'
+            limit: 100
+            interval: '1 hour'
+
+        # Soumission de réponses (pic d'activité intense puis rien)
+        # Usage: 50-100 tentatives en 10min puis stop
+        game_answer:
+            policy: 'token_bucket'
+            limit: 100              # Permet le burst de 100 req
+            rate:
+                interval: '10 minutes'
+                amount: 50          # Se remplit de 50 tokens/10min
+
+        # Routes authentifiées protégées (/me, /profile, etc.)
+        # Usage: moins fréquent
+        authenticated_api:
+            policy: 'sliding_window'
+            limit: 100
+            interval: '1 hour'
+
+        # Login / Register (très contrôlé)
+        # Usage: max 30 essais/jour largement suffisant
+        auth_forms:
+            policy: 'fixed_window'
+            limit: 30
+            interval: '24 hours'
