@@ -6,7 +6,6 @@ use App\Entity\Achievement;
 use App\Entity\Game;
 use App\Entity\User;
 use App\Enum\GameType;
-use DateTime;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bridge\Doctrine\Types\UuidType;
@@ -22,19 +21,16 @@ class GameRepository extends ServiceEntityRepository
     }
 
     /**
-     * @param DateTime|null $date
-     * @param GameType|null $type
-     * @param User|null $user
      * @return array{game: Game|null ,achievement: Achievement|null, previous_game_date: string|null, next_game_date: string|null}
      */
-    public function findGameWithUserAchievement(?DateTime $date, ?GameType $type, ?User $user): array
+    public function findGameWithUserAchievement(?\DateTime $date, ?GameType $type, ?User $user): array
     {
         $gameWithUserAchievement =
             $this->createQueryBuilder('g')
                 ->leftJoin(Achievement::class, 'a', 'WITH', 'g.id = a.game AND a.player = :userId')
                 ->addSelect('a')
-                ->addSelect('(SELECT MAX(g2.date) FROM ' . Game::class . ' g2 WHERE g2.type = :type AND g2.date < g.date) as previous_game_date')
-                ->addSelect('(SELECT MIN(g3.date) FROM ' . Game::class . ' g3 WHERE g3.type = :type AND g3.date > g.date) as next_game_date')
+                ->addSelect('(SELECT MAX(g2.date) FROM '.Game::class.' g2 WHERE g2.type = :type AND g2.date < g.date) as previous_game_date')
+                ->addSelect('(SELECT MIN(g3.date) FROM '.Game::class.' g3 WHERE g3.type = :type AND g3.date > g.date) as next_game_date')
                 ->andWhere('g.type = :type')
                 ->andWhere('g.date <= :date')
                 ->groupBy('g.id')

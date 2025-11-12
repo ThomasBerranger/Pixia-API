@@ -8,8 +8,8 @@ use App\DTO\GameDifficultyRequest;
 use App\DTO\GameShowRequest;
 use App\DTO\GameUpdateRequest;
 use App\Entity\Game;
-use App\Service\GameAnswerService;
 use App\Service\AchievementService;
+use App\Service\GameAnswerService;
 use App\Service\ImageService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -25,11 +25,10 @@ final class GameController extends BaseController
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
-        private readonly GameAnswerService      $gameAnswerService,
-        private readonly AchievementService     $achievementService,
-        private readonly ImageService           $imageService,
-    )
-    {
+        private readonly GameAnswerService $gameAnswerService,
+        private readonly AchievementService $achievementService,
+        private readonly ImageService $imageService,
+    ) {
     }
 
     #[Route('', name: 'create', methods: ['POST'], format: 'json')]
@@ -38,15 +37,14 @@ final class GameController extends BaseController
         #[MapRequestPayload(
             serializationContext: ['groups' => ['game:create']],
             validationGroups: ['game:create']
-        )] Game                $game,
-        EntityManagerInterface $em
-    ): JsonResponse
-    {
+        )] Game $game,
+        EntityManagerInterface $em,
+    ): JsonResponse {
         $em->persist($game);
         $em->flush();
 
         return $this->json(data: $game, status: Response::HTTP_CREATED, context: [
-            'groups' => ['game:admin']
+            'groups' => ['game:admin'],
         ]);
     }
 
@@ -87,10 +85,9 @@ final class GameController extends BaseController
     #[Route('/{id}/solution', name: 'solution', methods: ['POST'], format: 'json')]
     #[RateLimit(limiterName: 'game_answer')]
     public function solution(
-        Game                                   $game,
-        #[MapRequestPayload] GameAnswerRequest $gameAnswerRequest
-    ): JsonResponse
-    {
+        Game $game,
+        #[MapRequestPayload] GameAnswerRequest $gameAnswerRequest,
+    ): JsonResponse {
         $result = $this->gameAnswerService->validateAnswer($game, $this->getCurrentUser(), $gameAnswerRequest->answer);
 
         return $this->json(data: $result, context: ['groups' => ['game:solution']]);
@@ -136,7 +133,7 @@ final class GameController extends BaseController
         $this->entityManager->flush();
 
         return $this->json(
-            data: $this->imageService->getDirectoryPath($game->getType(), $game->getDate()) . '/' . $game->getImage(),
+            data: $this->imageService->getDirectoryPath($game->getType(), $game->getDate()).'/'.$game->getImage(),
             context: ['groups' => ['game:admin']]
         );
     }

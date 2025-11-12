@@ -13,9 +13,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final class UserController extends BaseController
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager
-    )
-    {
+        private readonly EntityManagerInterface $entityManager,
+    ) {
     }
 
     #[Route(name: 'index', methods: ['GET'])]

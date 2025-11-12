@@ -36,7 +36,7 @@ class ExceptionSubscriber implements EventSubscriberInterface
 
                 $event->setResponse(new JsonResponse([
                     'error' => 'Validation failed',
-                    'violations' => $errors
+                    'violations' => $errors,
                 ], 422));
             }
         }

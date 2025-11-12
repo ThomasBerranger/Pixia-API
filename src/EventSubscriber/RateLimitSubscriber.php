@@ -14,13 +14,12 @@ use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInt
 readonly class RateLimitSubscriber implements EventSubscriberInterface
 {
     public function __construct(
-        private RateLimiterFactory    $globalApiLimiter,
-        private RateLimiterFactory    $gameAnswerLimiter,
-        private RateLimiterFactory    $authFormLimiter,
+        private RateLimiterFactory $globalApiLimiter,
+        private RateLimiterFactory $gameAnswerLimiter,
+        private RateLimiterFactory $authFormLimiter,
         private TokenStorageInterface $tokenStorage,
-        private LoggerInterface       $logger,
-    )
-    {
+        private LoggerInterface $logger,
+    ) {
     }
 
     private const LIMITERS_CONFIG = [
@@ -104,7 +103,7 @@ readonly class RateLimitSubscriber implements EventSubscriberInterface
         }
 
         if ($config['identifierSuffix']) {
-            $identifier .= '_' . $event->getRequest()->attributes->get($config['identifierSuffix']);
+            $identifier .= '_'.$event->getRequest()->attributes->get($config['identifierSuffix']);
         }
 
         $limiter = $limiterFactory->create($identifier);

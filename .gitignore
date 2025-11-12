@@ -3,6 +3,7 @@
 /.env.local
 /.env.local.php
 /.env.*.local
+/.env.test
 /config/secrets/prod/prod.decrypt.private.php
 /public/bundles/
 /var/
@@ -20,9 +21,11 @@
 
 ###> phpstan/phpstan ###
 phpstan.neon
+phpstan.dist.neon
 ###< phpstan/phpstan ###
 
 ###> friendsofphp/php-cs-fixer ###
-/.php-cs-fixer.php
-/.php-cs-fixer.cache
+.php-cs-fixer.php
+.php-cs-fixer.dist.php
+.php-cs-fixer.cache
 ###< friendsofphp/php-cs-fixer ###

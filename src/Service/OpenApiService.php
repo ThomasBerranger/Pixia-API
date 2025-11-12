@@ -16,12 +16,11 @@ readonly class OpenApiService
     public function __construct(
         private HttpClientInterface $httpClient,
         #[Autowire('%env(OPENAI_API_KEY)%')]
-        private string              $openaiApiKey,
+        private string $openaiApiKey,
         #[Autowire('%env(MULTIVERS_PROMPT_INSTRUCTION)%')]
-        private string              $promptInstruction,
-        private LoggerInterface     $logger
-    )
-    {
+        private string $promptInstruction,
+        private LoggerInterface $logger,
+    ) {
     }
 
     /**
@@ -35,17 +34,17 @@ readonly class OpenApiService
     {
         $response = $this->httpClient->request('POST', 'https://api.openai.com/v1/chat/completions', [
             'headers' => $this->generateHeader(),
-            'json' => $this->generatePromptJson($prompt)
+            'json' => $this->generatePromptJson($prompt),
         ]);
 
         $data = $response->toArray();
 
-        if ($data['choices'][0]['finish_reason'] === 'length') {
+        if ('length' === $data['choices'][0]['finish_reason']) {
             throw new \RuntimeException('Réponse tronquée : augmentez max_tokens');
         }
 
         if (isset($data['choices'][0]['message']['refusal'])) {
-            throw new \RuntimeException('Requête refusée par OpenAI : ' . $data['choices'][0]['message']['refusal']);
+            throw new \RuntimeException('Requête refusée par OpenAI : '.$data['choices'][0]['message']['refusal']);
         }
 
         return json_decode($data['choices'][0]['message']['content'], true);
@@ -54,8 +53,8 @@ readonly class OpenApiService
     private function generateHeader(): array
     {
         return [
-            'Authorization' => 'Bearer ' . $this->openaiApiKey,
-            'Content-Type' => 'application/json'
+            'Authorization' => 'Bearer '.$this->openaiApiKey,
+            'Content-Type' => 'application/json',
         ];
     }
 
@@ -66,12 +65,12 @@ readonly class OpenApiService
             'messages' => [
                 [
                     'role' => 'system',
-                    'content' => $this->promptInstruction
+                    'content' => $this->promptInstruction,
                 ],
                 [
                     'role' => 'user',
-                    'content' => $prompt
-                ]
+                    'content' => $prompt,
+                ],
             ],
             'max_tokens' => 2000,
             'response_format' => [
@@ -84,22 +83,22 @@ readonly class OpenApiService
                         'properties' => [
                             'prompt' => [
                                 'type' => 'string',
-                                'description' => 'Prompt DALL-E ultra-détaillé avec noms des personnages et univers'
+                                'description' => 'Prompt DALL-E ultra-détaillé avec noms des personnages et univers',
                             ],
                             'solution' => [
                                 'type' => 'string',
-                                'description' => 'Nom des 2 sources séparées par le mot "et" et ne finit pas par un . (ex: Harry Potter et Star Wars)'
+                                'description' => 'Nom des 2 sources séparées par le mot "et" et ne finit pas par un . (ex: Harry Potter et Star Wars)',
                             ],
                             'hint' => [
                                 'type' => 'string',
-                                'description' => 'Indice subtil sans révéler les noms'
-                            ]
+                                'description' => 'Indice subtil sans révéler les noms',
+                            ],
                         ],
                         'required' => ['prompt', 'solution', 'hint'],
-                        'additionalProperties' => false
-                    ]
-                ]
-            ]
+                        'additionalProperties' => false,
+                    ],
+                ],
+            ],
         ];
     }
 
@@ -114,7 +113,7 @@ readonly class OpenApiService
     {
         $response = $this->httpClient->request('POST', 'https://api.openai.com/v1/images/generations', [
             'headers' => $this->generateHeader(),
-            'json' => $this->generateImageJson($prompt)
+            'json' => $this->generateImageJson($prompt),
         ]);
 
         return $response->toArray()['data'][0]['url'] ?? '';
@@ -123,12 +122,12 @@ readonly class OpenApiService
     private function generateImageJson(string $prompt): array
     {
         return [
-            "model" => "dall-e-3",
-            "prompt" => $prompt,
-            "n" => 1,
-            "size" => "1792x1024",
-            "quality" => "standard",
-            "style" => "vivid"
+            'model' => 'dall-e-3',
+            'prompt' => $prompt,
+            'n' => 1,
+            'size' => '1792x1024',
+            'quality' => 'standard',
+            'style' => 'vivid',
         ];
     }
 }

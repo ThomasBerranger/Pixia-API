@@ -9,7 +9,7 @@ readonly class GameAnswerService
 {
     public function __construct(
         private AchievementService $historyService,
-        private UserService        $userService)
+        private UserService $userService)
     {
     }
 
@@ -63,7 +63,7 @@ readonly class GameAnswerService
             foreach ($userWords as $userWord) {
                 // Match exact ou similaire (Levenshtein pour les fautes de frappe)
                 if ($expectedWord === $userWord || $this->isSimilar($expectedWord, $userWord)) {
-                    $matchedWords++;
+                    ++$matchedWords;
                     break;
                 }
             }

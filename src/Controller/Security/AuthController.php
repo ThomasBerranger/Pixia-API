@@ -23,10 +23,9 @@ class AuthController extends AbstractController
     #[RateLimit(limiterName: 'auth_form')]
     public function register(
         #[MapRequestPayload] RegisterRequest $registerRequest,
-        UserPasswordHasherInterface          $hasher,
-        EntityManagerInterface               $em,
-    ): JsonResponse
-    {
+        UserPasswordHasherInterface $hasher,
+        EntityManagerInterface $em,
+    ): JsonResponse {
         $user = $registerRequest->toUser($hasher);
 
         $em->persist($user);

@@ -7,7 +7,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 abstract class BaseController extends AbstractController
 {
-    public function getCurrentUser(): null|User
+    public function getCurrentUser(): ?User
     {
         $user = $this->getUser();
 

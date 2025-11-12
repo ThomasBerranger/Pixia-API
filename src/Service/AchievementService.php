@@ -2,15 +2,11 @@
 
 namespace App\Service;
 
-use App\Entity\Game;
 use App\Entity\Achievement;
+use App\Entity\Game;
 use App\Enum\GameDifficulty;
-use App\Enum\GameType;
-use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
-use Psr\Log\LoggerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 readonly class AchievementService
 {
@@ -25,7 +21,7 @@ readonly class AchievementService
         $achievement
             ->setGame($game)
             ->setPlayer($this->security->getUser())
-            ->setDate(new DateTime())
+            ->setDate(new \DateTime())
             ->setDifficulty(GameDifficulty::EASY);
 
         $this->entityManager->persist($achievement);

@@ -10,7 +10,7 @@ enum GameDifficulty: string
 
     public function getPoints(): int
     {
-        return match($this) {
+        return match ($this) {
             self::EASY => 10,
             self::MEDIUM => 25,
             self::HARD => 50,

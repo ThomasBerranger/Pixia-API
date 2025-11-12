@@ -17,10 +17,10 @@ class RegisterRequest
 
     #[Assert\NotBlank(message: 'Un mot de passe est requis.')]
     #[Assert\Length(min: 5, max: 255, minMessage: 'Ton mot de passe doit faire au moins {{ limit }} caractères.')]
-//    #[Assert\PasswordStrength(
-//        minScore: Assert\PasswordStrength::STRENGTH_WEAK,
-//        message: 'Ton mot de passe est trop faible. Ajoute des majuscules, chiffres et symboles.'
-//    )]
+    //    #[Assert\PasswordStrength(
+    //        minScore: Assert\PasswordStrength::STRENGTH_WEAK,
+    //        message: 'Ton mot de passe est trop faible. Ajoute des majuscules, chiffres et symboles.'
+    //    )]
     public ?string $password = null;
 
     #[Assert\NotBlank(message: 'Un pseudo est requis.')]

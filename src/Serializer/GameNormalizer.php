@@ -5,7 +5,6 @@ namespace App\Serializer;
 use App\Entity\Game;
 use App\Enum\GameType;
 use App\Service\ImageService;
-use DateTime;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
@@ -16,9 +15,8 @@ class GameNormalizer implements NormalizerInterface
     public function __construct(
         #[Autowire(service: 'serializer.normalizer.object')]
         private readonly NormalizerInterface $objectNormalizer,
-        private readonly ImageService        $imageService
-    )
-    {
+        private readonly ImageService $imageService,
+    ) {
     }
 
     public function normalize(mixed $object, ?string $format = null, array $context = []): array
@@ -29,9 +27,9 @@ class GameNormalizer implements NormalizerInterface
 
         if (isset($data['image'], $data['type'], $data['date']) && $data['image']) {
             $data['image'] = $this->imageService->getDirectoryPath(
-                    GameType::from($data['type']),
-                    new DateTime($data['date'])
-                ) . '/' . $data['image'];
+                GameType::from($data['type']),
+                new \DateTime($data['date'])
+            ).'/'.$data['image'];
         }
 
         return $data;

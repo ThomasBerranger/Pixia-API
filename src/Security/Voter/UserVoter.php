@@ -5,7 +5,6 @@ namespace App\Security\Voter;
 use App\Entity\User;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
-use Symfony\Component\Security\Core\User\UserInterface;
 
 final class UserVoter extends Voter
 {
@@ -13,7 +12,7 @@ final class UserVoter extends Voter
 
     protected function supports(string $attribute, mixed $subject): bool
     {
-        return $attribute === self::VIEW && $subject instanceof User;
+        return self::VIEW === $attribute && $subject instanceof User;
     }
 
     protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token): bool

@@ -8,8 +8,8 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 class GameUpdateRequest
 {
-//    #[Assert\NotNull]
-//    public GameType $type = GameType::MULTIVERS;
+    //    #[Assert\NotNull]
+    //    public GameType $type = GameType::MULTIVERS;
 
     #[Assert\NotBlank]
     #[Assert\Length(min: 5, max: 255)]
@@ -26,6 +26,6 @@ class GameUpdateRequest
     #[Assert\NotNull(message: 'Difficulty is required')]
     public GameDifficulty $difficulty = GameDifficulty::EASY;
 
-//    #[Assert\Length(min: 5, max: 255)]
-//    public ?string $image = null;
+    //    #[Assert\Length(min: 5, max: 255)]
+    //    public ?string $image = null;
 }

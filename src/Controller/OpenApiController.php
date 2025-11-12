@@ -4,7 +4,6 @@ namespace App\Controller;
 
 use App\DTO\OpenAiRequest;
 use App\Service\OpenApiService;
-use Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -27,14 +26,13 @@ final class OpenApiController extends AbstractController
     #[Route('/generate-content', name: 'generate_content', methods: ['POST'], format: 'json')]
     #[IsGranted('ROLE_ADMIN')]
     public function generateGameContent(
-        #[MapRequestPayload] OpenAiRequest $request
-    ): JsonResponse
-    {
+        #[MapRequestPayload] OpenAiRequest $request,
+    ): JsonResponse {
         try {
             $gameContent = $this->openApiService->requestGameContent($request->prompt);
 
             return $this->json($gameContent);
-        } catch (Exception|DecodingExceptionInterface|RedirectionExceptionInterface|ClientExceptionInterface|ServerExceptionInterface|TransportExceptionInterface $error) {
+        } catch (\Exception|DecodingExceptionInterface|RedirectionExceptionInterface|ClientExceptionInterface|ServerExceptionInterface|TransportExceptionInterface $error) {
             return $this->json($error->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -49,9 +47,8 @@ final class OpenApiController extends AbstractController
     #[Route('/generate-image', name: 'generate_image', methods: ['POST'], format: 'json')]
     #[IsGranted('ROLE_ADMIN')]
     public function generateGameImage(
-        #[MapRequestPayload] OpenAiRequest $request
-    ): JsonResponse
-    {
+        #[MapRequestPayload] OpenAiRequest $request,
+    ): JsonResponse {
         return $this->json($this->openApiService->requestGameImage($request->prompt));
     }
 }

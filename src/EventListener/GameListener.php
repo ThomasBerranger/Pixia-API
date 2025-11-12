@@ -15,10 +15,9 @@ use Symfony\Bundle\SecurityBundle\Security;
 readonly class GameListener
 {
     public function __construct(
-        private Security     $security,
-        private ImageService $imageService
-    )
-    {
+        private Security $security,
+        private ImageService $imageService,
+    ) {
     }
 
     public function prePersist(Game $game, PrePersistEventArgs $event): void
