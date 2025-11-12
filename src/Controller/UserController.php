@@ -27,13 +27,7 @@ final class UserController extends BaseController
         return $this->json(data: $users, context: ['groups' => 'user:read']);
     }
 
-    #[Route('/me', name: 'me', methods: ['GET'])]
-    public function me(): Response
-    {
-        return $this->json(data: $this->getUser(), context: ['groups' => 'user:read']);
-    }
-
-    #[Route('/leaderboard', name: 'leaderboard', methods: ['GET'], format: 'json')]
+    #[Route(path: '/leaderboard', name: 'leaderboard', methods: ['GET'], format: 'json')]
     public function leaderboard(): JsonResponse
     {
         return $this->json(data: [
@@ -43,7 +37,7 @@ final class UserController extends BaseController
         ], context: ['groups' => ['user:read']]);
     }
 
-    #[Route('/{id}', name: 'show', methods: ['GET'])]
+    #[Route(path: '/{id}', name: 'show', methods: ['GET'])]
     #[IsGranted('view', subject: 'user')]
     public function show(User $user): Response
     {

@@ -16,11 +16,33 @@ readonly class RateLimitSubscriber implements EventSubscriberInterface
     public function __construct(
         private RateLimiterFactory    $globalApiLimiter,
         private RateLimiterFactory    $gameAnswerLimiter,
-//        private RateLimiterFactory    $authFormLimiter,
-        private TokenStorageInterface $tokenStorage, private LoggerInterface $logger,
+        private RateLimiterFactory    $authFormLimiter,
+        private TokenStorageInterface $tokenStorage,
+        private LoggerInterface       $logger,
     )
     {
     }
+
+    private const LIMITERS_CONFIG = [
+        'global_api' => [
+            'factory' => 'globalApiLimiter',
+            'message' => 'Trop de requêtes, ralentis un peu !',
+            'identifierSuffix' => null,
+            'useAuthIdentifier' => true,
+        ],
+        'game_answer' => [
+            'factory' => 'gameAnswerLimiter',
+            'message' => 'Trop de tentatives, fais une petite pause ou essaie une autre image.',
+            'identifierSuffix' => 'id',
+            'useAuthIdentifier' => false,
+        ],
+        'auth_form' => [
+            'factory' => 'authFormLimiter',
+            'message' => 'Trop de tentatives de connexion, réessaie plus tard.',
+            'identifierSuffix' => null,
+            'useAuthIdentifier' => false,
+        ],
+    ];
 
     public static function getSubscribedEvents(): array
     {
@@ -29,28 +51,23 @@ readonly class RateLimitSubscriber implements EventSubscriberInterface
         ];
     }
 
+    /**
+     * @throws \ReflectionException
+     */
     public function onKernelController(ControllerEvent $event): void
     {
         if (!$event->isMainRequest()) {
             return;
         }
 
-        $request = $event->getRequest();
-
-        $token = $this->tokenStorage->getToken();
-        $identifier = $token?->getUserIdentifier() ?? $request->getClientIp();
-
-        $limiter = $this->globalApiLimiter->create($identifier);
-
-        if (!$limiter->consume()->isAccepted()) {
-            throw new TooManyRequestsHttpException(
-                message: 'Trop de requêtes, ralentis un peu !'
-            );
-        }
+        $this->applyRateLimit($event, 'global_api');
 
         $this->applyAttributeRateLimit($event);
     }
 
+    /**
+     * @throws \ReflectionException
+     */
     private function applyAttributeRateLimit(ControllerEvent $event): void
     {
         $controller = $event->getController();
@@ -69,23 +86,31 @@ readonly class RateLimitSubscriber implements EventSubscriberInterface
         /** @var RateLimit $rateLimit */
         $rateLimit = $attributes[0]->newInstance();
 
-        $this->logger->info($rateLimit->limiterName);
+        $this->applyRateLimit($event, $rateLimit->limiterName);
+    }
 
-        // Sélectionne le bon limiter
-        $limiterFactory = match($rateLimit->limiterName) {
-            'game_answer' => $this->gameAnswerLimiter,
-//            'auth_forms' => $this->authFormLimiter,
-            default => throw new \InvalidArgumentException("Unknown rate limiter: {$rateLimit->limiterName}")
-        };
+    private function applyRateLimit(ControllerEvent $event, string $limiterName): void
+    {
+        $config = self::LIMITERS_CONFIG[$limiterName]
+            ?? throw new \InvalidArgumentException("Unknown rate limiter: {$limiterName}");
 
-        $identifier = $event->getRequest()->getClientIp() . $event->getRequest()->get('id');
+        $limiterFactory = $this->{$config['factory']};
+
+        $identifier = $event->getRequest()->getClientIp();
+
+        if ($config['useAuthIdentifier']) {
+            $token = $this->tokenStorage->getToken();
+            $identifier = $token?->getUserIdentifier() ?? $identifier;
+        }
+
+        if ($config['identifierSuffix']) {
+            $identifier .= '_' . $event->getRequest()->attributes->get($config['identifierSuffix']);
+        }
 
         $limiter = $limiterFactory->create($identifier);
 
         if (!$limiter->consume()->isAccepted()) {
-            throw new TooManyRequestsHttpException(
-                message: 'Trop de tentatives, fais une petite pause ou essaie une autre image.'
-            );
+            throw new TooManyRequestsHttpException(message: $config['message']);
         }
     }
 }
