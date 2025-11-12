@@ -62,7 +62,7 @@ readonly class ImageService
         return $directoryPath;
     }
 
-    public function getDirectoryPath(GameType $gameType, \DateTime $date, $isWriteOperation = false): string
+    public function getDirectoryPath(GameType $gameType, \DateTime $date, bool $isWriteOperation = false): string
     {
         $baseDir = $isWriteOperation ? $this->uploadImagesDir : 'images';
 

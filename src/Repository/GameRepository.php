@@ -21,7 +21,7 @@ class GameRepository extends ServiceEntityRepository
     }
 
     /**
-     * @return array{game: Game|null ,achievement: Achievement|null, previous_game_date: string|null, next_game_date: string|null}
+     * @return array{game: Achievement|Game|null, achievement: Achievement|Game|null, previousGameDate: mixed, nextGameDate: mixed}
      */
     public function findGameWithUserAchievement(?\DateTime $date, ?GameType $type, ?User $user): array
     {
@@ -57,6 +57,9 @@ class GameRepository extends ServiceEntityRepository
         ];
     }
 
+    /**
+     * @return Game[]
+     */
     public function findGamesWithAuthor(): array
     {
         return $this->createQueryBuilder('g')

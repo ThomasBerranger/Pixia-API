@@ -3,7 +3,6 @@
 namespace App\EventSubscriber;
 
 use App\Attribute\RateLimit;
-use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\ControllerEvent;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
@@ -18,7 +17,6 @@ readonly class RateLimitSubscriber implements EventSubscriberInterface
         private RateLimiterFactory $gameAnswerLimiter,
         private RateLimiterFactory $authFormLimiter,
         private TokenStorageInterface $tokenStorage,
-        private LoggerInterface $logger,
     ) {
     }
 

@@ -23,7 +23,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(length: 180)]
     #[Groups(['user:read', 'game:admin'])]
-    private ?string $email = null;
+    private string $email;
 
     /**
      * @var list<string> The user roles
@@ -32,11 +32,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(['user:read'])]
     private array $roles = [];
 
-    /**
-     * @var string|null The hashed password
-     */
     #[ORM\Column]
-    private ?string $password = null;
+    private string $password;
 
     #[ORM\Column]
     #[Groups(['user:read'])]
@@ -44,11 +41,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(length: 255)]
     #[Groups(['user:read', 'game:admin'])]
-    private ?string $username = null;
+    private string $username;
 
     #[ORM\Column]
     #[Groups(['user:read', 'game:admin'])]
-    private ?\DateTimeImmutable $createdAt;
+    private \DateTimeImmutable $createdAt;
 
     public function __construct()
     {

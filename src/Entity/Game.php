@@ -25,36 +25,36 @@ class Game
 
     #[ORM\Column(enumType: GameType::class)]
     #[Groups(['game:show', 'game:admin'])]
-    private ?GameType $type = GameType::MULTIVERS;
+    private GameType $type = GameType::MULTIVERS;
 
     #[Assert\NotBlank]
     #[Assert\Length(min: 5, max: 255)]
     #[ORM\Column(length: 255)]
     #[Groups(['game:solution', 'game:admin', 'game:create'])]
-    private ?string $solution = null;
+    private string $solution;
 
     #[Assert\NotBlank]
     #[Assert\Length(min: 5, max: 255)]
     #[ORM\Column(length: 255)]
     #[Groups(['game:admin', 'game:create'])]
-    private ?string $hint = null;
+    private string $hint;
 
     #[Assert\NotNull]
     #[Assert\Type(\DateTimeInterface::class)]
     #[ORM\Column(type: Types::DATE_MUTABLE)]
     #[Groups(['game:show', 'game:admin', 'game:create'])]
-    private ?\DateTime $date = null;
+    private \DateTime $date;
 
     #[Assert\NotBlank(message: 'Difficulty is required')]
     #[Assert\Type(type: GameDifficulty::class, message: 'Invalid difficulty value')]
     #[ORM\Column(enumType: GameDifficulty::class)]
     #[Groups(['game:show', 'game:admin'])]
-    private ?GameDifficulty $difficulty = GameDifficulty::EASY;
+    private GameDifficulty $difficulty = GameDifficulty::EASY;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
     #[Groups(['game:admin'])]
-    private ?User $author = null;
+    private User $author;
 
     #[Assert\Length(min: 5, max: 255)]
     #[ORM\Column(length: 255, nullable: true)]

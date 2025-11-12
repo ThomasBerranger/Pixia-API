@@ -33,6 +33,9 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         $this->getEntityManager()->flush();
     }
 
+    /**
+     * @return list<array<string, int|string>>
+     */
     public function findOrderedByScores(int $max = 0): array
     {
         return $this->createQueryBuilder('u')

@@ -3,6 +3,7 @@
 namespace App\EventListener;
 
 use App\Entity\Game;
+use App\Entity\User;
 use App\Service\ImageService;
 use Doctrine\Bundle\DoctrineBundle\Attribute\AsEntityListener;
 use Doctrine\ORM\Event\PostPersistEventArgs;
@@ -22,7 +23,7 @@ readonly class GameListener
 
     public function prePersist(Game $game, PrePersistEventArgs $event): void
     {
-        $game->setAuthor($this->security->getUser());
+        $game->setAuthor($this->security->getUser() instanceof User ? $this->security->getUser() : null);
     }
 
     public function postPersist(Game $game, PostPersistEventArgs $event): void

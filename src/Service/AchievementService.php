@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Entity\Achievement;
 use App\Entity\Game;
+use App\Entity\User;
 use App\Enum\GameDifficulty;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
@@ -20,7 +21,7 @@ readonly class AchievementService
 
         $achievement
             ->setGame($game)
-            ->setPlayer($this->security->getUser())
+            ->setPlayer($this->security->getUser() instanceof User ? $this->security->getUser() : null)
             ->setDate(new \DateTime())
             ->setDifficulty(GameDifficulty::EASY);
 

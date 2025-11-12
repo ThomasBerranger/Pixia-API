@@ -2,7 +2,6 @@
 
 namespace App\Service;
 
-use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
@@ -19,11 +18,12 @@ readonly class OpenApiService
         private string $openaiApiKey,
         #[Autowire('%env(MULTIVERS_PROMPT_INSTRUCTION)%')]
         private string $promptInstruction,
-        private LoggerInterface $logger,
     ) {
     }
 
     /**
+     * @return string[]
+     *
      * @throws TransportExceptionInterface
      * @throws ServerExceptionInterface
      * @throws RedirectionExceptionInterface
@@ -50,6 +50,9 @@ readonly class OpenApiService
         return json_decode($data['choices'][0]['message']['content'], true);
     }
 
+    /**
+     * @return string[]
+     */
     private function generateHeader(): array
     {
         return [
@@ -58,6 +61,9 @@ readonly class OpenApiService
         ];
     }
 
+    /**
+     * @return array<string, array<int|string, array<string, array<string, array<int|string, array<string, string>|string>|bool|string>|bool|string>|string>|int|string>
+     */
     private function generatePromptJson(string $prompt): array
     {
         return [
@@ -103,11 +109,11 @@ readonly class OpenApiService
     }
 
     /**
-     * @throws TransportExceptionInterface
-     * @throws ServerExceptionInterface
-     * @throws RedirectionExceptionInterface
-     * @throws DecodingExceptionInterface
      * @throws ClientExceptionInterface
+     * @throws DecodingExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws TransportExceptionInterface
      */
     public function requestGameImage(string $prompt): string
     {
@@ -119,6 +125,9 @@ readonly class OpenApiService
         return $response->toArray()['data'][0]['url'] ?? '';
     }
 
+    /**
+     * @return array<string, int|string>
+     */
     private function generateImageJson(string $prompt): array
     {
         return [

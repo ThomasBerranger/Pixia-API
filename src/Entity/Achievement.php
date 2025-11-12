@@ -21,11 +21,11 @@ class Achievement
     private ?Uuid $id = null;
 
     #[ORM\Column]
-    private ?\DateTime $date = null;
+    private \DateTime $date;
 
     #[ORM\Column(enumType: GameDifficulty::class)]
     #[Groups(['game:solution'])]
-    private ?GameDifficulty $difficulty = GameDifficulty::EASY;
+    private GameDifficulty $difficulty = GameDifficulty::EASY;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(name: 'player_id', referencedColumnName: 'id', nullable: false)]
@@ -33,7 +33,7 @@ class Achievement
 
     #[ORM\ManyToOne(targetEntity: Game::class, inversedBy: 'histories')]
     #[ORM\JoinColumn(name: 'game_id', referencedColumnName: 'id', nullable: false)]
-    private ?Game $game = null;
+    private Game $game;
 
     public function getId(): ?Uuid
     {
