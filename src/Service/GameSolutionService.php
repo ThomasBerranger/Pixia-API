@@ -5,7 +5,7 @@ namespace App\Service;
 use App\Entity\Game;
 use App\Entity\User;
 
-readonly class GameAnswerService
+readonly class GameSolutionService
 {
     public function __construct(
         private AchievementService $historyService,
@@ -13,12 +13,9 @@ readonly class GameAnswerService
     {
     }
 
-    public function validateAnswer(Game $game, ?User $user, string $answer): Game|false
+    public function save(Game $game, string $answer, ?User $user): Game|false
     {
-        $expectedWords = $this->normalizeAndExtractWords($game->getSolution());
-        $userWords = $this->normalizeAndExtractWords($answer);
-
-        if ($this->wordsMatch($expectedWords, $userWords) >= 0.8) {
+        if ($this->wordsMatch($game->getSolution(), $answer)) {
             if ($user) {
                 $this->historyService->saveResult($game);
                 $this->userService->addPoints($user, $game->getDifficulty());
@@ -28,6 +25,33 @@ readonly class GameAnswerService
         }
 
         return false;
+    }
+
+    /**
+     * @param array<int, string> $normalizedExpectedWords
+     */
+    public function wordsMatch(string $normalizedExpectedWords, string $normalizedTestedWords): bool
+    {
+        $normalizedExpectedWords = $this->normalizeAndExtractWords($normalizedExpectedWords);
+        $normalizedTestedWords = $this->normalizeAndExtractWords($normalizedTestedWords);
+
+        if (empty($normalizedExpectedWords)) {
+            return false;
+        }
+
+        $matchedWords = 0;
+        $totalExpectedWords = count($normalizedExpectedWords);
+
+        foreach ($normalizedExpectedWords as $normalizedExpectedWord) {
+            foreach ($normalizedTestedWords as $normalizedTestedWord) {
+                if ($normalizedExpectedWord === $normalizedTestedWord || $this->isSimilar($normalizedExpectedWord, $normalizedTestedWord)) {
+                    ++$matchedWords;
+                    break;
+                }
+            }
+        }
+
+        return $matchedWords / $totalExpectedWords >= 0.8;
     }
 
     /**
@@ -45,31 +69,6 @@ readonly class GameAnswerService
         return array_filter($words, function ($word) use ($stopWords) {
             return strlen($word) > 2 && !in_array($word, $stopWords, true);
         });
-    }
-
-    /**
-     * @param array<int, string> $expectedWords
-     * @param array<int, string> $userWords
-     */
-    private function wordsMatch(array $expectedWords, array $userWords): float
-    {
-        if (empty($expectedWords)) {
-            return 0;
-        }
-
-        $matchedWords = 0;
-        $totalExpectedWords = count($expectedWords);
-
-        foreach ($expectedWords as $expectedWord) {
-            foreach ($userWords as $userWord) {
-                if ($expectedWord === $userWord || $this->isSimilar($expectedWord, $userWord)) {
-                    ++$matchedWords;
-                    break;
-                }
-            }
-        }
-
-        return $matchedWords / $totalExpectedWords;
     }
 
     private function isSimilar(string $word1, string $word2): bool

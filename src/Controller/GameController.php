@@ -9,7 +9,7 @@ use App\DTO\GameShowRequest;
 use App\DTO\GameUpdateRequest;
 use App\Entity\Game;
 use App\Service\AchievementService;
-use App\Service\GameAnswerService;
+use App\Service\GameSolutionService;
 use App\Service\ImageService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -25,9 +25,9 @@ final class GameController extends BaseController
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
-        private readonly GameAnswerService $gameAnswerService,
-        private readonly AchievementService $achievementService,
-        private readonly ImageService $imageService,
+        private readonly GameSolutionService    $gameAnswerService,
+        private readonly AchievementService     $achievementService,
+        private readonly ImageService           $imageService,
     ) {
     }
 
@@ -88,7 +88,7 @@ final class GameController extends BaseController
         Game $game,
         #[MapRequestPayload] GameAnswerRequest $gameAnswerRequest,
     ): JsonResponse {
-        $result = $this->gameAnswerService->validateAnswer($game, $this->getCurrentUser(), $gameAnswerRequest->answer);
+        $result = $this->gameAnswerService->save($game, $gameAnswerRequest->answer, $this->getCurrentUser());
 
         return $this->json(data: $result, context: ['groups' => ['game:solution']]);
     }

@@ -69,4 +69,15 @@ class GameRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    public function findGamesByFields(array $fields): array
+    {
+        $qb = $this->createQueryBuilder('g');
+
+        $select = array_map(fn ($f) => 'g.'.$f, $fields);
+
+        $qb->select($select);
+
+        return $qb->getQuery()->getResult();
+    }
 }
