@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Attribute\RateLimit;
 use App\DTO\GameAnswerRequest;
 use App\DTO\GameDifficultyRequest;
 use App\DTO\GameShowRequest;
@@ -16,8 +17,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
-use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -29,7 +28,6 @@ final class GameController extends BaseController
         private readonly GameAnswerService      $gameAnswerService,
         private readonly AchievementService     $achievementService,
         private readonly ImageService           $imageService,
-        private readonly RateLimiterFactory     $gameAnswerLimiter,
     )
     {
     }
@@ -48,7 +46,7 @@ final class GameController extends BaseController
         $em->flush();
 
         return $this->json(data: $game, status: Response::HTTP_CREATED, context: [
-            'groups' => ['game:read']
+            'groups' => ['game:admin']
         ]);
     }
 
@@ -87,26 +85,15 @@ final class GameController extends BaseController
     }
 
     #[Route('/{id}/solution', name: 'solution', methods: ['POST'], format: 'json')]
+    #[RateLimit(limiterName: 'game_answer')]
     public function solution(
         Game                                   $game,
-        Request                                $request,
         #[MapRequestPayload] GameAnswerRequest $gameAnswerRequest
     ): JsonResponse
     {
-        $identifier = $request->getClientIp() . '_' . $game->getId();
-        $limiter = $this->gameAnswerLimiter->create($identifier);
-
-        if (!$limiter->consume()->isAccepted()) {
-            throw new TooManyRequestsHttpException(
-                message: 'Trop de tentatives, fais une pause ou essaie une autre image.'
-            );
-        }
-
         $result = $this->gameAnswerService->validateAnswer($game, $this->getCurrentUser(), $gameAnswerRequest->answer);
 
-        return $this->json(data: $result, context: [
-            'groups' => ['game:solution']
-        ]);
+        return $this->json(data: $result, context: ['groups' => ['game:solution']]);
     }
 
     #[Route('/{id}/difficulty', name: 'difficulty', methods: ['POST'], format: 'json')]
