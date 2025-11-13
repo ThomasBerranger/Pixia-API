@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Service;
 
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -63,6 +65,7 @@ readonly class OpenApiService
         if (!is_array($decoded)) {
             throw new \RuntimeException('JSON invalide dans la réponse');
         }
+
         /** @var array<string> */
         return $decoded;
     }

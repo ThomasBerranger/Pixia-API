@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Service;
 
 use App\DTO\GameUpdateImageRequest;
@@ -14,11 +16,12 @@ readonly class ImageService
 {
     public function __construct(
         private HttpClientInterface $httpClient,
-        private LoggerInterface $logger,
+        private LoggerInterface     $logger,
         #[Autowire('%env(UPLOAD_IMAGES_DIR)%')]
-        private string $uploadImagesDir,
-        private ValidatorInterface $validator,
-    ) {
+        private string              $uploadImagesDir,
+        private ValidatorInterface  $validator,
+    )
+    {
     }
 
     public function downloadAndStore(GameType $gameType, \DateTime $date, string $imageUrl): ?string
@@ -31,7 +34,7 @@ readonly class ImageService
 
         $imageName = $this->generateImageName();
 
-        file_put_contents($directoryPath.'/'.$imageName, $this->getImage($imageUrl));
+        file_put_contents($directoryPath . '/' . $imageName, $this->getImage($imageUrl));
 
         return $imageName;
     }
@@ -40,8 +43,8 @@ readonly class ImageService
     {
         $directoryPath = $this->createRepository($gameType, $date);
 
-        if ($image && file_exists($directoryPath.'/'.$image)) {
-            unlink($directoryPath.'/'.$image);
+        if ($image && file_exists($directoryPath . '/' . $image)) {
+            unlink($directoryPath . '/' . $image);
         }
 
         $filename = $this->generateImageName();
@@ -54,14 +57,14 @@ readonly class ImageService
     public function move(\DateTime $oldDate, GameType $gameType, \DateTime $newDate, string $imageName): ?string
     {
         $oldDirectoryPath = $this->getDirectoryPath($gameType, $oldDate, isWriteOperation: true);
-        $oldFilePath = $oldDirectoryPath.'/'.$imageName;
+        $oldFilePath = $oldDirectoryPath . '/' . $imageName;
 
         if ($oldDate->format('Y/m') === $newDate->format('Y/m')) {
             return $imageName;
         }
 
         $newDirectoryPath = $this->createRepository($gameType, $newDate);
-        $newFilePath = $newDirectoryPath.'/'.$imageName;
+        $newFilePath = $newDirectoryPath . '/' . $imageName;
 
         if (!rename($oldFilePath, $newFilePath)) {
             $this->logger->error('Failed to move image', [
@@ -99,7 +102,7 @@ readonly class ImageService
     {
         $baseDir = $isWriteOperation ? $this->uploadImagesDir : 'images';
 
-        return $baseDir.'/'.$gameType->value.'/'.$date->format('Y/m');
+        return $baseDir . '/' . $gameType->value . '/' . $date->format('Y/m');
     }
 
     private function getImage(string $url): string
@@ -120,7 +123,7 @@ readonly class ImageService
 
     private function generateImageName(): string
     {
-        return uniqid().'.jpg';
+        return uniqid() . '.jpg';
     }
 
     public function validate(UploadedFile $image): bool

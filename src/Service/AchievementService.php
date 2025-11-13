@@ -1,13 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Service;
 
 use App\Entity\Achievement;
 use App\Entity\Game;
-use App\Entity\User;
 use App\Enum\GameDifficulty;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\SecurityBundle\Security;
 
 readonly class AchievementService
 {

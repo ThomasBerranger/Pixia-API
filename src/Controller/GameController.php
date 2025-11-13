@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controller;
 
 use App\Attribute\RateLimit;
@@ -27,10 +29,11 @@ final class GameController extends BaseController
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
-        private readonly GameSolutionService $gameAnswerService,
-        private readonly AchievementService $achievementService,
-        private readonly ImageService $imageService,
-    ) {
+        private readonly GameSolutionService    $gameAnswerService,
+        private readonly AchievementService     $achievementService,
+        private readonly ImageService           $imageService,
+    )
+    {
     }
 
     #[Route('', name: 'create', methods: ['POST'], format: 'json')]
@@ -39,9 +42,10 @@ final class GameController extends BaseController
         #[MapRequestPayload(
             serializationContext: ['groups' => ['game:create']],
             validationGroups: ['game:create']
-        )] Game $game,
+        )] Game                $game,
         EntityManagerInterface $em,
-    ): JsonResponse {
+    ): JsonResponse
+    {
         $em->persist($game);
         $em->flush();
 
@@ -89,9 +93,10 @@ final class GameController extends BaseController
     #[Route('/{id}/solution', name: 'solution', methods: ['POST'], format: 'json')]
     #[RateLimit(limiterName: 'game_answer')]
     public function solution(
-        Game $game,
+        Game                                   $game,
         #[MapRequestPayload] GameAnswerRequest $gameAnswerRequest,
-    ): JsonResponse {
+    ): JsonResponse
+    {
         $result = $this->gameAnswerService->save($game, $gameAnswerRequest->answer, $this->getCurrentUser());
 
         return $this->json(data: $result, context: ['groups' => ['game:solution']]);
@@ -149,7 +154,7 @@ final class GameController extends BaseController
         $this->entityManager->flush();
 
         return $this->json(
-            data: $this->imageService->getDirectoryPath($game->getType(), $game->getDate()).'/'.$game->getImage(),
+            data: $this->imageService->getDirectoryPath($game->getType(), $game->getDate()) . '/' . $game->getImage(),
             context: ['groups' => ['game:admin']]
         );
     }
