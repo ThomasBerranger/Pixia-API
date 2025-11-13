@@ -52,7 +52,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
             return null;
         }
 
-        return $this->createQueryBuilder('u')
+        return (int) $this->createQueryBuilder('u')
             ->select('COUNT(DISTINCT u2.id) + 1')
             ->from(User::class, 'u2')
             ->where('u2.score > :userScore OR (u2.score = :userScore AND u2.createdAt < :userCreatedAt)')

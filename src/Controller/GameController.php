@@ -12,6 +12,7 @@ use App\Service\AchievementService;
 use App\Service\GameSolutionService;
 use App\Service\ImageService;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -118,6 +119,10 @@ final class GameController extends BaseController
 
         $this->entityManager->flush();
 
+        if (!$game->getImage()) {
+            throw new \LogicException('No image found on edited game.');
+        }
+
         $this->imageService->move($oldGameDate, $game->getType(), $game->getDate(), $game->getImage());
 
         return $this->json(data: $game, context: ['groups' => ['game:admin']]);
@@ -128,6 +133,10 @@ final class GameController extends BaseController
     public function updateImage(Game $game, Request $request): JsonResponse
     {
         $newImageFile = $request->files->get('image');
+
+        if (!$newImageFile instanceof UploadedFile) {
+            throw new \InvalidArgumentException('Image file is required');
+        }
 
         if (!$this->imageService->validate($newImageFile)) {
             return $this->json('Image non validée.', Response::HTTP_UNPROCESSABLE_ENTITY);

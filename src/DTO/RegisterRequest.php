@@ -13,7 +13,7 @@ class RegisterRequest
 {
     #[Assert\NotBlank(message: 'Un email est requis.')]
     #[Assert\Email(message: "Cet email n'est pas valide.")]
-    public ?string $email = null;
+    public string $email;
 
     #[Assert\NotBlank(message: 'Un mot de passe est requis.')]
     #[Assert\Length(min: 5, max: 255, minMessage: 'Ton mot de passe doit faire au moins {{ limit }} caractères.')]
@@ -21,12 +21,12 @@ class RegisterRequest
     //        minScore: Assert\PasswordStrength::STRENGTH_WEAK,
     //        message: 'Ton mot de passe est trop faible. Ajoute des majuscules, chiffres et symboles.'
     //    )]
-    public ?string $password = null;
+    public string $password;
 
     #[Assert\NotBlank(message: 'Un pseudo est requis.')]
     #[Assert\Length(min: 2, max: 255, minMessage: 'Ton pseudo doit faire au moins {{ limit }} caractères.')]
     #[Assert\Regex(pattern: '/^[a-zA-Z0-9_\-\s\p{L}]+$/u', message: "Ce pseudo n'est pas valide.")]
-    public ?string $username = null;
+    public string $username;
 
     public function toUser(UserPasswordHasherInterface $userPasswordHasher): User
     {

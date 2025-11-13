@@ -25,6 +25,8 @@ class GameRepository extends ServiceEntityRepository
      */
     public function findGameWithUserAchievement(?\DateTime $date, ?GameType $type, ?User $user): array
     {
+        $formattedDate = $date ? $date->format('Y-m-d') : (new \DateTime('now'))->format('Y-m-d');
+
         $gameWithUserAchievement =
             $this->createQueryBuilder('g')
                 ->leftJoin(Achievement::class, 'a', 'WITH', 'g.id = a.game AND a.player = :userId')
@@ -37,7 +39,7 @@ class GameRepository extends ServiceEntityRepository
                 ->addSelect('CASE WHEN g.date = :date THEN 0 ELSE 1 END as HIDDEN priority')
                 ->orderBy('priority', 'ASC')
                 ->addOrderBy('g.date', 'DESC')
-                ->setParameter('date', $date->format('Y-m-d'))
+                ->setParameter('date', $formattedDate)
                 ->setParameter('type', $type)
                 ->setParameter('userId', $user?->getId(), UuidType::NAME)
                 ->setMaxResults(1)
@@ -47,8 +49,8 @@ class GameRepository extends ServiceEntityRepository
         return isset($gameWithUserAchievement[0]) ? [
             'game' => $gameWithUserAchievement[0][0],
             'achievement' => $gameWithUserAchievement[1][0],
-            'previousGameDate' => $gameWithUserAchievement[1]['previous_game_date'],
-            'nextGameDate' => $gameWithUserAchievement[1]['next_game_date'],
+            'previousGameDate' => $gameWithUserAchievement[1]['previous_game_date'] ?? false,
+            'nextGameDate' => $gameWithUserAchievement[1]['next_game_date'] ?? false,
         ] : [
             'game' => null,
             'achievement' => null,
@@ -57,6 +59,11 @@ class GameRepository extends ServiceEntityRepository
         ];
     }
 
+    /**
+     * @param array<int, string> $fields
+     *
+     * @return array<int, Game>
+     */
     public function findByFields(array $fields = []): array
     {
         $qb = $this->createQueryBuilder('g');
@@ -73,8 +80,11 @@ class GameRepository extends ServiceEntityRepository
         $qb->leftJoin('g.author', 'a')
             ->addSelect('partial a.{id, email}');
 
-        return $qb->orderBy('g.date', 'DESC')
+        /** @var array<int, Game> $result */
+        $result = $qb->orderBy('g.date', 'DESC')
             ->getQuery()
             ->getResult();
+
+        return $result;
     }
 }

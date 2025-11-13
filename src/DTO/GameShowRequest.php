@@ -18,8 +18,10 @@ class GameShowRequest
     ) {
     }
 
-    public function getDate(): ?\DateTime
+    public function getDate(): \DateTime
     {
-        return $this->date ? \DateTime::createFromFormat('Y-m-d', $this->date) : new \DateTime('today');
+        return $this->date && \DateTime::createFromFormat('Y-m-d', $this->date) ?
+            \DateTime::createFromFormat('Y-m-d', $this->date) :
+            new \DateTime('today');
     }
 }

@@ -73,10 +73,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * A visual identifier that represents this user.
      *
      * @see UserInterface
-     */
+     **/
     public function getUserIdentifier(): string
     {
-        return (string) $this->email;
+        assert('' !== $this->email);
+
+        return $this->email;
     }
 
     /**

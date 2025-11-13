@@ -11,7 +11,7 @@ use Symfony\Bundle\SecurityBundle\Security;
 
 readonly class AchievementService
 {
-    public function __construct(private Security $security, private EntityManagerInterface $entityManager)
+    public function __construct(private AuthenticatedUserService $authenticatedUserService, private EntityManagerInterface $entityManager)
     {
     }
 
@@ -21,7 +21,7 @@ readonly class AchievementService
 
         $achievement
             ->setGame($game)
-            ->setPlayer($this->security->getUser() instanceof User ? $this->security->getUser() : null)
+            ->setPlayer($this->authenticatedUserService->getUserOrThrow())
             ->setDate(new \DateTime())
             ->setDifficulty(GameDifficulty::EASY);
 
@@ -35,8 +35,12 @@ readonly class AchievementService
     {
         $achievement = $this->entityManager->getRepository(Achievement::class)->findOneBy([
             'game' => $game,
-            'player' => $this->security->getUser(),
+            'player' => $this->authenticatedUserService->getUserOrThrow(),
         ]);
+
+        if (!$achievement) {
+            throw new \LogicException('Achievement introuvable : le joueur doit avoir terminé le jeu avant de voter');
+        }
 
         $achievement->setDifficulty($difficulty);
 

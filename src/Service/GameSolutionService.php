@@ -27,13 +27,10 @@ readonly class GameSolutionService
         return false;
     }
 
-    /**
-     * @param array<int, string> $normalizedExpectedWords
-     */
-    public function wordsMatch(string $normalizedExpectedWords, string $normalizedTestedWords): bool
+    public function wordsMatch(string $expectedWords, string $testedWords): bool
     {
-        $normalizedExpectedWords = $this->normalizeAndExtractWords($normalizedExpectedWords);
-        $normalizedTestedWords = $this->normalizeAndExtractWords($normalizedTestedWords);
+        $normalizedExpectedWords = $this->normalizeAndExtractWords($expectedWords);
+        $normalizedTestedWords = $this->normalizeAndExtractWords($testedWords);
 
         if (empty($normalizedExpectedWords)) {
             return false;
@@ -82,6 +79,14 @@ readonly class GameSolutionService
 
     private function removeAccents(string $text): string
     {
-        return iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $text);
+        $normalized = \Normalizer::normalize($text, \Normalizer::NFD);
+
+        if (!is_string($normalized)) {
+            return $text;
+        }
+
+        $result = preg_replace('/\p{Mn}/u', '', $normalized);
+
+        return is_string($result) ? $result : $text;
     }
 }

@@ -20,6 +20,7 @@ readonly class RateLimitSubscriber implements EventSubscriberInterface
     ) {
     }
 
+    /** @var array<string, array{factory: string, message: string, identifierSuffix: string|null, useAuthIdentifier: bool}> */
     private const LIMITERS_CONFIG = [
         'global_api' => [
             'factory' => 'globalApiLimiter',
@@ -48,9 +49,6 @@ readonly class RateLimitSubscriber implements EventSubscriberInterface
         ];
     }
 
-    /**
-     * @throws \ReflectionException
-     */
     public function onKernelController(ControllerEvent $event): void
     {
         if (!$event->isMainRequest()) {
@@ -62,18 +60,21 @@ readonly class RateLimitSubscriber implements EventSubscriberInterface
         $this->applyAttributeRateLimit($event);
     }
 
-    /**
-     * @throws \ReflectionException
-     */
     private function applyAttributeRateLimit(ControllerEvent $event): void
     {
         $controller = $event->getController();
 
-        if (!is_array($controller)) {
+        if (!is_array($controller) || 2 !== count($controller)) {
             return;
         }
 
-        $method = new \ReflectionMethod($controller[0]::class, $controller[1]);
+        [$controllerObject, $methodName] = $controller;
+
+        if (!is_object($controllerObject) || !is_string($methodName)) {
+            return;
+        }
+
+        $method = new \ReflectionMethod($controllerObject::class, $methodName);
         $attributes = $method->getAttributes(RateLimit::class);
 
         if (empty($attributes)) {
@@ -91,17 +92,27 @@ readonly class RateLimitSubscriber implements EventSubscriberInterface
         $config = self::LIMITERS_CONFIG[$limiterName]
             ?? throw new \InvalidArgumentException("Unknown rate limiter: {$limiterName}");
 
-        $limiterFactory = $this->{$config['factory']};
+        $limiterFactory = $this->getLimiterFactory($config['factory']);
 
         $identifier = $event->getRequest()->getClientIp();
 
+        if (!$identifier) {
+            throw new \RuntimeException('Unable to determine client IP for rate limiting');
+        }
+
         if ($config['useAuthIdentifier']) {
-            $token = $this->tokenStorage->getToken();
-            $identifier = $token?->getUserIdentifier() ?? $identifier;
+            $userIdentifier = $this->tokenStorage->getToken()?->getUserIdentifier();
+            $identifier = $userIdentifier ?? $identifier;
         }
 
         if ($config['identifierSuffix']) {
-            $identifier .= '_'.$event->getRequest()->attributes->get($config['identifierSuffix']);
+            $suffix = $event->getRequest()->attributes->get($config['identifierSuffix']);
+
+            if (!is_string($suffix) && !is_int($suffix)) {
+                throw new \RuntimeException('Invalid identifier suffix: expected string or int');
+            }
+
+            $identifier .= '_'.$suffix;
         }
 
         $limiter = $limiterFactory->create($identifier);
@@ -109,5 +120,15 @@ readonly class RateLimitSubscriber implements EventSubscriberInterface
         if (!$limiter->consume()->isAccepted()) {
             throw new TooManyRequestsHttpException(message: $config['message']);
         }
+    }
+
+    private function getLimiterFactory(string $factoryName): RateLimiterFactory
+    {
+        return match ($factoryName) {
+            'globalApiLimiter' => $this->globalApiLimiter,
+            'gameAnswerLimiter' => $this->gameAnswerLimiter,
+            'authFormLimiter' => $this->authFormLimiter,
+            default => throw new \InvalidArgumentException("Unknown limiter factory: {$factoryName}"),
+        };
     }
 }

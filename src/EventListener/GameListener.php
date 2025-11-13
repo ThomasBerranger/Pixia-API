@@ -23,21 +23,26 @@ readonly class GameListener
 
     public function prePersist(Game $game, PrePersistEventArgs $event): void
     {
-        $game->setAuthor($this->security->getUser() instanceof User ? $this->security->getUser() : null);
+        $user = $this->security->getUser();
+
+        if ($user instanceof User) {
+            $game->setAuthor($user);
+        }
     }
 
     public function postPersist(Game $game, PostPersistEventArgs $event): void
     {
-        if ($game->getImageUrl()) {
-            $game->setImage(
-                $this->imageService->downloadAndStore(
-                    $game->getType(),
-                    $game->getDate(),
-                    $game->getImageUrl()
-                )
-            );
+        $imageUrl = $game->getImageUrl();
+        $type = $game->getType();
+        $date = $game->getDate();
 
-            $event->getObjectManager()->flush();
+        if ($imageUrl) {
+            $imageName = $this->imageService->downloadAndStore($type, $date, $imageUrl);
+
+            if ($imageName) {
+                $game->setImage($imageName);
+                $event->getObjectManager()->flush();
+            }
         }
     }
 }

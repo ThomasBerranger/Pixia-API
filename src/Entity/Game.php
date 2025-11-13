@@ -75,7 +75,7 @@ class Game
         return $this->id;
     }
 
-    public function getType(): ?GameType
+    public function getType(): GameType
     {
         return $this->type;
     }
@@ -87,7 +87,7 @@ class Game
         return $this;
     }
 
-    public function getSolution(): ?string
+    public function getSolution(): string
     {
         return $this->solution;
     }
@@ -99,7 +99,7 @@ class Game
         return $this;
     }
 
-    public function getHint(): ?string
+    public function getHint(): string
     {
         return $this->hint;
     }
@@ -111,7 +111,7 @@ class Game
         return $this;
     }
 
-    public function getDate(): ?\DateTime
+    public function getDate(): \DateTime
     {
         return $this->date;
     }
@@ -123,7 +123,7 @@ class Game
         return $this;
     }
 
-    public function getDifficulty(): ?GameDifficulty
+    public function getDifficulty(): GameDifficulty
     {
         return $this->difficulty;
     }
@@ -140,7 +140,7 @@ class Game
         return $this->author;
     }
 
-    public function setAuthor(?User $author): static
+    public function setAuthor(User $author): static
     {
         $this->author = $author;
 

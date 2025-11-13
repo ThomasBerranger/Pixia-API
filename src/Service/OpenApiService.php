@@ -37,17 +37,34 @@ readonly class OpenApiService
             'json' => $this->generatePromptJson($prompt),
         ]);
 
+        /** @var array{choices: array<int, array{finish_reason: string, message: array{content?: string, refusal?: string}}>} $data */
         $data = $response->toArray();
+
+        if (!isset($data['choices'][0]['finish_reason'])) {
+            throw new \RuntimeException('Réponse OpenAI invalide');
+        }
 
         if ('length' === $data['choices'][0]['finish_reason']) {
             throw new \RuntimeException('Réponse tronquée : augmentez max_tokens');
         }
 
         if (isset($data['choices'][0]['message']['refusal'])) {
-            throw new \RuntimeException('Requête refusée par OpenAI : '.$data['choices'][0]['message']['refusal']);
+            throw new \RuntimeException('Requête refusée par OpenAI : '.(string) $data['choices'][0]['message']['refusal']);
         }
 
-        return json_decode($data['choices'][0]['message']['content'], true);
+        $content = $data['choices'][0]['message']['content'] ?? null;
+
+        if (!is_string($content)) {
+            throw new \RuntimeException('Contenu de la réponse invalide');
+        }
+
+        $decoded = json_decode($content, true);
+
+        if (!is_array($decoded)) {
+            throw new \RuntimeException('JSON invalide dans la réponse');
+        }
+        /** @var array<string> */
+        return $decoded;
     }
 
     /**
@@ -122,7 +139,15 @@ readonly class OpenApiService
             'json' => $this->generateImageJson($prompt),
         ]);
 
-        return $response->toArray()['data'][0]['url'] ?? '';
+        /** @var array{data: array<int, array{url: string}>} $data */
+        $data = $response->toArray();
+        $url = $data['data'][0]['url'] ?? null;
+
+        if (!is_string($url)) {
+            throw new \RuntimeException('URL d\'image non trouvée dans la réponse');
+        }
+
+        return $url;
     }
 
     /**

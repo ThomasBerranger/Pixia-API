@@ -25,7 +25,7 @@ class Achievement
 
     #[ORM\Column(enumType: GameDifficulty::class)]
     #[Groups(['game:solution'])]
-    private GameDifficulty $difficulty = GameDifficulty::EASY;
+    private GameDifficulty $difficulty;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(name: 'player_id', referencedColumnName: 'id', nullable: false)]
@@ -34,6 +34,11 @@ class Achievement
     #[ORM\ManyToOne(targetEntity: Game::class, inversedBy: 'histories')]
     #[ORM\JoinColumn(name: 'game_id', referencedColumnName: 'id', nullable: false)]
     private Game $game;
+
+    public function __construct()
+    {
+        $this->difficulty = GameDifficulty::EASY;
+    }
 
     public function getId(): ?Uuid
     {
@@ -64,12 +69,12 @@ class Achievement
         return $this;
     }
 
-    public function getPlayer(): ?User
+    public function getPlayer(): User
     {
         return $this->player;
     }
 
-    public function setPlayer(?User $player): static
+    public function setPlayer(User $player): static
     {
         $this->player = $player;
 
@@ -81,7 +86,7 @@ class Achievement
         return $this->game;
     }
 
-    public function setGame(?Game $game): static
+    public function setGame(Game $game): static
     {
         $this->game = $game;
 

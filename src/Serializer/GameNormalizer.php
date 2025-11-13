@@ -6,6 +6,7 @@ use App\Entity\Game;
 use App\Enum\GameType;
 use App\Service\ImageService;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\Serializer\Exception\ExceptionInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
 class GameNormalizer implements NormalizerInterface
@@ -19,17 +20,24 @@ class GameNormalizer implements NormalizerInterface
     ) {
     }
 
+    /**
+     * @throws ExceptionInterface
+     * @throws \Exception
+     */
     public function normalize(mixed $object, ?string $format = null, array $context = []): array
     {
         $context[self::ALREADY_CALLED] = true;
 
+        /** @var array<string, mixed> $data */
         $data = $this->objectNormalizer->normalize($object, $format, $context);
 
-        if (isset($data['image'], $data['type'], $data['date']) && $data['image']) {
-            $data['image'] = $this->imageService->getDirectoryPath(
-                GameType::from($data['type']),
-                new \DateTime($data['date'])
-            ).'/'.$data['image'];
+        if (isset($data['image'], $data['type'], $data['date'])
+            && is_string($data['image'])
+            && '' !== $data['image']
+            && is_string($data['type'])
+            && is_string($data['date'])
+        ) {
+            $data['image'] = $this->imageService->getDirectoryPath(GameType::from($data['type']), new \DateTime($data['date'])).'/'.$data['image'];
         }
 
         return $data;
