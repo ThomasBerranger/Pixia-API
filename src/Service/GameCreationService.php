@@ -15,12 +15,11 @@ readonly class GameCreationService
 
     public function gameSolutionExist(string $solution): string|bool
     {
-        /** @var array<int, string> $gamesSolutions */
-        $gamesSolutions = array_column($this->entityManager->getRepository(Game::class)->findByFields(['solution']), 'solution');
+        $existingGames = $this->entityManager->getRepository(Game::class)->findByFields(['solution']);
 
-        foreach ($gamesSolutions as $gameSolution) {
-            if ($this->gameAnswerService->wordsMatch($gameSolution, $solution)) {
-                return $gameSolution;
+        foreach ($existingGames as $existingGame) {
+            if ($this->gameAnswerService->wordsMatch($existingGame->getSolution(), $solution)) {
+                return $existingGame->getSolution();
             }
         }
 
