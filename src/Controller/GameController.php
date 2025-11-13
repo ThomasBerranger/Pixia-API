@@ -15,6 +15,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
@@ -25,9 +26,9 @@ final class GameController extends BaseController
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
-        private readonly GameSolutionService    $gameAnswerService,
-        private readonly AchievementService     $achievementService,
-        private readonly ImageService           $imageService,
+        private readonly GameSolutionService $gameAnswerService,
+        private readonly AchievementService $achievementService,
+        private readonly ImageService $imageService,
     ) {
     }
 
@@ -69,9 +70,11 @@ final class GameController extends BaseController
 
     #[Route(name: 'index', methods: ['GET'], format: 'json')]
     #[IsGranted('ROLE_ADMIN')]
-    public function index(): JsonResponse
+    public function index(#[MapQueryParameter] ?string $fields): JsonResponse
     {
-        $games = $this->entityManager->getRepository(Game::class)->findGamesWithAuthor();
+        $fields = $fields ? explode(',', $fields) : [];
+
+        $games = $this->entityManager->getRepository(Game::class)->findByFields($fields);
 
         return $this->json(data: $games, context: ['groups' => 'game:admin']);
     }
@@ -106,12 +109,16 @@ final class GameController extends BaseController
     #[IsGranted('edit', subject: 'game')]
     public function update(Game $game, #[MapRequestPayload] GameUpdateRequest $updatedGame): JsonResponse
     {
+        $oldGameDate = $game->getDate();
+
         $game->setSolution($updatedGame->solution);
         $game->setHint($updatedGame->hint);
         $game->setDate($updatedGame->date);
         $game->setDifficulty($updatedGame->difficulty);
 
         $this->entityManager->flush();
+
+        $this->imageService->move($oldGameDate, $game->getType(), $game->getDate(), $game->getImage());
 
         return $this->json(data: $game, context: ['groups' => ['game:admin']]);
     }

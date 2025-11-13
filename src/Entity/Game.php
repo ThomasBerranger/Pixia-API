@@ -25,7 +25,7 @@ class Game
 
     #[ORM\Column(enumType: GameType::class)]
     #[Groups(['game:show', 'game:admin'])]
-    private GameType $type = GameType::MULTIVERS;
+    private GameType $type;
 
     #[Assert\NotBlank]
     #[Assert\Length(min: 5, max: 255)]
@@ -49,7 +49,7 @@ class Game
     #[Assert\Type(type: GameDifficulty::class, message: 'Invalid difficulty value')]
     #[ORM\Column(enumType: GameDifficulty::class)]
     #[Groups(['game:show', 'game:admin'])]
-    private GameDifficulty $difficulty = GameDifficulty::EASY;
+    private GameDifficulty $difficulty;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
@@ -59,13 +59,15 @@ class Game
     #[Assert\Length(min: 5, max: 255)]
     #[ORM\Column(length: 255, nullable: true)]
     #[Groups(['game:show', 'game:admin', 'game:create'])]
-    private ?string $image = null;
+    private ?string $image;
 
     #[Groups(['game:create'])]
     private ?string $imageUrl = null;
 
     public function __construct()
     {
+        $this->type = GameType::MULTIVERS;
+        $this->difficulty = GameDifficulty::EASY;
     }
 
     public function getId(): ?Uuid

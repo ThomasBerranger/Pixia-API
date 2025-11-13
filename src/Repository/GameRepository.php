@@ -57,27 +57,24 @@ class GameRepository extends ServiceEntityRepository
         ];
     }
 
-    /**
-     * @return Game[]
-     */
-    public function findGamesWithAuthor(): array
-    {
-        return $this->createQueryBuilder('g')
-            ->leftJoin('g.author', 'a')
-            ->addSelect('a')
-            ->orderBy('g.date', 'DESC')
-            ->getQuery()
-            ->getResult();
-    }
-
-    public function findGamesByFields(array $fields): array
+    public function findByFields(array $fields = []): array
     {
         $qb = $this->createQueryBuilder('g');
 
-        $select = array_map(fn ($f) => 'g.'.$f, $fields);
+        if (!empty($fields)) {
+            array_unshift($fields, 'id');
 
-        $qb->select($select);
+            $fieldsStr = implode(', ', $fields);
+            $qb->select('partial g.{'.$fieldsStr.'}');
+        } else {
+            $qb->select('g');
+        }
 
-        return $qb->getQuery()->getResult();
+        $qb->leftJoin('g.author', 'a')
+            ->addSelect('partial a.{id, email}');
+
+        return $qb->orderBy('g.date', 'DESC')
+            ->getQuery()
+            ->getResult();
     }
 }

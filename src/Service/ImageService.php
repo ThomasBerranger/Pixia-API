@@ -51,6 +51,39 @@ readonly class ImageService
         return $filename;
     }
 
+    public function move(\DateTime $oldDate, GameType $gameType, \DateTime $newDate, string $imageName): ?string
+    {
+        $oldDirectoryPath = $this->getDirectoryPath($gameType, $oldDate, isWriteOperation: true);
+        $oldFilePath = $oldDirectoryPath.'/'.$imageName;
+
+        if ($oldDate->format('Y/m') === $newDate->format('Y/m')) {
+            return $imageName;
+        }
+
+        $newDirectoryPath = $this->createRepository($gameType, $newDate);
+        $newFilePath = $newDirectoryPath.'/'.$imageName;
+
+        if (!rename($oldFilePath, $newFilePath)) {
+            $this->logger->error('Failed to move image', [
+                'from' => $oldFilePath,
+                'to' => $newFilePath,
+            ]);
+
+            return null;
+        }
+
+        $this->cleanupEmptyDirectory($oldDirectoryPath);
+
+        return $imageName;
+    }
+
+    private function cleanupEmptyDirectory(string $directoryPath): void
+    {
+        if (is_dir($directoryPath) && 2 === count(scandir($directoryPath))) {
+            rmdir($directoryPath);
+        }
+    }
+
     private function createRepository(GameType $gameType, \DateTime $date): string
     {
         $directoryPath = $this->getDirectoryPath($gameType, $date, isWriteOperation: true);
