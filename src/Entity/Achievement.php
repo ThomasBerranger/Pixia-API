@@ -59,7 +59,7 @@ class Achievement
         return $this;
     }
 
-    public function getDifficulty(): ?GameDifficulty
+    public function getDifficulty(): GameDifficulty
     {
         return $this->difficulty;
     }

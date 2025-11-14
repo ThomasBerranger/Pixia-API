@@ -25,9 +25,10 @@ class AuthController extends AbstractController
     #[RateLimit(limiterName: 'auth_form')]
     public function register(
         #[MapRequestPayload] RegisterRequest $registerRequest,
-        UserPasswordHasherInterface $hasher,
-        EntityManagerInterface $em,
-    ): JsonResponse {
+        UserPasswordHasherInterface          $hasher,
+        EntityManagerInterface               $em,
+    ): JsonResponse
+    {
         $user = $registerRequest->toUser($hasher);
 
         $em->persist($user);
@@ -41,6 +42,6 @@ class AuthController extends AbstractController
     #[Route('/me', name: 'me', methods: ['GET'])]
     public function me(): Response
     {
-        return $this->json(data: $this->getUser(), context: ['groups' => 'user:read']);
+        return $this->json(data: $this->getUser(), context: ['groups' => 'user:show']);
     }
 }

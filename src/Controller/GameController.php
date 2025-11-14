@@ -50,7 +50,7 @@ final class GameController extends BaseController
         $em->flush();
 
         return $this->json(data: $game, status: Response::HTTP_CREATED, context: [
-            'groups' => ['game:admin'],
+            'groups' => ['game:read:admin'],
         ]);
     }
 
@@ -70,7 +70,7 @@ final class GameController extends BaseController
     #[IsGranted('view', subject: 'game')]
     public function show(Game $game): JsonResponse
     {
-        return $this->json(data: $game, context: ['groups' => ['game:admin']]);
+        return $this->json(data: $game, context: ['groups' => ['game:read:admin']]);
     }
 
     #[Route(name: 'index', methods: ['GET'], format: 'json')]
@@ -81,7 +81,7 @@ final class GameController extends BaseController
 
         $games = $this->entityManager->getRepository(Game::class)->findByFields($fields);
 
-        return $this->json(data: $games, context: ['groups' => 'game:admin']);
+        return $this->json(data: $games, context: ['groups' => 'game:read:admin']);
     }
 
     #[Route('/{id}/hint', name: 'hint', methods: ['GET'], format: 'json')]
@@ -130,7 +130,7 @@ final class GameController extends BaseController
 
         $this->imageService->move($oldGameDate, $game->getType(), $game->getDate(), $game->getImage());
 
-        return $this->json(data: $game, context: ['groups' => ['game:admin']]);
+        return $this->json(data: $game, context: ['groups' => ['game:read:admin']]);
     }
 
     #[Route('/{id}/image', name: 'update_image', methods: ['POST'], format: 'json')]
@@ -155,7 +155,7 @@ final class GameController extends BaseController
 
         return $this->json(
             data: $this->imageService->getDirectoryPath($game->getType(), $game->getDate()) . '/' . $game->getImage(),
-            context: ['groups' => ['game:admin']]
+            context: ['groups' => ['game:read:admin']]
         );
     }
 }

@@ -20,37 +20,35 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: UuidType::NAME, unique: true)]
     #[ORM\GeneratedValue(strategy: 'CUSTOM')]
     #[ORM\CustomIdGenerator(class: 'doctrine.uuid_generator')]
-    #[Groups(['user:read'])]
+    #[Groups(['user:index:admin'])]
     private ?Uuid $id = null;
 
     #[ORM\Column(length: 180)]
-    #[Groups(['user:read', 'game:admin'])]
+    #[Groups(['user:show', 'user:index:admin', 'game:read:admin'])]
     private string $email;
 
-    /**
-     * @var list<string> The user roles
-     */
     #[ORM\Column]
-    #[Groups(['user:read'])]
-    private array $roles = [];
+    private array $roles;
 
     #[ORM\Column]
     private string $password;
 
     #[ORM\Column]
-    #[Groups(['user:read'])]
-    private int $score = 0;
+    #[Groups(['user:show', 'user:index:admin'])]
+    private int $score;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['user:read', 'game:admin'])]
+    #[Groups(['user:show', 'user:index:admin', 'game:read:admin'])]
     private string $username;
 
     #[ORM\Column]
-    #[Groups(['user:read', 'game:admin'])]
+    #[Groups(['user:show', 'user:index:admin'])]
     private \DateTimeImmutable $createdAt;
 
     public function __construct()
     {
+        $this->roles = [];
+        $this->score = 0;
         $this->createdAt = new \DateTimeImmutable();
     }
 
@@ -108,7 +106,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @see PasswordAuthenticatedUserInterface
      */
-    public function getPassword(): ?string
+    public function getPassword(): string
     {
         return $this->password;
     }
@@ -125,16 +123,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function __serialize(): array
     {
-        $data = (array) $this;
-        $data["\0".self::class."\0password"] = hash('crc32c', $this->password);
+        $data = (array)$this;
+        $data["\0" . self::class . "\0password"] = hash('crc32c', $this->password);
 
         return $data;
-    }
-
-    #[\Deprecated]
-    public function eraseCredentials(): void
-    {
-        // @deprecated, to be removed when upgrading to Symfony 8
     }
 
     public function getScore(): ?int
@@ -154,7 +146,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return in_array('ROLE_ADMIN', $this->getRoles(), true);
     }
 
-    public function getUsername(): ?string
+    public function getUsername(): string
     {
         return $this->username;
     }
@@ -166,7 +158,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTimeImmutable
+    public function getCreatedAt(): \DateTimeImmutable
     {
         return $this->createdAt;
     }
@@ -176,5 +168,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->createdAt = $createdAt;
 
         return $this;
+    }
+
+    public function eraseCredentials(): void
+    {
+        // TODO: Remove on SF8
     }
 }
