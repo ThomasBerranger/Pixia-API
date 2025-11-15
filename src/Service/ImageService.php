@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service;
 
-use App\DTO\GameUpdateImageRequest;
+use App\DTO\Game\GameUpdateImageRequest;
 use App\Enum\GameType;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -128,10 +128,10 @@ readonly class ImageService
 
     public function validate(UploadedFile $image): bool
     {
-        $gameUpdateRequest = new GameUpdateImageRequest();
-        $gameUpdateRequest->image = $image;
+        $gameUpdateImageRequest = new GameUpdateImageRequest();
+        $gameUpdateImageRequest->image = $image;
 
-        $errors = $this->validator->validate($gameUpdateRequest);
+        $errors = $this->validator->validate($gameUpdateImageRequest);
 
         if (count($errors) > 0) {
             return false;

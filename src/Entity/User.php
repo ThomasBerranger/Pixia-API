@@ -24,9 +24,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?Uuid $id = null;
 
     #[ORM\Column(length: 180)]
-    #[Groups(['user:show', 'user:index:admin', 'game:read:admin'])]
+    #[Groups(['user:show', 'user:index:admin', 'game:index:admin'])]
     private string $email;
 
+    /**
+     * @var list<string> The user roles
+     */
     #[ORM\Column]
     private array $roles;
 
@@ -38,7 +41,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private int $score;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['user:show', 'user:index:admin', 'game:read:admin'])]
+    #[Groups(['user:show', 'user:index:admin', 'game:show:admin'])]
     private string $username;
 
     #[ORM\Column]
@@ -172,6 +175,5 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function eraseCredentials(): void
     {
-        // TODO: Remove on SF8
     }
 }

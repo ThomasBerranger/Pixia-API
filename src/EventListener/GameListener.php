@@ -35,11 +35,9 @@ readonly class GameListener
     public function postPersist(Game $game, PostPersistEventArgs $event): void
     {
         $imageUrl = $game->getImageUrl();
-        $type = $game->getType();
-        $date = $game->getDate();
 
         if ($imageUrl) {
-            $imageName = $this->imageService->downloadAndStore($type, $date, $imageUrl);
+            $imageName = $this->imageService->downloadAndStore($game->getType(), $game->getDate(), $imageUrl);
 
             if ($imageName) {
                 $game->setImage($imageName);

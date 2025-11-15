@@ -2,10 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\DTO;
+namespace App\DTO\Game;
 
 use App\Enum\GameDifficulty;
-use App\Enum\GameType;
 use Symfony\Component\Validator\Constraints as Assert;
 
 class GameUpdateRequest
@@ -25,9 +24,6 @@ class GameUpdateRequest
     #[Assert\Type(\DateTimeInterface::class)]
     public \DateTime $date;
 
-    #[Assert\NotNull(message: 'Difficulty is required')]
-    public GameDifficulty $difficulty = GameDifficulty::EASY;
-
-    //    #[Assert\Length(min: 5, max: 255)]
-    //    public ?string $image = null;
+    #[Assert\NotNull]
+    public GameDifficulty $difficulty;
 }

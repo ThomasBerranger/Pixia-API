@@ -30,22 +30,4 @@ readonly class AchievementService
 
         return $achievement;
     }
-
-    public function saveDifficultyVote(Game $game, GameDifficulty $difficulty): Achievement
-    {
-        $achievement = $this->entityManager->getRepository(Achievement::class)->findOneBy([
-            'game' => $game,
-            'player' => $this->authenticatedUserService->getUserOrThrow(),
-        ]);
-
-        if (!$achievement) {
-            throw new \LogicException('Achievement introuvable : le joueur doit avoir terminé le jeu avant de voter');
-        }
-
-        $achievement->setDifficulty($difficulty);
-
-        $this->entityManager->flush();
-
-        return $achievement;
-    }
 }

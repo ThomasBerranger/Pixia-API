@@ -9,7 +9,6 @@ use App\Repository\AchievementRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\IdGenerator\UuidGenerator;
 use Symfony\Bridge\Doctrine\Types\UuidType;
-use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: AchievementRepository::class)]
@@ -26,7 +25,6 @@ class Achievement
     private \DateTime $date;
 
     #[ORM\Column(enumType: GameDifficulty::class)]
-    #[Groups(['game:solution'])]
     private GameDifficulty $difficulty;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
@@ -47,7 +45,7 @@ class Achievement
         return $this->id;
     }
 
-    public function getDate(): ?\DateTime
+    public function getDate(): \DateTime
     {
         return $this->date;
     }
@@ -83,7 +81,7 @@ class Achievement
         return $this;
     }
 
-    public function getGame(): ?Game
+    public function getGame(): Game
     {
         return $this->game;
     }
