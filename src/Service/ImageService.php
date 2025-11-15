@@ -9,6 +9,7 @@ use App\Enum\GameType;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
@@ -39,8 +40,12 @@ readonly class ImageService
         return $imageName;
     }
 
-    public function store(GameType $gameType, \DateTime $date, ?string $image, UploadedFile $newImage): string
+    public function store(GameType $gameType, \DateTime $date, ?string $image, mixed $newImage): string
     {
+        if (!$newImage instanceof UploadedFile || !$this->validate($newImage)) {
+            throw new UnprocessableEntityHttpException('Image introuvable ou non valide.');
+        }
+
         $directoryPath = $this->createRepository($gameType, $date);
 
         if ($image && file_exists($directoryPath . '/' . $image)) {

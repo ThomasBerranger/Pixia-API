@@ -11,7 +11,6 @@ use App\Entity\User;
 use App\Service\GameCreationService;
 use App\Service\ImageService;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -70,8 +69,6 @@ final class AdminController extends BaseController
 
         $games = $this->entityManager->getRepository(Game::class)->findByFields($fields);
 
-        // todo: remove les fields non demandés si $fields is not empty
-
         return $this->json(data: $games, context: ['groups' => 'game:index:admin']);
     }
 
@@ -86,7 +83,6 @@ final class AdminController extends BaseController
     #[IsGranted('edit', subject: 'game')]
     public function update(Game $game, #[MapRequestPayload] GameUpdateRequest $updatedGame): JsonResponse
     {
-        // todo: refacto cette partie
         $oldGameDate = $game->getDate();
 
         $game->setSolution($updatedGame->solution);
@@ -107,18 +103,9 @@ final class AdminController extends BaseController
     #[IsGranted('edit', subject: 'game')]
     public function updateImage(Game $game, Request $request): JsonResponse
     {
-        // todo: refacto cette partie
-        $newImageFile = $request->files->get('image');
+        $imageFile = $request->files->get('image');
 
-        if (!$newImageFile instanceof UploadedFile) {
-            throw new \InvalidArgumentException('Aucune image trouvée.');
-        }
-
-        if (!$this->imageService->validate($newImageFile)) {
-            return $this->json('Image non validée.', Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
-
-        $imageName = $this->imageService->store($game->getType(), $game->getDate(), $game->getImage(), $newImageFile);
+        $imageName = $this->imageService->store($game->getType(), $game->getDate(), $game->getImage(), $imageFile);
 
         $game->setImage($imageName);
 

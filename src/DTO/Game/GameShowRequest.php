@@ -16,7 +16,7 @@ class GameShowRequest
         )]
         public ?string $date,
 
-        public GameType $type = GameType::MULTIVERS,
+        public ?GameType $type,
     ) {
     }
 
@@ -25,5 +25,10 @@ class GameShowRequest
         return $this->date && \DateTime::createFromFormat('Y-m-d', $this->date) ?
             \DateTime::createFromFormat('Y-m-d', $this->date) :
             new \DateTime('today');
+    }
+
+    public function getType(): GameType
+    {
+        return $this->type ?? GameType::MULTIVERS;
     }
 }

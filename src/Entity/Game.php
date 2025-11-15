@@ -63,7 +63,7 @@ class Game
     #[Groups(['game:show', 'game:show:admin', 'game:index:admin'])]
     private ?string $image;
 
-    private ?string $imageUrl;
+    private string $imageUrl;
 
     public function __construct()
     {

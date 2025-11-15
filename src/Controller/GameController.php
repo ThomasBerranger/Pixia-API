@@ -29,7 +29,7 @@ final class GameController extends BaseController
     public function daily(#[MapQueryString] GameShowRequest $request): JsonResponse
     {
         $gameWithUserAchievement = $this->entityManager->getRepository(Game::class)->findGameWithUserAchievement(
-            $request->getDate(), $request->type, $this->getCurrentUser()
+            $request->getDate(), $request->getType(), $this->getCurrentUser()
         );
 
         return $this->json(data: $gameWithUserAchievement, context: [
