@@ -32,7 +32,7 @@ class Game
     #[Assert\NotBlank]
     #[Assert\Length(min: 5, max: 255)]
     #[ORM\Column(length: 255)]
-    #[Groups(['game:solution', 'game:show:admin', 'game:index:admin'])]
+    #[Groups(['game:solution', 'game:show:admin', 'game:index:admin', 'achievement:index'])]
     private string $solution;
 
     #[Assert\NotBlank]

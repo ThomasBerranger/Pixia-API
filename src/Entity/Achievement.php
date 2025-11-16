@@ -9,6 +9,7 @@ use App\Repository\AchievementRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\IdGenerator\UuidGenerator;
 use Symfony\Bridge\Doctrine\Types\UuidType;
+use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: AchievementRepository::class)]
@@ -19,9 +20,11 @@ class Achievement
     #[ORM\Column(type: UuidType::NAME, unique: true)]
     #[ORM\GeneratedValue(strategy: 'CUSTOM')]
     #[ORM\CustomIdGenerator(class: UuidGenerator::class)]
+    #[Groups('achievement:index')]
     private ?Uuid $id = null;
 
     #[ORM\Column]
+    #[Groups('achievement:index')]
     private \DateTime $date;
 
     #[ORM\Column(enumType: GameDifficulty::class)]
@@ -31,8 +34,9 @@ class Achievement
     #[ORM\JoinColumn(name: 'player_id', referencedColumnName: 'id', nullable: false)]
     private User $player;
 
-    #[ORM\ManyToOne(targetEntity: Game::class, inversedBy: 'histories')]
+    #[ORM\ManyToOne(targetEntity: Game::class)]
     #[ORM\JoinColumn(name: 'game_id', referencedColumnName: 'id', nullable: false)]
+    #[Groups('achievement:index')]
     private Game $game;
 
     public function __construct()

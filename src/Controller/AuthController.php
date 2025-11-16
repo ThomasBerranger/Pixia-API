@@ -2,10 +2,14 @@
 
 declare(strict_types=1);
 
-namespace App\Controller\Security;
+namespace App\Controller;
 
 use App\Attribute\RateLimit;
 use App\DTO\RegisterRequest;
+use App\Entity\Achievement;
+use App\Entity\Game;
+use App\Entity\User;
+use App\Service\AuthenticatedUserService;
 use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -13,10 +17,15 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 class AuthController extends AbstractController
 {
-    public function __construct(private readonly JWTTokenManagerInterface $JWTTokenManager)
+    public function __construct(
+        private readonly JWTTokenManagerInterface $JWTTokenManager,
+        private readonly EntityManagerInterface   $entityManager,
+        private readonly AuthenticatedUserService $authenticatedUserService,
+    )
     {
     }
 
@@ -39,8 +48,15 @@ class AuthController extends AbstractController
     }
 
     #[Route('/me', name: 'me', methods: ['GET'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
     public function me(): JsonResponse
     {
-        return $this->json(data: $this->getUser(), context: ['groups' => 'user:show']);
+        $data['user'] = $this->authenticatedUserService->getUserOrThrow();
+        $data['rank'] = $this->entityManager->getRepository(User::class)->getRank($data['user']);
+        $data['games'] = $this->entityManager->getRepository(Game::class)->count();
+        $data['success'] = $this->entityManager->getRepository(Achievement::class)->count(['player' => $data['user']]);
+        $data['history'] = $this->entityManager->getRepository(Achievement::class)->findLastFor($data['user'], 3);
+
+        return $this->json($data, context: ['groups' => ['user:show', 'achievement:index']]);
     }
 }
