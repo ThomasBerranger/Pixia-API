@@ -54,6 +54,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * @var Collection<int, Badge>
      */
     #[ORM\OneToMany(targetEntity: Badge::class, mappedBy: 'player', orphanRemoval: true)]
+    #[Groups(['user:show'])]
     private Collection $badges;
 
     public function __construct()

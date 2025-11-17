@@ -1,13 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Entity;
 
+use App\Enum\Badge as BadgeEnum;
 use App\Repository\BadgeRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\IdGenerator\UuidGenerator;
 use Symfony\Bridge\Doctrine\Types\UuidType;
+use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Uid\Uuid;
-use App\Enum\Badge as BadgeEnum;
 
 #[ORM\Entity(repositoryClass: BadgeRepository::class)]
 #[ORM\UniqueConstraint(name: 'unique_name_player', columns: ['name', 'player_id'])]
@@ -20,6 +23,7 @@ class Badge
     private ?Uuid $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['user:show'])]
     private BadgeEnum $name;
 
     #[ORM\Column]

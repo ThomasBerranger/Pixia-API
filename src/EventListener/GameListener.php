@@ -6,6 +6,7 @@ namespace App\EventListener;
 
 use App\Entity\Game;
 use App\Entity\User;
+use App\Service\BadgeService;
 use App\Service\ImageService;
 use Doctrine\Bundle\DoctrineBundle\Attribute\AsEntityListener;
 use Doctrine\ORM\Event\PostPersistEventArgs;
@@ -18,8 +19,8 @@ use Symfony\Bundle\SecurityBundle\Security;
 readonly class GameListener
 {
     public function __construct(
-        private Security $security,
-        private ImageService $imageService,
+        private Security     $security,
+        private ImageService $imageService, private BadgeService $badgeService,
     ) {
     }
 
@@ -44,5 +45,7 @@ readonly class GameListener
                 $event->getObjectManager()->flush();
             }
         }
+
+        $this->badgeService->checkAndAwardCreatorBadge($game->getAuthor());
     }
 }
