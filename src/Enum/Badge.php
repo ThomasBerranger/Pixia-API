@@ -6,15 +6,15 @@ namespace App\Enum;
 
 enum Badge: string
 {
-    case CREATOR = 'Créateur';
-    case BETA_TESTER = 'Bêta-Testeur';
-    case WINS_1 = 'Débutant';
-    case WINS_10 = 'Cinéphile';
-    case WINS_50 = 'Expert';
-    case WINS_100 = 'Maître';
-    case WINS_300 = 'Légendaire';
-    case TOP_10_REACHED = 'Top 10';
-    case STREAK_10 = 'En Feu';
-    case STREAK_20 = 'Inarrêtable';
-    case STREAK_30 = 'Perfectionniste';
+    case CREATOR = 'CREATOR';
+    case BETA_TESTER = 'BETA_TESTER';
+    case WINS_1 = 'WINS_1';
+    case WINS_10 = 'WINS_10';
+    case WINS_50 = 'WINS_50';
+    case WINS_100 = 'WINS_100';
+    case WINS_300 = 'WINS_300';
+    case TOP_10_REACHED = 'TOP_10_REACHED';
+    case STREAK_10 = 'STREAK_10';
+    case STREAK_20 = 'STREAK_20';
+    case STREAK_30 = 'STREAK_30';
 }
