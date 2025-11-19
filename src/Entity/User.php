@@ -57,12 +57,20 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(['user:show'])]
     private Collection $badges;
 
+    /**
+     * @var Collection<int, Game>
+     */
+    #[ORM\ManyToMany(targetEntity: Game::class, inversedBy: 'hintedPlayers')]
+    #[ORM\JoinTable(name: 'hint_request')]
+    private Collection $hintedGames;
+
     public function __construct()
     {
         $this->roles = [];
         $this->score = 0;
         $this->createdAt = new \DateTimeImmutable();
         $this->badges = new ArrayCollection();
+        $this->hintedGames = new ArrayCollection();
     }
 
     public function getId(): ?Uuid
@@ -210,5 +218,29 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function eraseCredentials(): void
     {
+    }
+
+    /**
+     * @return Collection<int, Game>
+     */
+    public function getHintedGames(): Collection
+    {
+        return $this->hintedGames;
+    }
+
+    public function addHintedGame(Game $hintedGame): static
+    {
+        if (!$this->hintedGames->contains($hintedGame)) {
+            $this->hintedGames->add($hintedGame);
+        }
+
+        return $this;
+    }
+
+    public function removeHintedGame(Game $hintedGame): static
+    {
+        $this->hintedGames->removeElement($hintedGame);
+
+        return $this;
     }
 }

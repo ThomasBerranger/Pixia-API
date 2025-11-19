@@ -10,9 +10,13 @@ enum GameDifficulty: string
     case MEDIUM = 'TORDU';
     case HARD = 'DIABOLIQUE';
 
-    public function getPoints(): int
+    public function getPoints(bool $hinted): int
     {
-        return match ($this) {
+        return $hinted ? match ($this) {
+            self::EASY => 5,
+            self::MEDIUM => 15,
+            self::HARD => 25,
+        } : match ($this) {
             self::EASY => 10,
             self::MEDIUM => 25,
             self::HARD => 50,

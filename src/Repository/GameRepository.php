@@ -10,6 +10,7 @@ use App\Entity\User;
 use App\Enum\GameType;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Exception;
 use Symfony\Bridge\Doctrine\Types\UuidType;
 
 /**
@@ -23,7 +24,8 @@ class GameRepository extends ServiceEntityRepository
     }
 
     /**
-     * @return array{game: Achievement|Game|null, achievement: Achievement|Game|null, previousGameDate: mixed, nextGameDate: mixed}
+     * @return array{game: Game, achievement: Achievement|null|Game, previousGameDate: mixed, nextGameDate: mixed}
+     * @throws Exception
      */
     public function findGameWithUserAchievement(?\DateTime $date, ?GameType $type, ?User $user): array
     {
@@ -31,6 +33,8 @@ class GameRepository extends ServiceEntityRepository
 
         $gameWithUserAchievement =
             $this->createQueryBuilder('g')
+                ->leftJoin('g.hintedPlayers', 'hp', 'WITH', 'hp.id = :userId')
+                ->addSelect('hp')
                 ->leftJoin(Achievement::class, 'a', 'WITH', 'g.id = a.game AND a.player = :userId')
                 ->addSelect('a')
                 ->addSelect('(SELECT MAX(g2.date) FROM ' . Game::class . ' g2 WHERE g2.type = :type AND g2.date < g.date) as previous_game_date')
@@ -40,6 +44,7 @@ class GameRepository extends ServiceEntityRepository
                 ->groupBy('g.id')
                 ->addSelect('CASE WHEN g.date = :date THEN 0 ELSE 1 END as HIDDEN priority')
                 ->orderBy('priority', 'ASC')
+                ->addGroupBy('hp.id')
                 ->addOrderBy('g.date', 'DESC')
                 ->setParameter('date', $formattedDate)
                 ->setParameter('type', $type)
@@ -48,16 +53,15 @@ class GameRepository extends ServiceEntityRepository
                 ->getQuery()
                 ->getResult();
 
-        return isset($gameWithUserAchievement[0]) ? [
+        if (empty($gameWithUserAchievement) || !$gameWithUserAchievement[0][0] instanceof Game) {
+            throw new Exception('Game not found');
+        }
+
+        return [
             'game' => $gameWithUserAchievement[0][0],
             'achievement' => $gameWithUserAchievement[1][0],
             'previousGameDate' => $gameWithUserAchievement[1]['previous_game_date'] ?? false,
             'nextGameDate' => $gameWithUserAchievement[1]['next_game_date'] ?? false,
-        ] : [
-            'game' => null,
-            'achievement' => null,
-            'previousGameDate' => false,
-            'nextGameDate' => false,
         ];
     }
 

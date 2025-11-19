@@ -7,6 +7,8 @@ namespace App\Entity;
 use App\Enum\GameDifficulty;
 use App\Enum\GameType;
 use App\Repository\GameRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Types\UuidType;
@@ -38,7 +40,7 @@ class Game
     #[Assert\NotBlank]
     #[Assert\Length(min: 5, max: 255)]
     #[ORM\Column(length: 255)]
-    #[Groups(['game:show:admin', 'game:index:admin'])]
+    #[Groups(['game:hint', 'game:show:admin', 'game:index:admin'])]
     private string $hint;
 
     #[Assert\NotNull]
@@ -65,10 +67,17 @@ class Game
 
     private string $imageUrl;
 
+    /**
+     * @var Collection<int, User>
+     */
+    #[ORM\ManyToMany(targetEntity: User::class, mappedBy: 'hintedGames')]
+    private Collection $hintedPlayers;
+
     public function __construct()
     {
         $this->type = GameType::MULTIVERS;
         $this->difficulty = GameDifficulty::EASY;
+        $this->hintedPlayers = new ArrayCollection();
     }
 
     public function getId(): ?Uuid
@@ -168,6 +177,33 @@ class Game
     public function setImageUrl(string $imageUrl): static
     {
         $this->imageUrl = $imageUrl;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, User>
+     */
+    public function getHintedPlayers(): Collection
+    {
+        return $this->hintedPlayers;
+    }
+
+    public function addHintedPlayer(User $hintedPlayer): static
+    {
+        if (!$this->hintedPlayers->contains($hintedPlayer)) {
+            $this->hintedPlayers->add($hintedPlayer);
+            $hintedPlayer->addHintedGame($this);
+        }
+
+        return $this;
+    }
+
+    public function removeHintedPlayer(User $hintedPlayer): static
+    {
+        if ($this->hintedPlayers->removeElement($hintedPlayer)) {
+            $hintedPlayer->removeHintedGame($this);
+        }
 
         return $this;
     }

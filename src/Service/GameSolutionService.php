@@ -20,7 +20,7 @@ readonly class GameSolutionService
         if ($this->wordsMatch($game->getSolution(), $answer)) {
             if ($user) {
                 $this->historyService->saveResult($game);
-                $this->userService->addPoints($user, $game->getDifficulty());
+                $this->userService->addPoints($user, $game);
             }
 
             return $game;

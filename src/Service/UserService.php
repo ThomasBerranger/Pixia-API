@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Entity\Game;
 use App\Entity\User;
-use App\Enum\GameDifficulty;
 use Doctrine\ORM\EntityManagerInterface;
 
 readonly class UserService
@@ -14,9 +14,11 @@ readonly class UserService
     {
     }
 
-    public function addPoints(User $user, GameDifficulty $difficulty): void
+    public function addPoints(User $user, Game $game): void
     {
-        $user->setScore($user->getScore() + $difficulty->getPoints());
+        $points = $game->getDifficulty()->getPoints($user->getHintedGames()->contains($game));
+
+        $user->setScore($user->getScore() + $points);
 
         $this->entityManager->flush();
     }
