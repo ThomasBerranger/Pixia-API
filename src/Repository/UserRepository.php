@@ -44,6 +44,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
             ->select('u.username, u.score')
             ->setMaxResults($max)
             ->orderBy('u.score', 'DESC')
+            ->addOrderBy('u.createdAt', 'ASC')
             ->getQuery()
             ->getResult();
     }
