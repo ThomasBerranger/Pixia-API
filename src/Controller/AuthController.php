@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Attribute\RateLimit;
-use App\DTO\RegisterRequest;
+use App\DTO\User\RegisterRequest;
 use App\Entity\Achievement;
 use App\Entity\Badge;
 use App\Entity\Game;
@@ -36,7 +36,6 @@ class AuthController extends AbstractController
     public function register(
         #[MapRequestPayload] RegisterRequest $registerRequest,
         UserPasswordHasherInterface          $hasher,
-        EntityManagerInterface               $em,
     ): JsonResponse
     {
         $user = $registerRequest->toUser($hasher);
@@ -44,10 +43,10 @@ class AuthController extends AbstractController
         $betaTesterBadge = new Badge();
         $betaTesterBadge->setName(BadgeEnum::BETA_TESTER)->setPlayer($user);
 
-        $em->persist($betaTesterBadge);
-        $em->persist($user);
+        $this->entityManager->persist($betaTesterBadge);
+        $this->entityManager->persist($user);
 
-        $em->flush();
+        $this->entityManager->flush();
 
         $token = $this->JWTTokenManager->create($user);
 
