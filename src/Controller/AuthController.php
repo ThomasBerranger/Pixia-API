@@ -61,7 +61,7 @@ class AuthController extends AbstractController
 
         $data['user'] = $user;
         $data['rank'] = $this->entityManager->getRepository(User::class)->getRank($user);
-        $data['games'] = $this->entityManager->getRepository(Game::class)->count();
+        $data['games'] = $this->entityManager->getRepository(Game::class)->countAvailableGames();
         $data['success'] = $this->entityManager->getRepository(Achievement::class)->count(['player' => $user]);
         $data['history'] = $this->entityManager->getRepository(Achievement::class)->findLastFor($user, 3);
 

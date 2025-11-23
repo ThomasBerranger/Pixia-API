@@ -93,4 +93,14 @@ class GameRepository extends ServiceEntityRepository
 
         return $result;
     }
+
+    public function countAvailableGames(): int
+    {
+        return (int) $this->createQueryBuilder('g')
+            ->select('COUNT(g.id)')
+            ->where('g.date <= :today')
+            ->setParameter('today', new \DateTime('today'))
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
 }
