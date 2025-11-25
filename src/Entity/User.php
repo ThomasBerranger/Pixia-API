@@ -64,6 +64,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\JoinTable(name: 'hint_request')]
     private Collection $hintedGames;
 
+    /**
+     * @var Collection<int, Contribution>
+     */
+    #[ORM\OneToMany(targetEntity: Contribution::class, mappedBy: 'author', cascade: ['remove'], orphanRemoval: true)]
+    #[Groups(['user:show'])]
+    private Collection $contributions;
+
     public function __construct()
     {
         $this->roles = [];
@@ -71,6 +78,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->createdAt = new \DateTimeImmutable();
         $this->badges = new ArrayCollection();
         $this->hintedGames = new ArrayCollection();
+        $this->contributions = new ArrayCollection();
     }
 
     public function getId(): ?Uuid
@@ -240,6 +248,31 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function removeHintedGame(Game $hintedGame): static
     {
         $this->hintedGames->removeElement($hintedGame);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Contribution>
+     */
+    public function getContributions(): Collection
+    {
+        return $this->contributions;
+    }
+
+    public function addContribution(Contribution $contribution): static
+    {
+        if (!$this->contributions->contains($contribution)) {
+            $this->contributions->add($contribution);
+            $contribution->setAuthor($this);
+        }
+
+        return $this;
+    }
+
+    public function removeContribution(Contribution $contribution): static
+    {
+        $this->contributions->removeElement($contribution);
 
         return $this;
     }
