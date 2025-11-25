@@ -6,6 +6,7 @@ namespace App\Controller;
 
 use App\DTO\Game\GameCreateRequest;
 use App\DTO\Game\GameUpdateRequest;
+use App\Entity\Contribution;
 use App\Entity\Game;
 use App\Entity\User;
 use App\Service\GameCreationService;
@@ -115,5 +116,11 @@ final class AdminController extends AbstractController
         return $this->json(
             data: $this->imageService->getDirectoryPath($game->getType(), $game->getDate()) . '/' . $game->getImage(),
         );
+    }
+
+    #[Route(path: '/contributions', name: 'contributions_index', methods: ['GET'], format: 'json')]
+    public function contributionIndex(): JsonResponse
+    {
+        return $this->json(data: $this->entityManager->getRepository(Contribution::class)->findAllWithAuthor());
     }
 }
