@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace App\DTO;
+namespace App\DTO\Contribution;
 
 use App\Entity\Contribution;
 use App\Enum\ContributionType;
 use Symfony\Component\Validator\Constraints as Assert;
 
-class ContributionRequest
+class ContributionCreateRequest
 {
     #[Assert\NotBlank(message: 'Un titre est requis.')]
     #[Assert\Length(min: 2, max: 255, minMessage: 'Ton titre doit faire au moins {{ limit }} caractères.', maxMessage: 'Ton titre doit faire moins de {{ limit }} caractères.')]

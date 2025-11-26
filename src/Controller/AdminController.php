@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\DTO\Contribution\ContributionUpdateRequest;
 use App\DTO\Game\GameCreateRequest;
 use App\DTO\Game\GameUpdateRequest;
 use App\Entity\Contribution;
 use App\Entity\Game;
 use App\Entity\User;
+use App\Enum\ContributionStatus;
+use App\Service\ContributionService;
 use App\Service\GameCreationService;
 use App\Service\ImageService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -28,7 +31,7 @@ final class AdminController extends AbstractController
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly GameCreationService    $gameCreationService,
-        private readonly ImageService           $imageService,
+        private readonly ImageService           $imageService, private readonly ContributionService $contributionService,
     )
     {
     }
@@ -122,5 +125,19 @@ final class AdminController extends AbstractController
     public function contributionIndex(): JsonResponse
     {
         return $this->json(data: $this->entityManager->getRepository(Contribution::class)->findAllWithAuthor());
+    }
+
+    #[Route(path: '/contributions/{id}', name: 'contributions_update', methods: ['PATCH'], format: 'json')]
+    public function contributionUpdate(Contribution $contribution, #[MapRequestPayload] ContributionUpdateRequest $contributionUpdateRequest): JsonResponse
+    {
+        $contribution->setStatus($contributionUpdateRequest->status);
+
+        $this->entityManager->flush();
+
+        if ($contributionUpdateRequest->status === ContributionStatus::APPROVED) {
+            $this->contributionService->rewardPlayer($contribution->getAuthor(), $contribution->getType());
+        }
+
+        return $this->json(data: $contribution, context: ['groups' => ['contribution:show']]);
     }
 }

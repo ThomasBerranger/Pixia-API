@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\DTO\ContributionRequest;
+use App\DTO\Contribution\ContributionCreateRequest;
 use App\Service\AuthenticatedUserService;
 use App\Service\ContributionService;
 use App\Service\MailService;
@@ -29,7 +29,7 @@ final class ContributionController extends AbstractController
     }
 
     #[Route(name: 'create', methods: ['POST'], format: 'json')]
-    public function create(#[MapRequestPayload] ContributionRequest $contributionRequest): Response
+    public function create(#[MapRequestPayload] ContributionCreateRequest $contributionRequest): Response
     {
         $author = $this->authenticatedUserService->getUserOrThrow();
 

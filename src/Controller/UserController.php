@@ -36,7 +36,7 @@ final class UserController extends AbstractController
         ], context: ['groups' => ['user:show']]);
     }
 
-    #[Route(path: '/update', name: 'update', methods: ['PATCH'])]
+    #[Route(name: 'update', methods: ['PATCH'])]
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
     public function update(
         #[MapRequestPayload] UpdateRequest $updateRequest,
