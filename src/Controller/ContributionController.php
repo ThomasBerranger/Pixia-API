@@ -7,6 +7,7 @@ namespace App\Controller;
 use App\DTO\ContributionRequest;
 use App\Service\AuthenticatedUserService;
 use App\Service\ContributionService;
+use App\Service\MailService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -20,13 +21,15 @@ final class ContributionController extends AbstractController
 {
     public function __construct(
         private readonly EntityManagerInterface   $entityManager,
-        private readonly AuthenticatedUserService $authenticatedUserService, private readonly ContributionService $contributionService
+        private readonly AuthenticatedUserService $authenticatedUserService,
+        private readonly ContributionService      $contributionService,
+        private readonly MailService              $mailService,
     )
     {
     }
 
     #[Route(name: 'create', methods: ['POST'], format: 'json')]
-    public function index(#[MapRequestPayload] ContributionRequest $contributionRequest): Response
+    public function create(#[MapRequestPayload] ContributionRequest $contributionRequest): Response
     {
         $author = $this->authenticatedUserService->getUserOrThrow();
 
@@ -38,6 +41,8 @@ final class ContributionController extends AbstractController
 
         $this->entityManager->persist($contribution);
         $this->entityManager->flush();
+
+        $this->mailService->sendContributionMail($author->getUsername(), $contribution);
 
         return $this->json($contribution, Response::HTTP_CREATED, context: ['groups' => ['contribution:show']]);
     }
