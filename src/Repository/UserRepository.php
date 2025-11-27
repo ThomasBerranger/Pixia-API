@@ -40,10 +40,25 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
      */
     public function findOrderedByScores(int $max = 0): array
     {
+        // Étape 1 : Récupérer les IDs des top users
+        $userIds = $this->createQueryBuilder('u')
+            ->select('u.id')
+            ->orderBy('u.score', 'DESC')
+            ->addOrderBy('u.createdAt', 'ASC')
+            ->setMaxResults($max)
+            ->getQuery()
+            ->getSingleColumnResult();
+
+        if (empty($userIds)) {
+            return [];
+        }
+
+        // Étape 2 : Récupérer les users complets avec leurs badges
         return $this->createQueryBuilder('u')
             ->leftJoin('u.badges', 'b')
             ->addSelect('b')
-            ->setMaxResults($max)
+            ->where('u.id IN (:ids)')
+            ->setParameter('ids', $userIds)
             ->orderBy('u.score', 'DESC')
             ->addOrderBy('u.createdAt', 'ASC')
             ->getQuery()
