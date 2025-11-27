@@ -17,6 +17,6 @@ enum Badge: string
     case GAME_SUGGESTION = 'GAME_SUGGESTION';
     case BUG_DETECTED = 'BUG_DETECTED';
     case STREAK_10 = 'STREAK_10';
-    case STREAK_20 = 'STREAK_20';
     case STREAK_30 = 'STREAK_30';
+    case STREAK_60 = 'STREAK_60';
 }
