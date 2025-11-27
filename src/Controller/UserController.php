@@ -29,11 +29,13 @@ final class UserController extends AbstractController
     #[Route(path: '/leaderboard', name: 'leaderboard', methods: ['GET'], format: 'json')]
     public function leaderboard(): JsonResponse
     {
+        $currentUserRank = $this->entityManager->getRepository(User::class)->getRank($this->authenticatedUserService->getUser());
+
         return $this->json(data: [
             'leaderboard' => $this->entityManager->getRepository(User::class)->findOrderedByScores(10),
-            'currentUser' => $this->authenticatedUserService->getUser(),
-            'currentUserRank' => $this->entityManager->getRepository(User::class)->getRank($this->authenticatedUserService->getUser()),
-        ], context: ['groups' => ['user:show']]);
+            'currentUser' => $currentUserRank > 10 ? $this->authenticatedUserService->getUser() : null,
+            'currentUserRank' => $currentUserRank,
+        ], context: ['groups' => ['user:index']]);
     }
 
     #[Route(name: 'update', methods: ['PATCH'])]

@@ -23,7 +23,7 @@ class Badge
     private ?Uuid $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['user:show'])]
+    #[Groups(['user:show', 'user:index'])]
     private BadgeEnum $name;
 
     #[ORM\Column]

@@ -36,12 +36,13 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     }
 
     /**
-     * @return list<array<string, int|string>>
+     * @return list<User>
      */
     public function findOrderedByScores(int $max = 0): array
     {
         return $this->createQueryBuilder('u')
-            ->select('u.username, u.score')
+            ->leftJoin('u.badges', 'b')
+            ->addSelect('b')
             ->setMaxResults($max)
             ->orderBy('u.score', 'DESC')
             ->addOrderBy('u.createdAt', 'ASC')
@@ -55,7 +56,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
             return null;
         }
 
-        return (int) $this->createQueryBuilder('u')
+        return (int)$this->createQueryBuilder('u')
             ->select('COUNT(DISTINCT u2.id) + 1')
             ->from(User::class, 'u2')
             ->where('u2.score > :userScore OR (u2.score = :userScore AND u2.createdAt < :userCreatedAt)')

@@ -40,11 +40,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private string $password;
 
     #[ORM\Column]
-    #[Groups(['user:show', 'user:index:admin'])]
+    #[Groups(['user:show', 'user:index', 'user:index:admin'])]
     private int $score;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['user:show', 'user:index:admin', 'game:show:admin'])]
+    #[Groups(['user:show', 'user:index', 'user:index:admin', 'game:show:admin'])]
     private string $username;
 
     #[ORM\Column]
@@ -55,7 +55,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * @var Collection<int, Badge>
      */
     #[ORM\OneToMany(targetEntity: Badge::class, mappedBy: 'player', orphanRemoval: true)]
-    #[Groups(['user:show'])]
+    #[Groups(['user:show', 'user:index'])]
     private Collection $badges;
 
     /**
@@ -73,7 +73,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private Collection $contributions;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
-    #[Groups(['user:show'])]
+    #[Groups(['user:show', 'user:index'])]
     private ?string $avatarUrl = null;
 
     public function __construct()
