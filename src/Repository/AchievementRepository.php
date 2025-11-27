@@ -21,18 +21,30 @@ class AchievementRepository extends ServiceEntityRepository
     }
 
     /**
-     * @return Achievement[]
+     * @return array{count: int, history: list<Achievement>}
      */
-    public function findLastFor(User $user, int $limit): array
+    public function findLastWithCountFor(User $user, int $limit): array
     {
-        return $this->createQueryBuilder('a')
+        $qb = $this->createQueryBuilder('a')
             ->leftJoin('a.game', 'g')
             ->addSelect('g')
             ->where('a.player = :userId')
             ->setParameter('userId', $user->getId(), UuidType::NAME)
-            ->setMaxResults($limit)
-            ->orderBy('a.date', 'DESC')
+            ->orderBy('a.date', 'DESC');
+
+        $countQb = clone $qb;
+        /** @var int $count */
+        $count = $countQb->select('COUNT(a.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        $history = $qb->setMaxResults($limit)
             ->getQuery()
             ->getResult();
+
+        return [
+            'count' => $count,
+            'history' => $history
+        ];
     }
 }

@@ -7,6 +7,7 @@ namespace App\Entity;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Types\UuidType;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -70,6 +71,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Contribution::class, mappedBy: 'author', cascade: ['remove'], orphanRemoval: true)]
     #[Groups(['user:show'])]
     private Collection $contributions;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Groups(['user:show'])]
+    private ?string $avatarUrl = null;
 
     public function __construct()
     {
@@ -273,6 +278,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function removeContribution(Contribution $contribution): static
     {
         $this->contributions->removeElement($contribution);
+
+        return $this;
+    }
+
+    public function getAvatarUrl(): ?string
+    {
+        return $this->avatarUrl;
+    }
+
+    public function setAvatarUrl(?string $avatarUrl): static
+    {
+        $this->avatarUrl = $avatarUrl;
 
         return $this;
     }

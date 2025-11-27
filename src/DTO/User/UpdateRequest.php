@@ -19,6 +19,11 @@ class UpdateRequest
     #[Assert\Regex(pattern: '/^[a-zA-Z0-9_\-\s\p{L}]+$/u', message: "Ce pseudo n'est pas valide.")]
     public ?string $username = null;
 
+    #[Assert\Url(protocols: ['https'])]
+    #[Assert\Length(max: 1000)]
+    #[Assert\Regex(pattern: '/^https:\/\/api\.dicebear\.com\/[\d]+\.x\/[a-z]+\/svg\?/')]
+    public ?string $avatarUrl = null;
+
     public function update(User $user): void
     {
         if ($this->email && $this->email !== $user->getEmail()) {
@@ -27,6 +32,10 @@ class UpdateRequest
 
         if ($this->username && $this->username !== $user->getUsername()) {
             $user->setUsername($this->username);
+        }
+
+        if ($this->avatarUrl && $this->avatarUrl !== $user->getAvatarUrl()) {
+            $user->setAvatarUrl($this->avatarUrl);
         }
     }
 }
