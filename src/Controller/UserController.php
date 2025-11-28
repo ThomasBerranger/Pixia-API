@@ -9,6 +9,7 @@ use App\Entity\User;
 use App\Service\AuthenticatedUserService;
 use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
+use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
@@ -54,5 +55,11 @@ final class UserController extends AbstractController
         $token = $this->JWTTokenManager->create($user);
 
         return $this->json(['token' => $token]);
+    }
+
+    #[Route(path: '/{slug:user}', name: 'show', requirements: ['username' => '[a-z0-9àâäéèêëïîôùûüÿæœç_-]+'], methods: ['GET'], format: 'json')]
+    public function show(User $user): JsonResponse
+    {
+        return $this->json(data: ['currentUser' => $this->authenticatedUserService->getUser(), 'user' => $user], context: ['groups' => ['user:show']]);
     }
 }

@@ -20,7 +20,7 @@ class Contribution
     #[ORM\Column(type: UuidType::NAME, unique: true)]
     #[ORM\GeneratedValue(strategy: 'CUSTOM')]
     #[ORM\CustomIdGenerator(class: UuidGenerator::class)]
-    #[Groups(['contribution:show', 'user:show'])]
+    #[Groups(['contribution:show', 'user:me'])]
     private ?Uuid $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'contributions')]
@@ -28,23 +28,23 @@ class Contribution
     private User $author;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['contribution:show', 'user:show'])]
+    #[Groups(['contribution:show', 'user:me'])]
     private string $title;
 
     #[ORM\Column(length: 1000)]
-    #[Groups(['contribution:show', 'user:show'])]
+    #[Groups(['contribution:show', 'user:me'])]
     private string $description;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['contribution:show', 'user:show'])]
+    #[Groups(['contribution:show', 'user:me'])]
     private ContributionType $type;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['contribution:show', 'user:show'])]
+    #[Groups(['contribution:show', 'user:me'])]
     private ContributionStatus $status;
 
     #[ORM\Column]
-    #[Groups(['contribution:show', 'user:show'])]
+    #[Groups(['contribution:show', 'user:me'])]
     private \DateTimeImmutable $createdAt;
 
     public function __construct()

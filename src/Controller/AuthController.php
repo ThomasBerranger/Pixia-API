@@ -68,6 +68,6 @@ class AuthController extends AbstractController
         $data['success'] = $achievementData['count'];
         $data['history'] = $achievementData['history'];
 
-        return $this->json($data, context: ['groups' => ['user:show', 'achievement:index']]);
+        return $this->json($data, context: ['groups' => ['user:me', 'achievement:index']]);
     }
 }

@@ -17,6 +17,7 @@ use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
+#[ORM\HasLifecycleCallbacks]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
@@ -27,7 +28,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?Uuid $id = null;
 
     #[ORM\Column(length: 180)]
-    #[Groups(['user:show', 'user:index:admin', 'game:index:admin'])]
+    #[Groups(['user:me', 'user:index:admin', 'game:index:admin'])]
     private string $email;
 
     /**
@@ -40,22 +41,22 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private string $password;
 
     #[ORM\Column]
-    #[Groups(['user:show', 'user:index', 'user:index:admin'])]
+    #[Groups(['user:me', 'user:show', 'user:index', 'user:index:admin'])]
     private int $score;
 
-    #[ORM\Column(length: 255)]
-    #[Groups(['user:show', 'user:index', 'user:index:admin', 'game:show:admin'])]
+    #[ORM\Column(length: 255, unique: true)]
+    #[Groups(['user:me', 'user:show', 'user:index', 'user:index:admin', 'game:show:admin'])]
     private string $username;
 
     #[ORM\Column]
-    #[Groups(['user:show', 'user:index:admin'])]
+    #[Groups(['user:me', 'user:show', 'user:index:admin'])]
     private \DateTimeImmutable $createdAt;
 
     /**
      * @var Collection<int, Badge>
      */
     #[ORM\OneToMany(targetEntity: Badge::class, mappedBy: 'player', orphanRemoval: true)]
-    #[Groups(['user:show', 'user:index'])]
+    #[Groups(['user:me', 'user:show', 'user:index'])]
     private Collection $badges;
 
     /**
@@ -69,12 +70,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * @var Collection<int, Contribution>
      */
     #[ORM\OneToMany(targetEntity: Contribution::class, mappedBy: 'author', cascade: ['remove'], orphanRemoval: true)]
-    #[Groups(['user:show'])]
+    #[Groups(['user:me'])]
     private Collection $contributions;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
-    #[Groups(['user:show', 'user:index'])]
+    #[Groups(['user:me', 'user:show', 'user:index'])]
     private ?string $avatarUrl = null;
+
+    #[ORM\Column(length: 255, unique: true)]
+    #[Groups(['user:index'])]
+    private string $slug;
 
     public function __construct()
     {
@@ -292,5 +297,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->avatarUrl = $avatarUrl;
 
         return $this;
+    }
+
+    public function getSlug(): string
+    {
+        return $this->slug;
+    }
+
+    #[ORM\PrePersist]
+    #[ORM\PreUpdate]
+    public function updateSlug(): void
+    {
+        $this->slug = mb_strtolower(str_replace([' ', '_'], '-', $this->username));
     }
 }
