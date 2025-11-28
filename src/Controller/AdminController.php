@@ -10,7 +10,9 @@ use App\DTO\Game\GameUpdateRequest;
 use App\Entity\Contribution;
 use App\Entity\Game;
 use App\Entity\User;
+use App\Enum\Badge as BadgeEnum;
 use App\Enum\ContributionStatus;
+use App\Service\BadgeService;
 use App\Service\ContributionService;
 use App\Service\GameCreationService;
 use App\Service\ImageService;
@@ -31,7 +33,8 @@ final class AdminController extends AbstractController
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly GameCreationService    $gameCreationService,
-        private readonly ImageService           $imageService, private readonly ContributionService $contributionService,
+        private readonly ImageService           $imageService,
+        private readonly ContributionService    $contributionService,
     )
     {
     }

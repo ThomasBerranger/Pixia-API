@@ -27,6 +27,7 @@ class ContributionRepository extends ServiceEntityRepository
             ->select('c')
             ->addSelect('PARTIAL author.{id, username, email}')
             ->leftJoin('c.author', 'author')
+            ->orderBy('c.createdAt', 'DESC')
             ->getQuery()
             ->getArrayResult();
     }
