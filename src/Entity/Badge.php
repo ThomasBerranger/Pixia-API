@@ -30,11 +30,14 @@ class Badge
     private \DateTimeImmutable $createdAt;
 
     #[ORM\ManyToOne]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private User $player;
 
-    public function __construct()
+    public function __construct(?BadgeEnum $name = null)
     {
+        if ($name) {
+            $this->name = $name;
+        }
         $this->createdAt = new \DateTimeImmutable();
     }
 

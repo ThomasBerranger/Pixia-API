@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Entity\Badge;
 use App\Entity\Game;
 use App\Entity\User;
+use App\Enum\Badge as BadgeEnum;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
 readonly class UserService
 {
@@ -22,4 +25,24 @@ readonly class UserService
 
         $this->entityManager->flush();
     }
+
+    public function findAndRewardSponsor(string $sponsorSlug): User
+    {
+        $sponsor = $this->entityManager->getRepository(User::class)->findOneBy(['slug' => $sponsorSlug]);
+
+        if (!$sponsor) {
+            throw new UnprocessableEntityHttpException('Sponsor not found');
+        }
+
+        $sponsor->setScore($sponsor->getScore() + 5);
+
+        $sponsor->addBadge(new Badge(BadgeEnum::SPONSOR));
+
+        if ($this->entityManager->getRepository(User::class)->count(['sponsor' => $sponsor]) >= 5) {
+            $sponsor->addBadge(new Badge(BadgeEnum::SPONSOR_5));
+        }
+
+        return $sponsor;
+    }
+
 }

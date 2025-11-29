@@ -12,6 +12,7 @@ use App\Entity\Game;
 use App\Entity\User;
 use App\Enum\Badge as BadgeEnum;
 use App\Service\AuthenticatedUserService;
+use App\Service\UserService;
 use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -26,7 +27,8 @@ class AuthController extends AbstractController
     public function __construct(
         private readonly JWTTokenManagerInterface $JWTTokenManager,
         private readonly EntityManagerInterface   $entityManager,
-        private readonly AuthenticatedUserService $authenticatedUserService
+        private readonly AuthenticatedUserService $authenticatedUserService,
+        private readonly UserService $userService,
     )
     {
     }
@@ -40,10 +42,14 @@ class AuthController extends AbstractController
     {
         $user = $registerRequest->toUser($hasher);
 
-        $betaTesterBadge = new Badge();
-        $betaTesterBadge->setName(BadgeEnum::BETA_TESTER)->setPlayer($user);
+        if ($registerRequest->sponsor) {
+            $sponsor = $this->userService->findAndRewardSponsor($registerRequest->sponsor);
 
-        $this->entityManager->persist($betaTesterBadge);
+            $user->setSponsor($sponsor);
+        }
+
+        $user->addBadge(new Badge(BadgeEnum::BETA_TESTER));
+
         $this->entityManager->persist($user);
 
         $this->entityManager->flush();

@@ -55,7 +55,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @var Collection<int, Badge>
      */
-    #[ORM\OneToMany(targetEntity: Badge::class, mappedBy: 'player', orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: Badge::class, mappedBy: 'player', cascade: ['persist', 'remove'], orphanRemoval: true)]
     #[Groups(['user:me', 'user:show', 'user:index'])]
     private Collection $badges;
 
@@ -78,8 +78,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $avatarUrl = null;
 
     #[ORM\Column(length: 255, unique: true)]
-    #[Groups(['user:index'])]
+    #[Groups(['user:me', 'user:index'])]
     private string $slug;
+
+    #[ORM\ManyToOne(targetEntity: self::class, inversedBy: 'referees')]
+    private ?self $sponsor = null;
+
+    /**
+     * @var Collection<int, self>
+     */
+    #[ORM\OneToMany(targetEntity: self::class, mappedBy: 'sponsor')]
+    private Collection $referees;
 
     public function __construct()
     {
@@ -89,6 +98,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->badges = new ArrayCollection();
         $this->hintedGames = new ArrayCollection();
         $this->contributions = new ArrayCollection();
+        $this->referees = new ArrayCollection();
     }
 
     public function getId(): ?Uuid
@@ -192,7 +202,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function setUsername(string $username): static
     {
-        $this->username = $username;
+        $this->username = trim($username);
 
         return $this;
     }
@@ -219,6 +229,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function addBadge(Badge $badge): static
     {
+        if ($this->badges->exists(
+            fn ($key, Badge $existingBadge) => $existingBadge->getName() === $badge->getName()
+        )) {
+            return $this;
+        }
+
         if (!$this->badges->contains($badge)) {
             $this->badges->add($badge);
             $badge->setPlayer($this);
@@ -309,5 +325,47 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function updateSlug(): void
     {
         $this->slug = mb_strtolower(str_replace([' ', '_'], '-', $this->username));
+    }
+
+    public function getSponsor(): ?self
+    {
+        return $this->sponsor;
+    }
+
+    public function setSponsor(?self $sponsor): static
+    {
+        $this->sponsor = $sponsor;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, self>
+     */
+    public function getReferees(): Collection
+    {
+        return $this->referees;
+    }
+
+    public function addReferee(self $referee): static
+    {
+        if (!$this->referees->contains($referee)) {
+            $this->referees->add($referee);
+            $referee->setSponsor($this);
+        }
+
+        return $this;
+    }
+
+    public function removeReferee(self $referee): static
+    {
+        if ($this->referees->removeElement($referee)) {
+            // set the owning side to null (unless already changed)
+            if ($referee->getSponsor() === $this) {
+                $referee->setSponsor(null);
+            }
+        }
+
+        return $this;
     }
 }
