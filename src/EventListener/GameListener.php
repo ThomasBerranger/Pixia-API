@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace App\EventListener;
 
+use App\Entity\Badge;
 use App\Entity\Game;
 use App\Entity\User;
-use App\Service\BadgeService;
+use App\Enum\Badge as BadgeEnum;
 use App\Service\ImageService;
 use Doctrine\Bundle\DoctrineBundle\Attribute\AsEntityListener;
 use Doctrine\ORM\Event\PostPersistEventArgs;
@@ -20,8 +21,9 @@ readonly class GameListener
 {
     public function __construct(
         private Security     $security,
-        private ImageService $imageService, private BadgeService $badgeService,
-    ) {
+        private ImageService $imageService,
+    )
+    {
     }
 
     public function prePersist(Game $game, PrePersistEventArgs $event): void
@@ -42,10 +44,11 @@ readonly class GameListener
 
             if ($imageName) {
                 $game->setImage($imageName);
-                $event->getObjectManager()->flush();
             }
         }
 
-        $this->badgeService->checkAndAwardCreatorBadge($game->getAuthor());
+        $game->getAuthor()->addBadge(new Badge(BadgeEnum::CREATOR));
+
+        $event->getObjectManager()->flush();
     }
 }

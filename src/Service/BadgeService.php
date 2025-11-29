@@ -16,7 +16,7 @@ readonly class BadgeService
     {
     }
 
-    public function checkAndAwardBadges(User $user): void
+    public function rewardWin(User $user): void
     {
         $totalWins = $this->entityManager
             ->getRepository(Achievement::class)
@@ -31,14 +31,14 @@ readonly class BadgeService
             default => null,
         };
 
-        if ($winsBadge && !$this->userHasBadges($user, [$winsBadge])) {
+        if ($winsBadge && !$this->userHasBadge($user, [$winsBadge])) {
             $newBadge = new Badge();
             $newBadge->setName($winsBadge)->setPlayer($user);
 
             $this->entityManager->persist($newBadge);
         }
 
-        if ($this->entityManager->getRepository(User::class)->getRank($user) <= 10 && !$this->userHasBadges($user, [BadgeEnum::TOP_10_REACHED])) {
+        if ($this->entityManager->getRepository(User::class)->getRank($user) <= 10 && !$this->userHasBadge($user, [BadgeEnum::TOP_10_REACHED])) {
             $newBadge = new Badge();
             $newBadge->setName(BadgeEnum::TOP_10_REACHED)->setPlayer($user);
 
@@ -54,21 +54,10 @@ readonly class BadgeService
         $this->entityManager->flush();
     }
 
-    public function checkAndAwardCreatorBadge(User $user): void
-    {
-        if (!$this->userHasBadges($user, [BadgeEnum::CREATOR])) {
-            $creatorBadge = new Badge();
-            $creatorBadge->setName(BadgeEnum::CREATOR)->setPlayer($user);
-
-            $this->entityManager->persist($creatorBadge);
-            $this->entityManager->flush();
-        }
-    }
-
     /**
      * @param BadgeEnum[] $badgeNames
      */
-    public function userHasBadges(User $user, array $badgeNames): bool
+    public function userHasBadge(User $user, array $badgeNames): bool
     {
         return $user->getBadges()->exists(
             fn ($key, Badge $badge) => in_array($badge->getName(), $badgeNames, true)

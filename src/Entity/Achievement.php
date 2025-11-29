@@ -31,7 +31,7 @@ class Achievement
     private GameDifficulty $difficulty;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
-    #[ORM\JoinColumn(name: 'player_id', referencedColumnName: 'id', nullable: false)]
+    #[ORM\JoinColumn(name: 'player_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private User $player;
 
     #[ORM\ManyToOne(targetEntity: Game::class)]

@@ -133,11 +133,11 @@ final class AdminController extends AbstractController
     {
         $contribution->setStatus($contributionUpdateRequest->status);
 
-        $this->entityManager->flush();
-
         if ($contributionUpdateRequest->status === ContributionStatus::APPROVED) {
             $this->contributionService->rewardPlayer($contribution->getAuthor(), $contribution->getType());
         }
+
+        $this->entityManager->flush();
 
         return $this->json(data: $contribution, context: ['groups' => ['contribution:show']]);
     }

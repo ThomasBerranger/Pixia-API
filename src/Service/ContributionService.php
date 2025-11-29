@@ -32,18 +32,12 @@ readonly class ContributionService
 
     public function rewardPlayer(User $player, ContributionType $contributionType): void
     {
-        if (!$this->badgeService->userHasBadges($player, [BadgeEnum::GAME_SUGGESTION, BadgeEnum::BUG_DETECTED])) {
+        if (!$this->badgeService->userHasBadge($player, [BadgeEnum::GAME_SUGGESTION, BadgeEnum::BUG_DETECTED])) {
             $player->setScore($player->getScore() + 10);
         }
 
         $badgeName = BadgeEnum::from($contributionType->value);
 
-        if (!$this->badgeService->userHasBadges($player, [$badgeName])) {
-            $badge = new Badge();
-            $badge->setPlayer($player)->setName($badgeName);
-
-            $this->entityManager->persist($badge);
-            $this->entityManager->flush();
-        }
+        $player->addBadge(new Badge($badgeName));
     }
 }
