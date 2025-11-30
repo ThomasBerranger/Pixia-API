@@ -56,6 +56,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * @var Collection<int, Badge>
      */
     #[ORM\OneToMany(targetEntity: Badge::class, mappedBy: 'player', cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[ORM\OrderBy(['createdAt' => 'DESC'])]
     #[Groups(['user:me', 'user:show', 'user:index'])]
     private Collection $badges;
 
@@ -238,7 +239,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function addBadge(Badge $badge): static
     {
         if (!$this->badges->exists(
-            fn($key, Badge $existingBadge) => $existingBadge->getName() === $badge->getName()
+            fn ($key, Badge $existingBadge) => $existingBadge->getName() === $badge->getName()
         )) {
             $this->badges->add($badge);
             $badge->setPlayer($this);
