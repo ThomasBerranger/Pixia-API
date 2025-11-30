@@ -36,7 +36,7 @@ class Achievement
 
     #[ORM\ManyToOne(targetEntity: Game::class)]
     #[ORM\JoinColumn(name: 'game_id', referencedColumnName: 'id', nullable: false)]
-    #[Groups('achievement:index')]
+    #[Groups(['achievement:index', 'user:show'])]
     private Game $game;
 
     public function __construct()

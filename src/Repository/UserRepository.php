@@ -7,6 +7,7 @@ namespace App\Repository;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Bridge\Doctrine\Types\UuidType;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\PasswordUpgraderInterface;
@@ -79,5 +80,23 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
             ->setParameter('userCreatedAt', $user->getCreatedAt())
             ->getQuery()
             ->getSingleScalarResult();
+    }
+
+    public function findWithBadgesAchievementsGames(User $user): ?User
+    {
+        /** @var User|null $user */
+        $user = $this->createQueryBuilder('u')
+            ->leftJoin('u.badges', 'b')
+            ->leftJoin('u.achievements', 'a')
+            ->leftJoin('a.game', 'g')
+            ->addSelect('b')
+            ->addSelect('a')
+            ->addSelect('g')
+            ->where('u.id = :userId')
+            ->setParameter('userId', $user->getId(), UuidType::NAME)
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        return $user;
     }
 }

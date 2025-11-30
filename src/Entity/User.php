@@ -90,6 +90,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: self::class, mappedBy: 'sponsor')]
     private Collection $referees;
 
+    /**
+     * @var Collection<int, Achievement>
+     */
+    #[ORM\OneToMany(targetEntity: Achievement::class, mappedBy: 'player', cascade: ['remove'], orphanRemoval: true)]
+    #[Groups(['user:show'])]
+    private Collection $achievements;
+
     public function __construct()
     {
         $this->roles = [];
@@ -99,6 +106,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->hintedGames = new ArrayCollection();
         $this->contributions = new ArrayCollection();
         $this->referees = new ArrayCollection();
+        $this->achievements = new ArrayCollection();
     }
 
     public function getId(): ?Uuid
@@ -229,13 +237,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function addBadge(Badge $badge): static
     {
-        if ($this->badges->exists(
-            fn ($key, Badge $existingBadge) => $existingBadge->getName() === $badge->getName()
+        if (!$this->badges->exists(
+            fn($key, Badge $existingBadge) => $existingBadge->getName() === $badge->getName()
         )) {
-            return $this;
-        }
-
-        if (!$this->badges->contains($badge)) {
             $this->badges->add($badge);
             $badge->setPlayer($this);
         }
@@ -367,5 +371,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         }
 
         return $this;
+    }
+
+    /**
+     * @return Collection<int, Achievement>
+     */
+    public function getAchievements(): Collection
+    {
+        return $this->achievements;
     }
 }

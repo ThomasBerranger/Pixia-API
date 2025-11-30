@@ -59,6 +59,11 @@ final class UserController extends AbstractController
     #[Route(path: '/{slug:user}', name: 'show', requirements: ['username' => '[a-z0-9àâäéèêëïîôùûüÿæœç_-]+'], methods: ['GET'], format: 'json')]
     public function show(User $user): JsonResponse
     {
-        return $this->json(data: ['currentUser' => $this->authenticatedUserService->getUser(), 'user' => $user], context: ['groups' => ['user:show']]);
+        $currentUser = $this->authenticatedUserService->getUser();
+
+        return $this->json(data: [
+            'user' => $this->entityManager->getRepository(User::class)->findWithBadgesAchievementsGames($user),
+            'currentUser' => $currentUser ? $this->entityManager->getRepository(User::class)->findWithBadgesAchievementsGames($currentUser) : null,
+        ], context: ['groups' => ['user:show']]);
     }
 }

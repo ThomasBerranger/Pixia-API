@@ -38,7 +38,7 @@ readonly class UserService
 
         $sponsor->addBadge(new Badge(BadgeEnum::SPONSOR));
 
-        if ($this->entityManager->getRepository(User::class)->count(['sponsor' => $sponsor]) >= 5) {
+        if ($sponsor->getReferees()->count() >= 5) {
             $sponsor->addBadge(new Badge(BadgeEnum::SPONSOR_5));
         }
 

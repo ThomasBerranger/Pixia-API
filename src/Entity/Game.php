@@ -28,7 +28,7 @@ class Game
     private ?Uuid $id = null;
 
     #[ORM\Column(enumType: GameType::class)]
-    #[Groups(['game:show', 'game:show:admin', 'game:index:admin'])]
+    #[Groups(['game:show', 'game:show:admin', 'game:index:admin', 'user:show'])]
     private GameType $type;
 
     #[Assert\NotBlank]
@@ -46,7 +46,7 @@ class Game
     #[Assert\NotNull]
     #[Assert\Type(\DateTimeInterface::class)]
     #[ORM\Column(type: Types::DATE_MUTABLE)]
-    #[Groups(['game:show', 'game:show:admin', 'game:index:admin'])]
+    #[Groups(['game:show', 'game:show:admin', 'game:index:admin', 'user:show'])]
     private \DateTime $date;
 
     #[Assert\NotBlank(message: 'Difficulty is required')]
@@ -62,7 +62,7 @@ class Game
 
     #[Assert\Length(min: 5, max: 255)]
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['game:show', 'game:show:admin', 'game:index:admin'])]
+    #[Groups(['game:show', 'game:show:admin', 'game:index:admin', 'user:show'])]
     private ?string $image;
 
     private string $imageUrl;
