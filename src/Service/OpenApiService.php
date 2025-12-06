@@ -117,7 +117,7 @@ readonly class OpenApiService
                             ],
                             'hint' => [
                                 'type' => 'string',
-                                'description' => 'Indice subtil sans révéler les noms',
+                                'description' => 'Indice subtil sans révéler les noms, Doit obligatoirement faire moins de 255 caractères',
                             ],
                         ],
                         'required' => ['prompt', 'solution', 'hint'],
