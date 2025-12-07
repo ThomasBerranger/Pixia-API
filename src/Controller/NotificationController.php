@@ -27,15 +27,15 @@ final class NotificationController extends AbstractController
     #[Route(name: 'index', methods: ['GET'], format: 'json')]
     public function index(): JsonResponse
     {
-        $user = $this->authenticatedUserService->getUserOrThrow();
-        $notifications = $this->notificationRepository->findAllByNewest();
+        $player = $this->authenticatedUserService->getUserOrThrow();
+        $notifications = $this->notificationRepository->findAllByNewestFor($player);
 
         foreach ($notifications as $notification) {
-            $isRead = $notification->getReaders()->contains($user);
+            $isRead = $notification->getReaders()->contains($player);
             $notification->setRead($isRead);
 
             if (!$isRead) {
-                $notification->addReader($user);
+                $notification->addReader($player);
             }
         }
 

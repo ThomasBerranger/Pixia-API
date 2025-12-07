@@ -49,6 +49,9 @@ class Notification
     #[Groups(["notification:index"])]
     private bool $read = false;
 
+    #[ORM\ManyToOne]
+    private ?User $player = null;
+
     public function __construct()
     {
         $this->readers = new ArrayCollection();
@@ -139,5 +142,17 @@ class Notification
     public function setRead(bool $isRead): void
     {
         $this->read = $isRead;
+    }
+
+    public function getPlayer(): ?User
+    {
+        return $this->player;
+    }
+
+    public function setPlayer(?User $player): static
+    {
+        $this->player = $player;
+
+        return $this;
     }
 }
