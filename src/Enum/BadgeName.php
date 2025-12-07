@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Enum;
 
-enum Badge: string
+enum BadgeName: string
 {
     case CREATOR = 'CREATOR';
     case BETA_TESTER = 'BETA_TESTER';

@@ -10,7 +10,7 @@ use App\Entity\Achievement;
 use App\Entity\Badge;
 use App\Entity\Game;
 use App\Entity\User;
-use App\Enum\Badge as BadgeEnum;
+use App\Enum\BadgeName;
 use App\Service\AuthenticatedUserService;
 use App\Service\UserService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -48,7 +48,7 @@ class AuthController extends AbstractController
             $user->setSponsor($sponsor);
         }
 
-        $user->addBadge(new Badge(BadgeEnum::BETA_TESTER));
+        $user->addBadge(new Badge(BadgeName::BETA_TESTER));
 
         $this->entityManager->persist($user);
 

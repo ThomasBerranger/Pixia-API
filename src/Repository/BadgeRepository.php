@@ -19,7 +19,7 @@ class BadgeRepository extends ServiceEntityRepository
     }
 
     //    /**
-    //     * @return Badge[] Returns an array of Badge objects
+    //     * @return BadgeName[] Returns an array of BadgeName objects
     //     */
     //    public function findByExampleField($value): array
     //    {
@@ -33,7 +33,7 @@ class BadgeRepository extends ServiceEntityRepository
     //        ;
     //    }
 
-    //    public function findOneBySomeField($value): ?Badge
+    //    public function findOneBySomeField($value): ?BadgeName
     //    {
     //        return $this->createQueryBuilder('b')
     //            ->andWhere('b.exampleField = :val')

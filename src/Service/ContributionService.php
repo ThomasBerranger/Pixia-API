@@ -7,7 +7,7 @@ namespace App\Service;
 use App\Entity\Badge;
 use App\Entity\Contribution;
 use App\Entity\User;
-use App\Enum\Badge as BadgeEnum;
+use App\Enum\BadgeName;
 use App\Enum\ContributionStatus;
 use App\Enum\ContributionType;
 use Doctrine\ORM\EntityManagerInterface;
@@ -32,11 +32,11 @@ readonly class ContributionService
 
     public function rewardPlayer(User $player, ContributionType $contributionType): void
     {
-        if (!$this->badgeService->userHasBadge($player, [BadgeEnum::GAME_SUGGESTION, BadgeEnum::BUG_DETECTED])) {
+        if (!$this->badgeService->userHasBadge($player, [BadgeName::GAME_SUGGESTION, BadgeName::BUG_DETECTED])) {
             $player->setScore($player->getScore() + 10);
         }
 
-        $badgeName = BadgeEnum::from($contributionType->value);
+        $badgeName = BadgeName::from($contributionType->value);
 
         $player->addBadge(new Badge($badgeName));
     }

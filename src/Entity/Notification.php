@@ -50,10 +50,12 @@ class Notification
     private bool $read = false;
 
     #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: true)]
     private ?User $player = null;
 
     public function __construct()
     {
+        $this->createdAt = new DateTimeImmutable();
         $this->readers = new ArrayCollection();
     }
 

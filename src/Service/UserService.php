@@ -7,7 +7,7 @@ namespace App\Service;
 use App\Entity\Badge;
 use App\Entity\Game;
 use App\Entity\User;
-use App\Enum\Badge as BadgeEnum;
+use App\Enum\BadgeName;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
@@ -36,10 +36,10 @@ readonly class UserService
 
         $sponsor->setScore($sponsor->getScore() + 5);
 
-        $sponsor->addBadge(new Badge(BadgeEnum::SPONSOR));
+        $sponsor->addBadge(new Badge(BadgeName::SPONSOR));
 
         if ($sponsor->getReferees()->count() >= 5) {
-            $sponsor->addBadge(new Badge(BadgeEnum::SPONSOR_5));
+            $sponsor->addBadge(new Badge(BadgeName::SPONSOR_5));
         }
 
         return $sponsor;

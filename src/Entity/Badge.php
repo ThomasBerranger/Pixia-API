@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
-use App\Enum\Badge as BadgeEnum;
+use App\Enum\BadgeName;
 use App\Repository\BadgeRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\IdGenerator\UuidGenerator;
@@ -24,7 +24,7 @@ class Badge
 
     #[ORM\Column(length: 255)]
     #[Groups(['user:me', 'user:show', 'user:index'])]
-    private BadgeEnum $name;
+    private BadgeName $name;
 
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
@@ -33,11 +33,12 @@ class Badge
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private User $player;
 
-    public function __construct(?BadgeEnum $name = null)
+    public function __construct(?BadgeName $name = null)
     {
         if ($name) {
             $this->name = $name;
         }
+
         $this->createdAt = new \DateTimeImmutable();
     }
 
@@ -46,12 +47,12 @@ class Badge
         return $this->id;
     }
 
-    public function getName(): BadgeEnum
+    public function getName(): BadgeName
     {
         return $this->name;
     }
 
-    public function setName(BadgeEnum $name): static
+    public function setName(BadgeName $name): static
     {
         $this->name = $name;
 

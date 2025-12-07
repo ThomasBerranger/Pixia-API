@@ -47,8 +47,13 @@ final class NotificationController extends AbstractController
     #[Route(path: '/has-unread', name: 'has-unread', methods: ['GET'], format: 'json')]
     public function hasUnread(): JsonResponse
     {
-        return $this->json(data: [
-            'ok'
-        ], context: ['groups' => ['user:index']]);
+        $player = $this->authenticatedUserService->getUserOrThrow();
+        $notifications = $this->notificationRepository->findAllByNewestFor($player);
+
+        if (array_any($notifications, fn ($notification) => !$notification->getReaders()->contains($player))) {
+            return $this->json(data: true, context: ['groups' => ['user:index']]);
+        }
+
+        return $this->json(data: false, context: ['groups' => ['user:index']]);
     }
 }

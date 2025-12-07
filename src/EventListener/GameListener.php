@@ -7,7 +7,7 @@ namespace App\EventListener;
 use App\Entity\Badge;
 use App\Entity\Game;
 use App\Entity\User;
-use App\Enum\Badge as BadgeEnum;
+use App\Enum\BadgeName;
 use App\Service\ImageService;
 use Doctrine\Bundle\DoctrineBundle\Attribute\AsEntityListener;
 use Doctrine\ORM\Event\PostPersistEventArgs;
@@ -47,7 +47,7 @@ readonly class GameListener
             }
         }
 
-        $game->getAuthor()->addBadge(new Badge(BadgeEnum::CREATOR));
+        $game->getAuthor()->addBadge(new Badge(BadgeName::CREATOR));
 
         $event->getObjectManager()->flush();
     }

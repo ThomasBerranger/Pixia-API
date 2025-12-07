@@ -7,7 +7,7 @@ namespace App\Service;
 use App\Entity\Achievement;
 use App\Entity\Badge;
 use App\Entity\User;
-use App\Enum\Badge as BadgeEnum;
+use App\Enum\BadgeName;
 use Doctrine\ORM\EntityManagerInterface;
 
 readonly class BadgeService
@@ -23,11 +23,11 @@ readonly class BadgeService
             ->count(['player' => $user]);
 
         $winsBadge = match (true) {
-            $totalWins >= 300 => BadgeEnum::WINS_300,
-            $totalWins >= 100 => BadgeEnum::WINS_100,
-            $totalWins >= 50 => BadgeEnum::WINS_50,
-            $totalWins >= 10 => BadgeEnum::WINS_10,
-            $totalWins >= 1 => BadgeEnum::WINS_1,
+            $totalWins >= 300 => BadgeName::WINS_300,
+            $totalWins >= 100 => BadgeName::WINS_100,
+            $totalWins >= 50 => BadgeName::WINS_50,
+            $totalWins >= 10 => BadgeName::WINS_10,
+            $totalWins >= 1 => BadgeName::WINS_1,
             default => null,
         };
 
@@ -38,9 +38,9 @@ readonly class BadgeService
             $this->entityManager->persist($newBadge);
         }
 
-        if ($this->entityManager->getRepository(User::class)->getRank($user) <= 10 && !$this->userHasBadge($user, [BadgeEnum::TOP_10_REACHED])) {
+        if ($this->entityManager->getRepository(User::class)->getRank($user) <= 10 && !$this->userHasBadge($user, [BadgeName::TOP_10_REACHED])) {
             $newBadge = new Badge();
-            $newBadge->setName(BadgeEnum::TOP_10_REACHED)->setPlayer($user);
+            $newBadge->setName(BadgeName::TOP_10_REACHED)->setPlayer($user);
 
             $this->entityManager->persist($newBadge);
         }
@@ -55,7 +55,7 @@ readonly class BadgeService
     }
 
     /**
-     * @param BadgeEnum[] $badgeNames
+     * @param BadgeName[] $badgeNames
      */
     public function userHasBadge(User $user, array $badgeNames): bool
     {
