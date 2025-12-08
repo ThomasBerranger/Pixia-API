@@ -92,6 +92,7 @@ final class AdminController extends AbstractController
         $oldGameDate = $game->getDate();
 
         $game->setSolution($updatedGame->solution);
+        $game->setEnglishSolution($updatedGame->englishSolution);
         $game->setHint($updatedGame->hint);
         $game->setDate($updatedGame->date);
         $game->setDifficulty($updatedGame->difficulty);

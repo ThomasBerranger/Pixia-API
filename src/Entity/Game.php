@@ -73,6 +73,12 @@ class Game
     #[ORM\ManyToMany(targetEntity: User::class, mappedBy: 'hintedGames')]
     private Collection $hintedPlayers;
 
+    #[Assert\NotBlank]
+    #[Assert\Length(min: 5, max: 255)]
+    #[ORM\Column(length: 255)]
+    #[Groups(['game:solution', 'game:show:admin'])]
+    private string $englishSolution;
+
     public function __construct()
     {
         $this->type = GameType::MULTIVERS;
@@ -204,6 +210,18 @@ class Game
         if ($this->hintedPlayers->removeElement($hintedPlayer)) {
             $hintedPlayer->removeHintedGame($this);
         }
+
+        return $this;
+    }
+
+    public function getEnglishSolution(): string
+    {
+        return $this->englishSolution;
+    }
+
+    public function setEnglishSolution(string $englishSolution): static
+    {
+        $this->englishSolution = $englishSolution;
 
         return $this;
     }

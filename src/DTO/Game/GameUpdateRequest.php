@@ -18,6 +18,10 @@ class GameUpdateRequest
 
     #[Assert\NotBlank]
     #[Assert\Length(min: 5, max: 255)]
+    public string $englishSolution;
+
+    #[Assert\NotBlank]
+    #[Assert\Length(min: 5, max: 255)]
     public string $hint;
 
     #[Assert\NotNull]

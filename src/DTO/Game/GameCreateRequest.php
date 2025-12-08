@@ -15,6 +15,10 @@ class GameCreateRequest
 
     #[Assert\NotBlank]
     #[Assert\Length(min: 5, max: 255)]
+    public string $englishSolution;
+
+    #[Assert\NotBlank]
+    #[Assert\Length(min: 5, max: 255)]
     public string $hint;
 
     #[Assert\NotNull]
@@ -28,6 +32,7 @@ class GameCreateRequest
         $game = new Game();
 
         $game->setSolution($this->solution);
+        $game->setEnglishSolution($this->englishSolution);
         $game->setHint($this->hint);
         $game->setDate($this->date);
         $game->setImageUrl($this->imageUrl);

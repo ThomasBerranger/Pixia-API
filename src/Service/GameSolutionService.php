@@ -26,6 +26,15 @@ readonly class GameSolutionService
             return $game;
         }
 
+        if ($this->wordsMatch($game->getEnglishSolution(), $answer)) {
+            if ($user) {
+                $this->historyService->saveResult($game);
+                $this->userService->addPoints($user, $game);
+            }
+
+            return $game;
+        }
+
         return false;
     }
 

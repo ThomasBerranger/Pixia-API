@@ -113,14 +113,18 @@ readonly class OpenApiService
                             ],
                             'solution' => [
                                 'type' => 'string',
-                                'description' => 'Nom des 2 sources séparées par le mot "et" et ne finit pas par un . (ex: Harry Potter et Star Wars)',
+                                'description' => 'Nom FRANCAIS des 2 sources séparées par le mot "et" et ne finit pas par un . (ex: Intouchables et Léon). Doit obligatoirement faire entre 5 et 255 caractères',
+                            ],
+                            'englishSolution' => [
+                                'type' => 'string',
+                                'description' => 'Nom ANGLAIS des 2 sources séparées par le mot "et" et ne finit pas par un . (ex: Harry Potter et Star Wars). Doit obligatoirement faire entre 5 et 255 caractères',
                             ],
                             'hint' => [
                                 'type' => 'string',
-                                'description' => 'Indice subtil sans révéler les noms, Doit obligatoirement faire moins de 255 caractères',
+                                'description' => 'Indice subtil sans révéler les noms. Doit obligatoirement faire entre 5 et 255 caractères',
                             ],
                         ],
-                        'required' => ['prompt', 'solution', 'hint'],
+                        'required' => ['prompt', 'solution', 'englishSolution', 'hint'],
                         'additionalProperties' => false,
                     ],
                 ],
