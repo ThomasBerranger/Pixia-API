@@ -21,19 +21,11 @@ class ResetPasswordRequest implements ResetPasswordRequestInterface
     #[ORM\Column(type: UuidType::NAME, unique: true)]
     #[ORM\GeneratedValue(strategy: 'CUSTOM')]
     #[ORM\CustomIdGenerator(class: 'doctrine.uuid_generator')]
-    private ?Uuid $id = null {
-        get {
-            return $this->id;
-        }
-    }
+    private ?Uuid $id = null;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
-    public User $user {
-        get {
-            return $this->user;
-        }
-    }
+    public User $user;
 
     public function __construct(User $user, \DateTimeInterface $expiresAt, string $selector, string $hashedToken)
     {
@@ -41,4 +33,8 @@ class ResetPasswordRequest implements ResetPasswordRequestInterface
         $this->initialize($expiresAt, $selector, $hashedToken);
     }
 
+    public function getUser(): object
+    {
+        return $this->user;
+    }
 }
