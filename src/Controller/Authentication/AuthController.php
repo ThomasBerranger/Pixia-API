@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Controller;
+namespace App\Controller\Authentication;
 
 use App\Attribute\RateLimit;
-use App\DTO\User\GoogleAuthRequest;
-use App\DTO\User\RegisterRequest;
+use App\DTO\Authentication\GoogleAuthRequest;
+use App\DTO\Authentication\RegisterRequest;
 use App\Entity\Achievement;
 use App\Entity\Badge;
 use App\Entity\Game;

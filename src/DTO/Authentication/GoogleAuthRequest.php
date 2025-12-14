@@ -2,13 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\DTO\User;
+namespace App\DTO\Authentication;
 
 use Symfony\Component\Validator\Constraints as Assert;
 
 class GoogleAuthRequest
 {
-
     /**
      * @var array{access_token: string}
      */
