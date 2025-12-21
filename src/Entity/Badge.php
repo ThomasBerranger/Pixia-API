@@ -29,7 +29,7 @@ class Badge
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
 
-    #[ORM\ManyToOne]
+    #[ORM\ManyToOne(inversedBy: 'badges')]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private User $player;
 

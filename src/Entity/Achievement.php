@@ -30,7 +30,7 @@ class Achievement
     #[ORM\Column(enumType: GameDifficulty::class)]
     private GameDifficulty $difficulty;
 
-    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'achievements')]
     #[ORM\JoinColumn(name: 'player_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     private User $player;
 

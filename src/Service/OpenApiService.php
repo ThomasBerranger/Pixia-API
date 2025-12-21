@@ -117,7 +117,7 @@ readonly class OpenApiService
                             ],
                             'englishSolution' => [
                                 'type' => 'string',
-                                'description' => 'Nom ANGLAIS des 2 sources séparées par le mot "et" et ne finit pas par un . (ex: Harry Potter et Star Wars). Doit obligatoirement faire entre 5 et 255 caractères',
+                                'description' => 'Nom ANGLAIS des 2 sources séparées par le mot "and" et ne finit pas par un . (ex: Harry Potter and Star Wars). Doit obligatoirement faire entre 5 et 255 caractères',
                             ],
                             'hint' => [
                                 'type' => 'string',

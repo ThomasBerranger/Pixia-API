@@ -20,5 +20,6 @@ enum BadgeName: string
     case SPONSOR_5 = 'SPONSOR_5';
     case STREAK_10 = 'STREAK_10';
     case STREAK_30 = 'STREAK_30';
-    case STREAK_60 = 'STREAK_60';
+    case STREAK_90 = 'STREAK_90';
+    case STREAK_200 = 'STREAK_200';
 }

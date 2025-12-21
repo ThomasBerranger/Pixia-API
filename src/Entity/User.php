@@ -98,6 +98,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(['user:show'])]
     private Collection $achievements;
 
+    /**
+     * @var array<string, int>
+     */
+    #[Groups(['user:show', 'user:index'])]
+    private array $streaks = ['current' => 0, 'best' => 0];
+
     public function __construct()
     {
         $this->roles = [];
@@ -239,7 +245,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function addBadge(Badge $badge): static
     {
         if (!$this->badges->exists(
-            fn ($key, Badge $existingBadge) => $existingBadge->getName() === $badge->getName()
+            fn($key, Badge $existingBadge) => $existingBadge->getName() === $badge->getName()
         )) {
             $this->badges->add($badge);
             $badge->setPlayer($this);
@@ -380,5 +386,21 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getAchievements(): Collection
     {
         return $this->achievements;
+    }
+
+    /**
+     * @return array<string, int>
+     */
+    public function getStreaks(): array
+    {
+        return $this->streaks;
+    }
+
+    /**
+     * @param array<string, int> $streaks
+     */
+    public function setStreaks(array $streaks): void
+    {
+        $this->streaks = $streaks;
     }
 }

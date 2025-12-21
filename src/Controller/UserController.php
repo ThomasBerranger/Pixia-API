@@ -6,7 +6,9 @@ namespace App\Controller;
 
 use App\DTO\User\UpdateRequest;
 use App\Entity\User;
+use App\Repository\UserRepository;
 use App\Service\AuthenticatedUserService;
+use Doctrine\DBAL\Exception;
 use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -19,22 +21,28 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final class UserController extends AbstractController
 {
     public function __construct(
-        private readonly EntityManagerInterface   $entityManager,
         private readonly AuthenticatedUserService $authenticatedUserService,
         private readonly JWTTokenManagerInterface $JWTTokenManager,
+        private readonly UserRepository           $userRepository,
     )
     {
     }
 
+    /**
+     * @throws Exception
+     */
     #[Route(path: '/leaderboard', name: 'leaderboard', methods: ['GET'], format: 'json')]
     public function leaderboard(): JsonResponse
     {
-        $currentUserRank = $this->entityManager->getRepository(User::class)->getRank($this->authenticatedUserService->getUser());
+        $player = $this->authenticatedUserService->getUser();
+
+        $playerRank = $this->userRepository->getRank($player);
 
         return $this->json(data: [
-            'leaderboard' => $this->entityManager->getRepository(User::class)->findOrderedByScores(10),
-            'currentUser' => $currentUserRank > 10 ? $this->authenticatedUserService->getUser() : null,
-            'currentUserRank' => $currentUserRank,
+            'leaderboard' => $this->userRepository->getLeaderboard(),
+            'player' => $playerRank > 10 ? $player : null,
+            'playerRank' => $playerRank,
+            'playerCurrentStreak' => $playerRank > 10 && $player instanceof User ? $this->userRepository->getCurrentStreak($player) : null,
         ], context: ['groups' => ['user:index']]);
     }
 
@@ -62,8 +70,8 @@ final class UserController extends AbstractController
         $currentUser = $this->authenticatedUserService->getUser();
 
         return $this->json(data: [
-            'user' => $this->entityManager->getRepository(User::class)->findWithBadgesAchievementsGames($user),
-            'currentUser' => $currentUser ? $this->entityManager->getRepository(User::class)->findWithBadgesAchievementsGames($currentUser) : null,
+            'user' => $this->userRepository->findWithBadgesAchievementsGames($user),
+            'currentUser' => $currentUser ? $this->userRepository->findWithBadgesAchievementsGames($currentUser) : null,
         ], context: ['groups' => ['user:show']]);
     }
 }

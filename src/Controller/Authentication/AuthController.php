@@ -12,9 +12,11 @@ use App\Entity\Badge;
 use App\Entity\Game;
 use App\Entity\User;
 use App\Enum\BadgeName;
+use App\Repository\UserRepository;
 use App\Service\AuthenticatedUserService;
 use App\Service\GoogleApiService;
 use App\Service\UserService;
+use Doctrine\DBAL\Exception;
 use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Random\RandomException;
@@ -39,6 +41,7 @@ class AuthController extends AbstractController
         private readonly UserService                 $userService,
         private readonly GoogleApiService            $googleApiService,
         private readonly UserPasswordHasherInterface $userPasswordHasher,
+        private readonly UserRepository              $userRepository,
     )
     {
     }
@@ -60,20 +63,25 @@ class AuthController extends AbstractController
         return $this->json(['token' => $token], 201);
     }
 
+    /**
+     * @throws Exception
+     */
     #[Route('/me', name: 'me', methods: ['GET'])]
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
     public function show(): JsonResponse
     {
-        $user = $this->authenticatedUserService->getUserOrThrow();
+        $player = $this->authenticatedUserService->getUserOrThrow();
 
-        $data['user'] = $user;
-        $data['rank'] = $this->entityManager->getRepository(User::class)->getRank($user);
+        $data['user'] = $player;
+        $data['rank'] = $this->userRepository->getRank($player);
 
         $data['games'] = $this->entityManager->getRepository(Game::class)->countAvailableGames();
 
-        $achievementData = $this->entityManager->getRepository(Achievement::class)->findLastWithCountFor($user, 3);
+        $achievementData = $this->entityManager->getRepository(Achievement::class)->findLastWithCountFor($player, 3);
         $data['success'] = $achievementData['count'];
         $data['history'] = $achievementData['history'];
+
+        $data = [...$data, 'streak' => [...$this->userRepository->getStreaks($player)]];
 
         return $this->json($data, context: ['groups' => ['user:me', 'achievement:index']]);
     }

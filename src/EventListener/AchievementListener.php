@@ -19,6 +19,6 @@ readonly class AchievementListener
 
     public function postPersist(Achievement $achievement, PostPersistEventArgs $event): void
     {
-        $this->badgeService->rewardWin($achievement->getPlayer());
+        $this->badgeService->reward($achievement->getPlayer());
     }
 }

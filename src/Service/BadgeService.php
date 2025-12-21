@@ -8,20 +8,38 @@ use App\Entity\Achievement;
 use App\Entity\Badge;
 use App\Entity\User;
 use App\Enum\BadgeName;
+use App\Repository\UserRepository;
+use Doctrine\DBAL\Exception;
 use Doctrine\ORM\EntityManagerInterface;
 
 readonly class BadgeService
 {
-    public function __construct(private EntityManagerInterface $entityManager)
+    public function __construct(
+        private EntityManagerInterface $entityManager,
+        private UserRepository         $userRepository
+    )
     {
     }
 
-    public function rewardWin(User $user): void
+    /**
+     * @throws Exception
+     */
+    public function reward(User $player): void
     {
         $totalWins = $this->entityManager
             ->getRepository(Achievement::class)
-            ->count(['player' => $user]);
+            ->count(['player' => $player]);
 
+        $this->rewardWin($totalWins, $player);
+        $this->rewardTopTenReached($player);
+        $this->rewardSponsor($totalWins, $player);
+        $this->rewardStreak($player);
+
+        $this->entityManager->flush();
+    }
+
+    private function rewardWin(int $totalWins, User $player): void
+    {
         $winsBadge = match (true) {
             $totalWins >= 300 => BadgeName::WINS_300,
             $totalWins >= 100 => BadgeName::WINS_100,
@@ -31,27 +49,54 @@ readonly class BadgeService
             default => null,
         };
 
-        if ($winsBadge && !$this->userHasBadge($user, [$winsBadge])) {
+        if ($winsBadge && !$this->userHasBadge($player, [$winsBadge])) {
             $newBadge = new Badge();
-            $newBadge->setName($winsBadge)->setPlayer($user);
+            $newBadge->setName($winsBadge)->setPlayer($player);
 
             $this->entityManager->persist($newBadge);
         }
+    }
 
-        if ($this->entityManager->getRepository(User::class)->getRank($user) <= 10 && !$this->userHasBadge($user, [BadgeName::TOP_10_REACHED])) {
+    private function rewardTopTenReached(User $player): void
+    {
+        if ($this->entityManager->getRepository(User::class)->getRank($player) <= 10 && !$this->userHasBadge($player, [BadgeName::TOP_10_REACHED])) {
             $newBadge = new Badge();
-            $newBadge->setName(BadgeName::TOP_10_REACHED)->setPlayer($user);
+            $newBadge->setName(BadgeName::TOP_10_REACHED)->setPlayer($player);
 
             $this->entityManager->persist($newBadge);
         }
+    }
 
-        if ($totalWins === 10 && $user->getSponsor()) {
-            $sponsor = $user->getSponsor();
+    private function rewardSponsor(int $totalWins, User $player): void
+    {
+        if ($totalWins === 10 && $player->getSponsor()) {
+            $sponsor = $player->getSponsor();
 
             $sponsor->setScore($sponsor->getScore() + 5);
         }
+    }
 
-        $this->entityManager->flush();
+    /**
+     * @throws Exception
+     */
+    private function rewardStreak(User $player): void
+    {
+        $currentStreak = $this->userRepository->getStreaks($player)['current'];
+
+        $streakBadge = match (true) {
+            $currentStreak >= 200 => BadgeName::STREAK_200,
+            $currentStreak >= 90 => BadgeName::STREAK_90,
+            $currentStreak >= 30 => BadgeName::STREAK_30,
+            $currentStreak >= 10 => BadgeName::STREAK_10,
+            default => null,
+        };
+
+        if ($streakBadge && !$this->userHasBadge($player, [$streakBadge])) {
+            $newBadge = new Badge();
+            $newBadge->setName($streakBadge)->setPlayer($player);
+
+            $this->entityManager->persist($newBadge);
+        }
     }
 
     /**
