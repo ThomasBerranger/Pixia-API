@@ -144,7 +144,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
                 GROUP BY streak_id
             )
             SELECT 
-                COALESCE(MAX(CASE WHEN min_game_num = 2 THEN streak_length END), 0) as " . self::CURRENT_STREAK_KEY . ",
+                COALESCE(MAX(CASE WHEN min_game_num <= 2 THEN streak_length END), 0) as " . self::CURRENT_STREAK_KEY . ",
                 COALESCE(MAX(streak_length), 0) as " . self::BEST_STREAK_KEY . "
             FROM all_streaks
         ";
@@ -228,7 +228,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
             )
             SELECT 
                 player_id,
-                COALESCE(MAX(CASE WHEN min_game_num = 2 THEN streak_length END), 0) as " . self::CURRENT_STREAK_KEY . "
+                COALESCE(MAX(CASE WHEN min_game_num <= 2 THEN streak_length END), 0) as " . self::CURRENT_STREAK_KEY . "
             FROM final_streaks
             GROUP BY player_id
         ";
