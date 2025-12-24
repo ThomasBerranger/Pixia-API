@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Command;
 
-use App\Entity\User;
 use App\Enum\GameDifficulty;
 use App\Enum\GameType;
 use App\Repository\GameRepository;

@@ -16,7 +16,8 @@ readonly class BadgeService
 {
     public function __construct(
         private EntityManagerInterface $entityManager,
-        private UserRepository         $userRepository
+        private UserRepository         $userRepository,
+        private UserService           $userService,
     )
     {
     }
@@ -72,7 +73,7 @@ readonly class BadgeService
         if ($totalWins === 10 && $player->getSponsor()) {
             $sponsor = $player->getSponsor();
 
-            $sponsor->setScore($sponsor->getScore() + 5);
+            $this->userService->addPoints($sponsor, 5);
         }
     }
 

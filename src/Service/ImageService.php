@@ -6,6 +6,7 @@ namespace App\Service;
 
 use App\DTO\Game\GameUpdateImageRequest;
 use App\Enum\GameType;
+use DateTimeImmutable;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -25,7 +26,7 @@ readonly class ImageService
     {
     }
 
-    public function downloadAndStore(GameType $gameType, \DateTime $date, string $imageUrl): ?string
+    public function downloadAndStore(GameType $gameType, DateTimeImmutable $date, string $imageUrl): ?string
     {
         if (!filter_var($imageUrl, FILTER_VALIDATE_URL)) {
             return null;
@@ -40,7 +41,7 @@ readonly class ImageService
         return $imageName;
     }
 
-    public function store(GameType $gameType, \DateTime $date, ?string $image, mixed $newImage): string
+    public function store(GameType $gameType, DateTimeImmutable $date, ?string $image, mixed $newImage): string
     {
         if (!$newImage instanceof UploadedFile || !$this->validate($newImage)) {
             throw new UnprocessableEntityHttpException('Image introuvable ou non valide.');
@@ -59,7 +60,7 @@ readonly class ImageService
         return $filename;
     }
 
-    public function move(\DateTime $oldDate, GameType $gameType, \DateTime $newDate, string $imageName): ?string
+    public function move(DateTimeImmutable $oldDate, GameType $gameType, DateTimeImmutable $newDate, string $imageName): ?string
     {
         $oldDirectoryPath = $this->getDirectoryPath($gameType, $oldDate, isWriteOperation: true);
         $oldFilePath = $oldDirectoryPath . '/' . $imageName;
@@ -92,7 +93,7 @@ readonly class ImageService
         }
     }
 
-    private function createRepository(GameType $gameType, \DateTime $date): string
+    private function createRepository(GameType $gameType, DateTimeImmutable $date): string
     {
         $directoryPath = $this->getDirectoryPath($gameType, $date, isWriteOperation: true);
 
@@ -103,7 +104,7 @@ readonly class ImageService
         return $directoryPath;
     }
 
-    public function getDirectoryPath(GameType $gameType, \DateTime $date, bool $isWriteOperation = false): string
+    public function getDirectoryPath(GameType $gameType, DateTimeImmutable $date, bool $isWriteOperation = false): string
     {
         $baseDir = $isWriteOperation ? $this->uploadImagesDir : 'images';
 

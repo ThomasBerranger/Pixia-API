@@ -7,6 +7,7 @@ namespace App\Serializer;
 use App\Entity\Game;
 use App\Enum\GameType;
 use App\Service\ImageService;
+use DateTimeImmutable;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Serializer\Exception\ExceptionInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
@@ -39,7 +40,7 @@ class GameNormalizer implements NormalizerInterface
             && is_string($data['type'])
             && is_string($data['date'])
         ) {
-            $data['image'] = $this->imageService->getDirectoryPath(GameType::from($data['type']), new \DateTime($data['date'])).'/'.$data['image'];
+            $data['image'] = $this->imageService->getDirectoryPath(GameType::from($data['type']), new DateTimeImmutable($data['date'])).'/'.$data['image'];
         }
 
         return $data;

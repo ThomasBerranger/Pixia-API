@@ -37,7 +37,7 @@ readonly class GameSolutionService
     {
         if (!$this->achievementRepository->findOneBy(['player' => $player, 'game' => $game])) {
             $this->achievementService->saveResult($player, $game);
-            $this->userService->addPoints($player, $game);
+            $this->userService->addGamePoints($player, $game);
 
             $this->entityManager->flush();
         }

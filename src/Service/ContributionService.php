@@ -15,7 +15,11 @@ use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
 readonly class ContributionService
 {
-    public function __construct(private EntityManagerInterface $entityManager, private BadgeService $badgeService)
+    public function __construct(
+        private EntityManagerInterface $entityManager,
+        private BadgeService           $badgeService,
+        private UserService            $userService,
+    )
     {
     }
 
@@ -33,7 +37,7 @@ readonly class ContributionService
     public function rewardPlayer(User $player, ContributionType $contributionType): void
     {
         if (!$this->badgeService->userHasBadge($player, [BadgeName::GAME_SUGGESTION, BadgeName::BUG_DETECTED])) {
-            $player->setScore($player->getScore() + 10);
+            $this->userService->addPoints($player, 10);
         }
 
         $badgeName = BadgeName::from($contributionType->value);

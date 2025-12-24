@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\DTO\Game;
 
 use App\Enum\GameType;
+use DateTimeImmutable;
+use DoctrineExtensions\Query\Mysql\Date;
 use Symfony\Component\Validator\Constraints as Assert;
 
 class GameShowRequest
@@ -20,11 +22,11 @@ class GameShowRequest
     ) {
     }
 
-    public function getDate(): \DateTime
+    public function getDate(): DateTimeImmutable
     {
-        return $this->date && \DateTime::createFromFormat('Y-m-d', $this->date) ?
-            \DateTime::createFromFormat('Y-m-d', $this->date) :
-            new \DateTime('today');
+        return $this->date && DateTimeImmutable::createFromFormat('Y-m-d', $this->date) ?
+            DateTimeImmutable::createFromFormat('Y-m-d', $this->date) :
+            new DateTimeImmutable('today');
     }
 
     public function getType(): GameType

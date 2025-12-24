@@ -7,6 +7,8 @@ namespace App\Entity;
 use App\Enum\GameDifficulty;
 use App\Enum\GameType;
 use App\Repository\GameRepository;
+use DateTimeImmutable;
+use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
@@ -44,10 +46,10 @@ class Game
     private string $hint;
 
     #[Assert\NotNull]
-    #[Assert\Type(\DateTimeInterface::class)]
-    #[ORM\Column(type: Types::DATE_MUTABLE)]
+    #[Assert\Type(DateTimeInterface::class)]
+    #[ORM\Column(type: Types::DATE_IMMUTABLE)]
     #[Groups(['game:show', 'game:show:admin', 'game:index:admin', 'user:show'])]
-    private \DateTime $date;
+    private DateTimeImmutable $date;
 
     #[Assert\NotBlank(message: 'Difficulty is required')]
     #[Assert\Type(type: GameDifficulty::class, message: 'Invalid difficulty value')]
@@ -127,12 +129,12 @@ class Game
         return $this;
     }
 
-    public function getDate(): \DateTime
+    public function getDate(): DateTimeImmutable
     {
         return $this->date;
     }
 
-    public function setDate(\DateTime $date): static
+    public function setDate(DateTimeImmutable $date): static
     {
         $this->date = $date;
 

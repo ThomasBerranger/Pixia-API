@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\DTO\Game;
 
 use App\Enum\GameDifficulty;
+use DateTimeImmutable;
 use Symfony\Component\Validator\Constraints as Assert;
 
 class GameUpdateRequest
@@ -26,7 +27,7 @@ class GameUpdateRequest
 
     #[Assert\NotNull]
     #[Assert\Type(\DateTimeInterface::class)]
-    public \DateTime $date;
+    public DateTimeImmutable $date;
 
     #[Assert\NotNull]
     public GameDifficulty $difficulty;

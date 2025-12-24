@@ -6,6 +6,7 @@ namespace App\Entity;
 
 use App\Enum\GameDifficulty;
 use App\Repository\AchievementRepository;
+use DateTimeImmutable;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\IdGenerator\UuidGenerator;
 use Symfony\Bridge\Doctrine\Types\UuidType;
@@ -25,7 +26,7 @@ class Achievement
 
     #[ORM\Column]
     #[Groups('achievement:index')]
-    private \DateTime $date;
+    private DateTimeImmutable $date;
 
     #[ORM\Column(enumType: GameDifficulty::class)]
     private GameDifficulty $difficulty;
@@ -49,12 +50,12 @@ class Achievement
         return $this->id;
     }
 
-    public function getDate(): \DateTime
+    public function getDate(): DateTimeImmutable
     {
         return $this->date;
     }
 
-    public function setDate(\DateTime $date): static
+    public function setDate(DateTimeImmutable $date): static
     {
         $this->date = $date;
 

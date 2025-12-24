@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\DTO\Game;
 
 use App\Entity\Game;
+use DateTimeImmutable;
 use Symfony\Component\Validator\Constraints as Assert;
 
 class GameCreateRequest
@@ -23,7 +24,7 @@ class GameCreateRequest
 
     #[Assert\NotNull]
     #[Assert\Type(\DateTimeInterface::class)]
-    public \DateTime $date;
+    public DateTimeImmutable $date;
 
     public string $imageUrl = '';
 

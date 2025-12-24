@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use DateTimeImmutable;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
@@ -50,7 +51,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column]
     #[Groups(['user:me', 'user:show', 'user:index:admin'])]
-    private \DateTimeImmutable $createdAt;
+    private DateTimeImmutable $createdAt;
 
     /**
      * @var Collection<int, Badge>
@@ -104,16 +105,23 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(['user:show', 'user:index'])]
     private array $streaks = ['current' => 0, 'best' => 0];
 
+    /**
+     * @var Collection<int, MonthlyLeaderboard>
+     */
+    #[ORM\OneToMany(targetEntity: MonthlyLeaderboard::class, mappedBy: 'player', orphanRemoval: true)]
+    private Collection $monthlyLeaderboards;
+
     public function __construct()
     {
         $this->roles = [];
         $this->score = 0;
-        $this->createdAt = new \DateTimeImmutable();
+        $this->createdAt = new DateTimeImmutable();
         $this->badges = new ArrayCollection();
         $this->hintedGames = new ArrayCollection();
         $this->contributions = new ArrayCollection();
         $this->referees = new ArrayCollection();
         $this->achievements = new ArrayCollection();
+        $this->monthlyLeaderboards = new ArrayCollection();
     }
 
     public function getId(): ?Uuid
@@ -222,12 +230,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getCreatedAt(): \DateTimeImmutable
+    public function getCreatedAt(): DateTimeImmutable
     {
         return $this->createdAt;
     }
 
-    public function setCreatedAt(\DateTimeImmutable $createdAt): static
+    public function setCreatedAt(DateTimeImmutable $createdAt): static
     {
         $this->createdAt = $createdAt;
 
@@ -402,5 +410,30 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setStreaks(array $streaks): void
     {
         $this->streaks = $streaks;
+    }
+
+    /**
+     * @return Collection<int, MonthlyLeaderboard>
+     */
+    public function getMonthlyLeaderboards(): Collection
+    {
+        return $this->monthlyLeaderboards;
+    }
+
+    public function addMonthlyLeaderboard(MonthlyLeaderboard $monthlyLeaderboard): static
+    {
+        if (!$this->monthlyLeaderboards->contains($monthlyLeaderboard)) {
+            $this->monthlyLeaderboards->add($monthlyLeaderboard);
+            $monthlyLeaderboard->setPlayer($this);
+        }
+
+        return $this;
+    }
+
+    public function removeMonthlyLeaderboard(MonthlyLeaderboard $monthlyLeaderboard): static
+    {
+        $this->monthlyLeaderboards->removeElement($monthlyLeaderboard);
+
+        return $this;
     }
 }

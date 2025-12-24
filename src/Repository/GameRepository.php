@@ -8,6 +8,7 @@ use App\Entity\Achievement;
 use App\Entity\Game;
 use App\Entity\User;
 use App\Enum\GameType;
+use DateTimeImmutable;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Exception;
@@ -27,9 +28,9 @@ class GameRepository extends ServiceEntityRepository
      * @return array{game: Game, achievement: Achievement|null|Game, previousGameDate: mixed, nextGameDate: mixed}
      * @throws Exception
      */
-    public function findGameWithUserAchievement(?\DateTime $date, ?GameType $type, ?User $user): array
+    public function findGameWithUserAchievement(?DateTimeImmutable $date, ?GameType $type, ?User $user): array
     {
-        $formattedDate = $date ? $date->format('Y-m-d') : (new \DateTime('now'))->format('Y-m-d');
+        $formattedDate = $date ? $date->format('Y-m-d') : new DateTimeImmutable('now')->format('Y-m-d');
 
         $gameWithUserAchievement =
             $this->createQueryBuilder('g')
@@ -99,7 +100,7 @@ class GameRepository extends ServiceEntityRepository
         return (int) $this->createQueryBuilder('g')
             ->select('COUNT(g.id)')
             ->where('g.date <= :today')
-            ->setParameter('today', new \DateTime('today'))
+            ->setParameter('today', new DateTimeImmutable('today'))
             ->getQuery()
             ->getSingleScalarResult();
     }

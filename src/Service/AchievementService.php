@@ -8,6 +8,7 @@ use App\Entity\Achievement;
 use App\Entity\Game;
 use App\Entity\User;
 use App\Enum\GameDifficulty;
+use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 
 readonly class AchievementService
@@ -23,7 +24,7 @@ readonly class AchievementService
         $achievement
             ->setPlayer($player)
             ->setGame($game)
-            ->setDate(new \DateTime())
+            ->setDate(new DateTimeImmutable())
             ->setDifficulty(GameDifficulty::EASY);
 
         $this->entityManager->persist($achievement);

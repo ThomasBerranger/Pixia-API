@@ -8,20 +8,30 @@ use App\Entity\Badge;
 use App\Entity\Game;
 use App\Entity\User;
 use App\Enum\BadgeName;
+use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
 readonly class UserService
 {
-    public function __construct(private EntityManagerInterface $entityManager)
+    public function __construct(
+        private EntityManagerInterface    $entityManager,
+        private MonthlyLeaderboardService $monthlyLeaderboardService,
+    )
     {
     }
 
-    public function addPoints(User $user, Game $game): void
+    public function addGamePoints(User $player, Game $game): void
     {
-        $points = $game->getDifficulty()->getPoints($user->getHintedGames()->contains($game));
+        $points = $game->getDifficulty()->getPoints($player->getHintedGames()->contains($game));
 
-        $user->setScore($user->getScore() + $points);
+        $this->addPoints($player, $points, $game->getDate());
+    }
+
+    public function addPoints(User $player, int $points, ?DateTimeImmutable $month = null): void
+    {
+        $player->setScore($player->getScore() + $points);
+        $this->monthlyLeaderboardService->addMonthlyPoints($player, $points, $month);
     }
 
     public function findAndRewardSponsor(string $sponsorSlug): User
@@ -32,7 +42,7 @@ readonly class UserService
             throw new UnprocessableEntityHttpException('Sponsor not found');
         }
 
-        $sponsor->setScore($sponsor->getScore() + 5);
+        $this->addPoints($sponsor, 5);
 
         $sponsor->addBadge(new Badge(BadgeName::SPONSOR));
 
@@ -42,5 +52,4 @@ readonly class UserService
 
         return $sponsor;
     }
-
 }
