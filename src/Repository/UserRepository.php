@@ -6,7 +6,6 @@ namespace App\Repository;
 
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Exception;
 use Doctrine\Persistence\ManagerRegistry;
@@ -20,8 +19,8 @@ use Symfony\Component\Security\Core\User\PasswordUpgraderInterface;
  */
 class UserRepository extends ServiceEntityRepository implements PasswordUpgraderInterface
 {
-    const string CURRENT_STREAK_KEY = 'current';
-    const string BEST_STREAK_KEY = 'best';
+    public const string CURRENT_STREAK_KEY = 'current';
+    public const string BEST_STREAK_KEY = 'best';
 
     public function __construct(ManagerRegistry $registry)
     {
@@ -260,5 +259,15 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         }
 
         return $users;
+    }
+
+    /** @return User[] */
+    public function findByRole(string $role): array
+    {
+        return $this->createQueryBuilder('u')
+            ->where('u.roles LIKE :role')
+            ->setParameter('role', '%"'.$role.'"%')
+            ->getQuery()
+            ->getResult();
     }
 }

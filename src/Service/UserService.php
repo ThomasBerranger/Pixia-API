@@ -22,8 +22,6 @@ readonly class UserService
         $points = $game->getDifficulty()->getPoints($user->getHintedGames()->contains($game));
 
         $user->setScore($user->getScore() + $points);
-
-        $this->entityManager->flush();
     }
 
     public function findAndRewardSponsor(string $sponsorSlug): User

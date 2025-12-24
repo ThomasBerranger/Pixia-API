@@ -7,6 +7,7 @@ namespace App\EventListener;
 use App\Entity\Achievement;
 use App\Service\BadgeService;
 use Doctrine\Bundle\DoctrineBundle\Attribute\AsEntityListener;
+use Doctrine\DBAL\Exception;
 use Doctrine\ORM\Event\PostPersistEventArgs;
 use Doctrine\ORM\Events;
 
@@ -17,6 +18,9 @@ readonly class AchievementListener
     {
     }
 
+    /**
+     * @throws Exception
+     */
     public function postPersist(Achievement $achievement, PostPersistEventArgs $event): void
     {
         $this->badgeService->reward($achievement->getPlayer());

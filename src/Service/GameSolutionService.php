@@ -6,36 +6,41 @@ namespace App\Service;
 
 use App\Entity\Game;
 use App\Entity\User;
+use App\Repository\AchievementRepository;
+use Doctrine\ORM\EntityManagerInterface;
 
 readonly class GameSolutionService
 {
     public function __construct(
-        private AchievementService $historyService,
-        private UserService $userService)
+        private EntityManagerInterface $entityManager,
+        private AchievementService     $achievementService,
+        private UserService            $userService,
+        private AchievementRepository  $achievementRepository,
+    )
     {
     }
 
-    public function save(Game $game, string $answer, ?User $user): Game|false
+    public function save(Game $game, string $answer, ?User $player): Game|false
     {
-        if ($this->wordsMatch($game->getSolution(), $answer)) {
-            if ($user) {
-                $this->historyService->saveResult($game);
-                $this->userService->addPoints($user, $game);
-            }
-
-            return $game;
-        }
-
-        if ($this->wordsMatch($game->getEnglishSolution(), $answer)) {
-            if ($user) {
-                $this->historyService->saveResult($game);
-                $this->userService->addPoints($user, $game);
+        if ($this->wordsMatch($game->getSolution(), $answer) || $this->wordsMatch($game->getEnglishSolution(), $answer)) {
+            if ($player) {
+                $this->handleWin($game, $player);
             }
 
             return $game;
         }
 
         return false;
+    }
+
+    public function handleWin(Game $game, User $player): void
+    {
+        if (!$this->achievementRepository->findOneBy(['player' => $player, 'game' => $game])) {
+            $this->achievementService->saveResult($player, $game);
+            $this->userService->addPoints($player, $game);
+
+            $this->entityManager->flush();
+        }
     }
 
     public function wordsMatch(string $expectedWords, string $testedWords): bool

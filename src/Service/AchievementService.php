@@ -6,28 +6,26 @@ namespace App\Service;
 
 use App\Entity\Achievement;
 use App\Entity\Game;
+use App\Entity\User;
 use App\Enum\GameDifficulty;
 use Doctrine\ORM\EntityManagerInterface;
 
 readonly class AchievementService
 {
-    public function __construct(private AuthenticatedUserService $authenticatedUserService, private EntityManagerInterface $entityManager)
+    public function __construct(private EntityManagerInterface $entityManager)
     {
     }
 
-    public function saveResult(Game $game): Achievement
+    public function saveResult(User $player, Game $game): void
     {
         $achievement = new Achievement();
 
         $achievement
+            ->setPlayer($player)
             ->setGame($game)
-            ->setPlayer($this->authenticatedUserService->getUserOrThrow())
             ->setDate(new \DateTime())
             ->setDifficulty(GameDifficulty::EASY);
 
         $this->entityManager->persist($achievement);
-        $this->entityManager->flush();
-
-        return $achievement;
     }
 }
