@@ -37,13 +37,14 @@ class PlayBotCommand extends Command
         try {
             $bots = $this->userRepository->findByRole('ROLE_BOT');
 
-
-            $game = $this->gameRepository->findOneBy(['type' => GameType::MULTIVERS], ['date' => 'DESC']);
+            $game = $this->gameRepository->findOneBy(
+                ['type' => GameType::MULTIVERS, 'date' => new \DateTimeImmutable('today')],
+            );
 
             if (!$game) {
-                $io->error('No game found');
+                $io->warning('No game found');
 
-                return Command::FAILURE;
+                return Command::SUCCESS;
             }
 
             $successRate = match ($game->getDifficulty()) {
@@ -52,13 +53,16 @@ class PlayBotCommand extends Command
                 default => 50
             };
 
+            $successCount = 0;
+
             foreach ($bots as $bot) {
                 if (rand(1, 100) <= $successRate) {
                     $this->gameSolutionService->handleWin($game, $bot);
+                    $successCount++;
                 }
             }
 
-            $io->success('Well played bot army !');
+            $io->success($successCount > 0 ? $successCount . ' wins! Well played bot army!' : 'No win but nice try.');
         } catch (\Exception $exception) {
             $io->error($exception->getMessage());
 
