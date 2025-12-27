@@ -109,7 +109,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * @var Collection<int, MonthlyLeaderboard>
      */
     #[ORM\OneToMany(targetEntity: MonthlyLeaderboard::class, mappedBy: 'player', orphanRemoval: true)]
+    #[Groups(['user:me', 'user:index'])]
     private Collection $monthlyLeaderboards;
+
+    #[Groups(['user:index'])]
+    private ?int $rank = null;
 
     public function __construct()
     {
@@ -407,9 +411,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @param array<string, int> $streaks
      */
-    public function setStreaks(array $streaks): void
+    public function setStreaks(array $streaks): static
     {
         $this->streaks = $streaks;
+
+        return $this;
     }
 
     /**
@@ -433,6 +439,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function removeMonthlyLeaderboard(MonthlyLeaderboard $monthlyLeaderboard): static
     {
         $this->monthlyLeaderboards->removeElement($monthlyLeaderboard);
+
+        return $this;
+    }
+
+    public function getRank(): ?int
+    {
+        return $this->rank;
+    }
+
+    public function setRank(?int $rank): static
+    {
+        $this->rank = $rank;
 
         return $this;
     }

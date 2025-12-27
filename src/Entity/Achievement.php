@@ -7,6 +7,7 @@ namespace App\Entity;
 use App\Enum\GameDifficulty;
 use App\Repository\AchievementRepository;
 use DateTimeImmutable;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\IdGenerator\UuidGenerator;
 use Symfony\Bridge\Doctrine\Types\UuidType;
@@ -24,8 +25,8 @@ class Achievement
     #[Groups('achievement:index')]
     private ?Uuid $id = null;
 
-    #[ORM\Column]
-    #[Groups('achievement:index')]
+    #[ORM\Column(type: Types::DATE_IMMUTABLE)]
+    #[Groups(['achievement:index', 'user:me'])]
     private DateTimeImmutable $date;
 
     #[ORM\Column(enumType: GameDifficulty::class)]
@@ -37,7 +38,7 @@ class Achievement
 
     #[ORM\ManyToOne(targetEntity: Game::class)]
     #[ORM\JoinColumn(name: 'game_id', referencedColumnName: 'id', nullable: false)]
-    #[Groups(['achievement:index', 'user:show'])]
+    #[Groups(['achievement:index','user:me', 'user:show'])]
     private Game $game;
 
     public function __construct()

@@ -8,7 +8,6 @@ use App\Enum\GameDifficulty;
 use App\Enum\GameType;
 use App\Repository\GameRepository;
 use DateTimeImmutable;
-use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
@@ -16,7 +15,6 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Types\UuidType;
 use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Uid\Uuid;
-use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: GameRepository::class)]
 #[ORM\UniqueConstraint(name: 'unique_type_date', columns: ['type', 'date'])]
@@ -33,26 +31,18 @@ class Game
     #[Groups(['game:show', 'game:show:admin', 'game:index:admin', 'user:show'])]
     private GameType $type;
 
-    #[Assert\NotBlank]
-    #[Assert\Length(min: 5, max: 255)]
     #[ORM\Column(length: 255)]
-    #[Groups(['game:solution', 'game:show:admin', 'game:index:admin', 'achievement:index'])]
+    #[Groups(['game:solution', 'game:show:admin', 'game:index:admin', 'user:me'])]
     private string $solution;
 
-    #[Assert\NotBlank]
-    #[Assert\Length(min: 5, max: 255)]
     #[ORM\Column(length: 255)]
     #[Groups(['game:hint', 'game:show:admin', 'game:index:admin'])]
     private string $hint;
 
-    #[Assert\NotNull]
-    #[Assert\Type(DateTimeInterface::class)]
     #[ORM\Column(type: Types::DATE_IMMUTABLE)]
     #[Groups(['game:show', 'game:show:admin', 'game:index:admin', 'user:show'])]
     private DateTimeImmutable $date;
 
-    #[Assert\NotBlank(message: 'Difficulty is required')]
-    #[Assert\Type(type: GameDifficulty::class, message: 'Invalid difficulty value')]
     #[ORM\Column(enumType: GameDifficulty::class)]
     #[Groups(['game:show', 'game:show:admin', 'game:index:admin'])]
     private GameDifficulty $difficulty;
@@ -62,7 +52,6 @@ class Game
     #[Groups(['game:show:admin', 'game:index:admin'])]
     private User $author;
 
-    #[Assert\Length(min: 5, max: 255)]
     #[ORM\Column(length: 255, nullable: true)]
     #[Groups(['game:show', 'game:show:admin', 'game:index:admin', 'user:show'])]
     private ?string $image;
@@ -75,8 +64,6 @@ class Game
     #[ORM\ManyToMany(targetEntity: User::class, mappedBy: 'hintedGames')]
     private Collection $hintedPlayers;
 
-    #[Assert\NotBlank]
-    #[Assert\Length(min: 5, max: 255)]
     #[ORM\Column(length: 255)]
     #[Groups(['game:solution', 'game:show:admin'])]
     private string $englishSolution;

@@ -6,7 +6,6 @@ namespace App\DTO\Game;
 
 use App\Enum\GameType;
 use DateTimeImmutable;
-use DoctrineExtensions\Query\Mysql\Date;
 use Symfony\Component\Validator\Constraints as Assert;
 
 class GameShowRequest

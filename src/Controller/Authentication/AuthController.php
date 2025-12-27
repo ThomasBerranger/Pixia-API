@@ -83,14 +83,14 @@ class AuthController extends AbstractController
 
         $data = [...$data, 'streak' => [...$this->userRepository->getStreaks($player)]];
 
-        return $this->json($data, context: ['groups' => ['user:me', 'achievement:index']]);
+        return $this->json($data, context: ['groups' => ['user:me']]);
     }
 
     /**
      * @throws RandomException
      */
     #[Route(path: '/google-auth', name: 'google_auth', methods: ['POST'])]
-    //    #[RateLimit(limiterName: 'auth_form')]
+    #[RateLimit(limiterName: 'auth_form')]
     public function googleAuth(
         #[MapRequestPayload] GoogleAuthRequest $googleAuthRequest,
     ): JsonResponse

@@ -8,6 +8,8 @@ use App\Entity\Badge;
 use App\Entity\Game;
 use App\Entity\User;
 use App\Enum\BadgeName;
+use App\Repository\BadgeRepository;
+use App\Repository\UserRepository;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
@@ -17,6 +19,7 @@ readonly class UserService
     public function __construct(
         private EntityManagerInterface    $entityManager,
         private MonthlyLeaderboardService $monthlyLeaderboardService,
+        private UserRepository            $userRepository,
     )
     {
     }
@@ -51,5 +54,26 @@ readonly class UserService
         }
 
         return $sponsor;
+    }
+
+    // todo : usefully for full players list
+    //    public function getLeaderboard(): array
+    //    {
+    //        $playerIds = $this->userRepository->getLeaderboard(10);
+    //
+    //        $this->userRepository->loadBadgesFor($playerIds);
+    //
+    //        return $this->userRepository->setStreaksFor($players);
+    //    }
+
+    /**
+     * @return list<User>
+     */    public function getCurrentMonthLeaderboard(): array
+    {
+        $players = $this->userRepository->getMonthlyLeaderboard(new DateTimeImmutable('now'));
+
+        $this->userRepository->setStreaksFor($players);
+
+        return $players;
     }
 }

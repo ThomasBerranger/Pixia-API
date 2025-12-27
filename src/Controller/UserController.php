@@ -6,8 +6,10 @@ namespace App\Controller;
 
 use App\DTO\User\UpdateRequest;
 use App\Entity\User;
+use App\Repository\MonthlyLeaderboardRepository;
 use App\Repository\UserRepository;
 use App\Service\AuthenticatedUserService;
+use App\Service\UserService;
 use Doctrine\DBAL\Exception;
 use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
@@ -21,9 +23,11 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final class UserController extends AbstractController
 {
     public function __construct(
-        private readonly AuthenticatedUserService $authenticatedUserService,
-        private readonly JWTTokenManagerInterface $JWTTokenManager,
-        private readonly UserRepository           $userRepository,
+        private readonly AuthenticatedUserService     $authenticatedUserService,
+        private readonly JWTTokenManagerInterface     $JWTTokenManager,
+        private readonly UserRepository               $userRepository,
+        private readonly UserService                  $userService,
+        private readonly MonthlyLeaderboardRepository $monthlyLeaderboardRepository,
     )
     {
     }
@@ -34,15 +38,16 @@ final class UserController extends AbstractController
     #[Route(path: '/leaderboard', name: 'leaderboard', methods: ['GET'], format: 'json')]
     public function leaderboard(): JsonResponse
     {
-        $player = $this->authenticatedUserService->getUser();
+        $currentMonthLeaderboard = $this->userService->getCurrentMonthLeaderboard();
 
-        $playerRank = $this->userRepository->getRank($player);
+        $player = $this->authenticatedUserService->getUser();
+        $player?->setRank($this->monthlyLeaderboardRepository->getMonthlyRank($player));
 
         return $this->json(data: [
-            'leaderboard' => $this->userRepository->getLeaderboard(),
-            'player' => $playerRank > 10 ? $player : null,
-            'playerRank' => $playerRank,
-            'playerCurrentStreak' => $playerRank > 10 && $player instanceof User ? $this->userRepository->getCurrentStreak($player) : null,
+            'leaderboard' => $currentMonthLeaderboard,
+            'player' => $player?->getRank() > count($currentMonthLeaderboard) ?
+                $player->setStreaks([UserRepository::CURRENT_STREAK_KEY => $this->userRepository->getCurrentStreak($player)]) :
+                null,
         ], context: ['groups' => ['user:index']]);
     }
 

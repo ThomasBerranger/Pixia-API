@@ -8,6 +8,7 @@ use App\Entity\Achievement;
 use App\Entity\Badge;
 use App\Entity\User;
 use App\Enum\BadgeName;
+use App\Repository\BadgeRepository;
 use App\Repository\UserRepository;
 use Doctrine\DBAL\Exception;
 use Doctrine\ORM\EntityManagerInterface;
@@ -17,7 +18,7 @@ readonly class BadgeService
     public function __construct(
         private EntityManagerInterface $entityManager,
         private UserRepository         $userRepository,
-        private UserService           $userService,
+        private UserService            $userService,
     )
     {
     }
@@ -60,7 +61,7 @@ readonly class BadgeService
 
     private function rewardTopTenReached(User $player): void
     {
-        if ($this->entityManager->getRepository(User::class)->getRank($player) <= 10 && !$this->userHasBadge($player, [BadgeName::TOP_10_REACHED])) {
+        if ($this->userRepository->getRank($player) <= 10 && !$this->userHasBadge($player, [BadgeName::TOP_10_REACHED])) {
             $newBadge = new Badge();
             $newBadge->setName(BadgeName::TOP_10_REACHED)->setPlayer($player);
 
@@ -106,7 +107,7 @@ readonly class BadgeService
     public function userHasBadge(User $user, array $badgeNames): bool
     {
         return $user->getBadges()->exists(
-            fn ($key, Badge $badge) => in_array($badge->getName(), $badgeNames, true)
+            fn($key, Badge $badge) => in_array($badge->getName(), $badgeNames, true)
         );
     }
 }

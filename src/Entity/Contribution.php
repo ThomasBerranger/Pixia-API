@@ -20,7 +20,7 @@ class Contribution
     #[ORM\Column(type: UuidType::NAME, unique: true)]
     #[ORM\GeneratedValue(strategy: 'CUSTOM')]
     #[ORM\CustomIdGenerator(class: UuidGenerator::class)]
-    #[Groups(['contribution:show', 'user:me'])]
+    #[Groups(['contribution:show'])]
     private ?Uuid $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'contributions')]

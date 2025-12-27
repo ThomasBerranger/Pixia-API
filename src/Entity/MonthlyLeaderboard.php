@@ -9,9 +9,12 @@ use DateTimeImmutable;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Types\UuidType;
+use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Uid\Uuid;
 
+#[ORM\HasLifecycleCallbacks]
 #[ORM\Entity(repositoryClass: MonthlyLeaderboardRepository::class)]
+#[ORM\UniqueConstraint(name: 'unique_player_month', columns: ['player_id', 'month'])]
 class MonthlyLeaderboard
 {
     #[ORM\Id]
@@ -25,14 +28,20 @@ class MonthlyLeaderboard
     private User $player;
 
     #[ORM\Column]
+    #[Groups(['user:me', 'user:index'])]
     private int $score;
 
     #[ORM\Column(type: Types::DATE_IMMUTABLE)]
+    #[Groups(['user:me'])]
     private DateTimeImmutable $month;
+
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
+    private DateTimeImmutable $updatedAt;
 
     public function __construct()
     {
         $this->score = 0;
+        $this->updatedAt = new DateTimeImmutable('now');
     }
 
     public function getId(): ?Uuid
@@ -74,5 +83,23 @@ class MonthlyLeaderboard
         $this->month = $month;
 
         return $this;
+    }
+
+    public function getUpdatedAt(): DateTimeImmutable
+    {
+        return $this->updatedAt;
+    }
+
+    public function setUpdatedAt(DateTimeImmutable $updatedAt): static
+    {
+        $this->updatedAt = $updatedAt;
+
+        return $this;
+    }
+
+    #[ORM\PreUpdate]
+    public function updateTimestamp(): void
+    {
+        $this->updatedAt = new \DateTimeImmutable();
     }
 }

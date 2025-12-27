@@ -9,7 +9,6 @@ use App\Entity\User;
 use App\Repository\MonthlyLeaderboardRepository;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
-use Exception;
 
 readonly class MonthlyLeaderboardService
 {

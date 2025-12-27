@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Repository;
 
 use App\Entity\MonthlyLeaderboard;
+use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -18,28 +19,28 @@ class MonthlyLeaderboardRepository extends ServiceEntityRepository
         parent::__construct($registry, MonthlyLeaderboard::class);
     }
 
-    //    /**
-    //     * @return MonthlyLeaderboard[] Returns an array of MonthlyLeaderboard objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('m')
-    //            ->andWhere('m.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('m.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+    public function getMonthlyRank(User $player): ?int
+    {
+        $month = new \DateTimeImmutable()->modify('first day of this month')->setTime(0, 0);
 
-    //    public function findOneBySomeField($value): ?MonthlyLeaderboard
-    //    {
-    //        return $this->createQueryBuilder('m')
-    //            ->andWhere('m.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+        $playerML = $this->getEntityManager()
+            ->getRepository(MonthlyLeaderboard::class)
+            ->findOneBy(['player' => $player, 'month' => $month]);
+
+        if (!$playerML) {
+            return null;
+        }
+
+        return (int)$this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('COUNT(DISTINCT ml.id) + 1')
+            ->from(MonthlyLeaderboard::class, 'ml')
+            ->where('ml.month = :month')
+            ->andWhere('ml.score > :score OR (ml.score = :score AND ml.updatedAt < :updatedAt)')
+            ->setParameter('month', $month)
+            ->setParameter('score', $playerML->getScore())
+            ->setParameter('updatedAt', $playerML->getUpdatedAt())
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
 }
