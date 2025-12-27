@@ -8,6 +8,7 @@ use App\Attribute\RateLimit;
 use App\DTO\Game\GameAnswerRequest;
 use App\DTO\Game\GameShowRequest;
 use App\Entity\Game;
+use App\Repository\GameRepository;
 use App\Service\AuthenticatedUserService;
 use App\Service\GameSolutionService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -25,22 +26,28 @@ final class GameController extends AbstractController
         private readonly EntityManagerInterface   $entityManager,
         private readonly GameSolutionService      $gameAnswerService,
         private readonly AuthenticatedUserService $authenticatedUserService,
+        private readonly GameRepository           $gameRepository,
     )
     {
     }
 
+    /**
+     * @throws \Exception
+     */
     #[Route('/daily', name: 'daily', methods: ['GET'], format: 'json')]
     public function daily(#[MapQueryString] GameShowRequest $request): JsonResponse
     {
-        $gameWithUserAchievement = $this->entityManager->getRepository(Game::class)->findGameWithUserAchievement(
-            $request->getDate(), $request->getType(), $this->authenticatedUserService->getUser()
+        $player = $this->authenticatedUserService->getUser();
+
+        $gameWithUserAchievement = $this->gameRepository->findGameWithUserAchievement(
+            $request->getDate(), $request->getType(), $player
         );
 
         return $this->json(data: $gameWithUserAchievement, context: [
             'groups' => [
                 'game:show',
                 $gameWithUserAchievement['achievement'] ? 'game:solution' : null,
-                $gameWithUserAchievement['game']->getHintedPlayers()->count() > 0 ? 'game:hint' : null,
+                $gameWithUserAchievement['hintRequested'] ? 'game:hint' : null,
             ],
         ]);
     }

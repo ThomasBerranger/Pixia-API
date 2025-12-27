@@ -25,7 +25,7 @@ class GameRepository extends ServiceEntityRepository
     }
 
     /**
-     * @return array{game: Game, achievement: Achievement|null|Game, previousGameDate: mixed, nextGameDate: mixed}
+     * @return array{game: Game, achievement: Achievement|null|Game, hintRequested: bool, previousGameDate: mixed, nextGameDate: mixed}
      * @throws Exception
      */
     public function findGameWithUserAchievement(?DateTimeImmutable $date, ?GameType $type, ?User $user): array
@@ -35,7 +35,7 @@ class GameRepository extends ServiceEntityRepository
         $gameWithUserAchievement =
             $this->createQueryBuilder('g')
                 ->leftJoin('g.hintedPlayers', 'hp', 'WITH', 'hp.id = :userId')
-                ->addSelect('hp')
+                ->addSelect('COUNT(DISTINCT hp.id) as playerHasHint')
                 ->leftJoin(Achievement::class, 'a', 'WITH', 'g.id = a.game AND a.player = :userId')
                 ->addSelect('a')
                 ->addSelect('(SELECT MAX(g2.date) FROM ' . Game::class . ' g2 WHERE g2.type = :type AND g2.date < g.date) as previous_game_date')
@@ -45,7 +45,6 @@ class GameRepository extends ServiceEntityRepository
                 ->groupBy('g.id')
                 ->addSelect('CASE WHEN g.date = :date THEN 0 ELSE 1 END as HIDDEN priority')
                 ->orderBy('priority', 'ASC')
-                ->addGroupBy('hp.id')
                 ->addOrderBy('g.date', 'DESC')
                 ->setParameter('date', $formattedDate)
                 ->setParameter('type', $type)
@@ -61,6 +60,7 @@ class GameRepository extends ServiceEntityRepository
         return [
             'game' => $gameWithUserAchievement[0][0],
             'achievement' => $gameWithUserAchievement[1][0],
+            'hintRequested' => (bool)($gameWithUserAchievement[1]['playerHasHint'] ?? 0),
             'previousGameDate' => $gameWithUserAchievement[1]['previous_game_date'] ?? false,
             'nextGameDate' => $gameWithUserAchievement[1]['next_game_date'] ?? false,
         ];
