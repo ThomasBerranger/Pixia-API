@@ -32,7 +32,7 @@ class MonthlyLeaderboard
     private int $score;
 
     #[ORM\Column(type: Types::DATE_IMMUTABLE)]
-    #[Groups(['user:me'])]
+    #[Groups(['user:me', 'user:index'])]
     private DateTimeImmutable $month;
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
