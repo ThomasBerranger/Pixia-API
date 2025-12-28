@@ -229,7 +229,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function setUsername(string $username): static
     {
-        $this->username = trim($username);
+        $username = trim($username);
+
+        $this->username = $username;
+        $this->updateSlug();
 
         return $this;
     }
@@ -257,7 +260,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function addBadge(Badge $badge): static
     {
         if (!$this->badges->exists(
-            fn ($key, Badge $existingBadge) => $existingBadge->getName() === $badge->getName()
+            fn($key, Badge $existingBadge) => $existingBadge->getName() === $badge->getName()
         )) {
             $this->badges->add($badge);
             $badge->setPlayer($this);
@@ -343,8 +346,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->slug;
     }
 
-    #[ORM\PrePersist]
-    #[ORM\PreUpdate]
     public function updateSlug(): void
     {
         $this->slug = mb_strtolower(str_replace([' ', '_'], '-', $this->username));
