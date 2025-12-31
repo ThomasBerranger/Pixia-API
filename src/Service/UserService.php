@@ -8,7 +8,6 @@ use App\Entity\Badge;
 use App\Entity\Game;
 use App\Entity\User;
 use App\Enum\BadgeName;
-use App\Repository\BadgeRepository;
 use App\Repository\UserRepository;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;

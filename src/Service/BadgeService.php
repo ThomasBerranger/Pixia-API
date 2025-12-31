@@ -8,7 +8,6 @@ use App\Entity\Achievement;
 use App\Entity\Badge;
 use App\Entity\User;
 use App\Enum\BadgeName;
-use App\Repository\BadgeRepository;
 use App\Repository\UserRepository;
 use Doctrine\DBAL\Exception;
 use Doctrine\ORM\EntityManagerInterface;
@@ -107,7 +106,7 @@ readonly class BadgeService
     public function userHasBadge(User $user, array $badgeNames): bool
     {
         return $user->getBadges()->exists(
-            fn($key, Badge $badge) => in_array($badge->getName(), $badgeNames, true)
+            fn ($key, Badge $badge) => in_array($badge->getName(), $badgeNames, true)
         );
     }
 }

@@ -98,12 +98,18 @@
         }
     },
     "require-dev": {
+        "dama/doctrine-test-bundle": "^8.4",
+        "doctrine/doctrine-fixtures-bundle": "^4.3",
         "friendsofphp/php-cs-fixer": "^3.90",
         "phpstan/extension-installer": ">=1.4.3",
         "phpstan/phpstan": ">=2.1.32",
         "phpstan/phpstan-doctrine": ">=2.0.11",
         "phpstan/phpstan-symfony": ">=2.0.8",
+        "phpunit/phpunit": "^12.5",
+        "symfony/browser-kit": "7.3.*",
+        "symfony/css-selector": "7.3.*",
         "symfony/maker-bundle": "^1.64",
+        "symfony/phpunit-bridge": "^8.0",
         "symfony/web-profiler-bundle": "7.3.*"
     }
 }
