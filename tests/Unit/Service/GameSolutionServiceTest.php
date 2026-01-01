@@ -11,8 +11,10 @@ use App\Service\AchievementService;
 use App\Service\GameSolutionService;
 use App\Service\UserService;
 use Doctrine\ORM\EntityManagerInterface;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\TestCase;
 
+#[AllowMockObjectsWithoutExpectations]
 class GameSolutionServiceTest extends TestCase
 {
     private GameSolutionService $service;

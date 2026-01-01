@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\EventSubscriber;
 
 use App\Attribute\RateLimit;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\ControllerEvent;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
@@ -19,6 +20,8 @@ readonly class RateLimitSubscriber implements EventSubscriberInterface
         private RateLimiterFactory $gameAnswerLimiter,
         private RateLimiterFactory $authFormLimiter,
         private TokenStorageInterface $tokenStorage,
+        #[Autowire('%kernel.environment%')]
+        private string $environment,
     ) {
     }
 
@@ -53,7 +56,7 @@ readonly class RateLimitSubscriber implements EventSubscriberInterface
 
     public function onKernelController(ControllerEvent $event): void
     {
-        if (!$event->isMainRequest()) {
+        if (!$event->isMainRequest() || $this->environment === 'test') {
             return;
         }
 

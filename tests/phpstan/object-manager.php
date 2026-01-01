@@ -5,11 +5,11 @@ declare(strict_types=1);
 use App\Kernel;
 use Symfony\Component\Dotenv\Dotenv;
 
-require __DIR__.'/../../vendor/autoload.php';
+require dirname(__DIR__, 2).'/vendor/autoload.php';
 
-(new Dotenv())->loadEnv(__DIR__.'/../../.env');
+(new Dotenv())->bootEnv(dirname(__DIR__, 2).'/.env');
 
-$kernel = new Kernel('test', true);
+$kernel = new Kernel($_SERVER['APP_ENV'] ?? 'dev', (bool) ($_SERVER['APP_DEBUG'] ?? false));
 $kernel->boot();
 
 return $kernel->getContainer()->get('doctrine')->getManager();
