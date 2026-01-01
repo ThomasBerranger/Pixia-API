@@ -74,7 +74,12 @@ readonly class GameSolutionService
     {
         $text = strtolower($this->removeAccents($text));
 
-        $stopWords = ['le', 'la', 'les', 'un', 'une', 'des', 'du', 'de', 'et', 'ou', 'à', 'au', 'aux', 'en', 'dans'];
+        $stopWords = [
+            // Français
+            'le', 'la', 'les', 'un', 'une', 'des', 'du', 'de', 'et', 'ou', 'à', 'au', 'aux', 'en', 'dans',
+            // Anglais
+            'the', 'and', 'for', 'with', 'from', 'into', 'this', 'that', 'these', 'those'
+        ];
 
         preg_match_all('/[a-z]+/', $text, $matches);
         $words = $matches[0];
