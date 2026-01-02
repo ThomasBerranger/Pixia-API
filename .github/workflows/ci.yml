@@ -56,16 +56,6 @@ jobs:
     name: Static Analysis
     runs-on: ubuntu-latest
 
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: pixia_test
-        ports:
-          - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -74,16 +64,11 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
-          extensions: mbstring, xml, ctype, iconv, intl, pdo_mysql
+          extensions: mbstring, xml, ctype, iconv, intl
           coverage: none
 
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress --no-interaction
-
-      - name: Create test database for PHPStan
-        run: |
-          php bin/console doctrine:database:create --if-not-exists --env=test
-          php bin/console doctrine:schema:create --env=test
 
       - name: Run PHPStan
         run: composer stan

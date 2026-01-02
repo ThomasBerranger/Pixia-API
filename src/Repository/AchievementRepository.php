@@ -38,6 +38,7 @@ class AchievementRepository extends ServiceEntityRepository
             ->getQuery()
             ->getSingleScalarResult();
 
+        /** @var list<Achievement> $history */
         $history = $qb->setMaxResults($limit)
             ->getQuery()
             ->getResult();

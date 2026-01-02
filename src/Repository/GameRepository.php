@@ -32,6 +32,7 @@ class GameRepository extends ServiceEntityRepository
     {
         $formattedDate = $date ? $date->format('Y-m-d') : new DateTimeImmutable('now')->format('Y-m-d');
 
+        /** @var list<array{0: Game, 1?: Achievement|null, playerHasHint?: int, previous_game_date?: DateTimeImmutable|null, next_game_date?: DateTimeImmutable|null}> $gameWithUserAchievement */
         $gameWithUserAchievement =
             $this->createQueryBuilder('g')
                 ->leftJoin('g.hintedPlayers', 'hp', 'WITH', 'hp.id = :userId')
@@ -53,6 +54,7 @@ class GameRepository extends ServiceEntityRepository
                 ->getQuery()
                 ->getResult();
 
+        /** @phpstan-ignore instanceof.alwaysTrue */
         if (empty($gameWithUserAchievement) || !$gameWithUserAchievement[0][0] instanceof Game) {
             throw new Exception('Game not found');
         }

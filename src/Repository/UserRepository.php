@@ -145,6 +145,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     {
         $month = $month->modify('first day of this month')->format('Y-m-d');
 
+        /** @var list<string> $userIds */
         $userIds = $this->createQueryBuilder('u')
             ->select('u.id')
             ->join('u.monthlyLeaderboards', 'ml')
@@ -160,6 +161,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
             return [];
         }
 
+        /** @var list<User> $users */
         $users = $this->createQueryBuilder('u')
             ->leftJoin('u.monthlyLeaderboards', 'ml', 'WITH', 'ml.month = :month')
             ->leftJoin('u.badges', 'b')
@@ -171,6 +173,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
             ->getQuery()
             ->getResult();
 
+        /** @var list<User> $orderedUsers */
         $orderedUsers = [];
         foreach ($userIds as $id) {
             foreach ($users as $user) {
@@ -288,10 +291,13 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     /** @return User[] */
     public function findByRole(string $role): array
     {
-        return $this->createQueryBuilder('u')
+        /** @var array<User> $result */
+        $result = $this->createQueryBuilder('u')
             ->where('u.roles LIKE :role')
             ->setParameter('role', '%"' . $role . '"%')
             ->getQuery()
             ->getResult();
+
+        return $result;
     }
 }

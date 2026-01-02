@@ -25,7 +25,8 @@ class NotificationRepository extends ServiceEntityRepository
      */
     public function findAllByNewestFor(User $player): array
     {
-        return $this->createQueryBuilder('n')
+        /** @var array<Notification> $result */
+        $result = $this->createQueryBuilder('n')
             ->leftJoin('n.readers', 'r')
             ->addSelect('r')
             ->where('n.player IS NULL OR n.player = :playerId')
@@ -33,5 +34,7 @@ class NotificationRepository extends ServiceEntityRepository
             ->orderBy('n.createdAt', 'DESC')
             ->getQuery()
             ->getResult();
+
+        return $result;
     }
 }
