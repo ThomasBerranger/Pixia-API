@@ -7,8 +7,8 @@ on:
     branches: [ main ]
 
 jobs:
-  quality:
-    name: Code Quality & Tests
+  tests:
+    name: Tests
     runs-on: ubuntu-latest
 
     services:
@@ -46,14 +46,11 @@ jobs:
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress --no-interaction
 
-      - name: Check PHP-CS-Fixer
-        run: vendor/bin/php-cs-fixer fix --dry-run --diff --verbose
-
       - name: Run PHPUnit tests
         run: vendor/bin/phpunit
 
-  static-analysis:
-    name: Static Analysis
+  code-quality:
+    name: Code Quality
     runs-on: ubuntu-latest
 
     steps:
@@ -69,6 +66,9 @@ jobs:
 
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Check PHP-CS-Fixer
+        run: vendor/bin/php-cs-fixer fix --dry-run --diff --verbose
 
       - name: Run PHPStan
         run: composer stan

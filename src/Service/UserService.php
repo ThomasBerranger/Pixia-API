@@ -55,19 +55,22 @@ readonly class UserService
         return $sponsor;
     }
 
-    // todo : usefully for full players list
-    //    public function getLeaderboard(): array
-    //    {
-    //        $playerIds = $this->userRepository->getLeaderboard(10);
-    //
-    //        $this->userRepository->loadBadgesFor($playerIds);
-    //
-    //        return $this->userRepository->setStreaksFor($players);
-    //    }
+    /**
+     * @return list<User>
+     */
+    public function getLeaderboard(int $page): array
+    {
+        $players = $this->userRepository->getLeaderboard($page);
+
+        $this->userRepository->setStreaksFor($players);
+
+        return $players;
+    }
 
     /**
      * @return list<User>
-     */    public function getCurrentMonthLeaderboard(): array
+     */
+    public function getCurrentMonthLeaderboard(): array
     {
         $players = $this->userRepository->getMonthlyLeaderboard(new DateTimeImmutable('now'));
 

@@ -188,18 +188,47 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     }
 
     /**
-     * @return list<string>
+     * @return list<User>
      */
-    public function getLeaderboard(int $max = 0): array
+    public function getLeaderboard(int $page = 1, int $max = 20): array
     {
-        // @phpstan-ignore return.type
-        return $this->createQueryBuilder('u')
+        $offset = ($page - 1) * $max;
+
+        /** @var list<string> $userIds */
+        $userIds = $this->createQueryBuilder('u')
             ->select('u.id')
             ->orderBy('u.score', 'DESC')
             ->addOrderBy('u.createdAt', 'ASC')
             ->setMaxResults($max)
+            ->setFirstResult($offset)
             ->getQuery()
             ->getSingleColumnResult();
+
+        if (empty($userIds)) {
+            return [];
+        }
+
+        /** @var list<User> $users */
+        $users = $this->createQueryBuilder('u')
+            ->leftJoin('u.badges', 'b')
+            ->addSelect('b')
+            ->where('u.id IN (:ids)')
+            ->setParameter('ids', $userIds)
+            ->getQuery()
+            ->getResult();
+
+        /** @var list<User> $orderedUsers */
+        $orderedUsers = [];
+        foreach ($userIds as $id) {
+            foreach ($users as $user) {
+                if ($user->getId()?->toBinary() === $id) {
+                    $orderedUsers[] = $user;
+                    break;
+                }
+            }
+        }
+
+        return $orderedUsers;
     }
 
     /**
