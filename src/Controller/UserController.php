@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\DTO\User\LeaderboardRequest;
 use App\DTO\User\UpdateRequest;
 use App\Entity\User;
 use App\Repository\MonthlyLeaderboardRepository;
@@ -16,6 +17,7 @@ use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
+use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -37,12 +39,12 @@ final class UserController extends AbstractController
      * @throws Exception
      */
     #[Route(path: '/monthly-leaderboard', name: 'monthly_leaderboard', methods: ['GET'], format: 'json')]
-    public function monthlyLeaderboard(): JsonResponse
+    public function monthlyLeaderboard(#[MapQueryString] LeaderboardRequest $request): JsonResponse
     {
-        $currentMonthLeaderboard = $this->userService->getCurrentMonthLeaderboard();
+        $currentMonthLeaderboard = $this->userService->getCurrentMonthLeaderboard($request->getDate());
 
         $player = $this->authenticatedUserService->getUser();
-        $player?->setRank($this->monthlyLeaderboardRepository->getMonthlyRank($player));
+        $player?->setRank($this->monthlyLeaderboardRepository->getMonthlyRank($player, $request->getDate()));
 
         return $this->json(data: [
             'leaderboard' => $currentMonthLeaderboard,

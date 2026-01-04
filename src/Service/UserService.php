@@ -33,6 +33,7 @@ readonly class UserService
     public function addPoints(User $player, int $points, ?DateTimeImmutable $month = null): void
     {
         $player->setScore($player->getScore() + $points);
+
         $this->monthlyLeaderboardService->addMonthlyPoints($player, $points, $month);
     }
 
@@ -70,9 +71,9 @@ readonly class UserService
     /**
      * @return list<User>
      */
-    public function getCurrentMonthLeaderboard(): array
+    public function getCurrentMonthLeaderboard(DateTimeImmutable $date): array
     {
-        $players = $this->userRepository->getMonthlyLeaderboard(new DateTimeImmutable('now'));
+        $players = $this->userRepository->getMonthlyLeaderboard($date);
 
         $this->userRepository->setStreaksFor($players);
 

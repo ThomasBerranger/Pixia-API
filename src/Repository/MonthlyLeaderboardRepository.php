@@ -6,6 +6,7 @@ namespace App\Repository;
 
 use App\Entity\MonthlyLeaderboard;
 use App\Entity\User;
+use DateTimeImmutable;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -19,9 +20,9 @@ class MonthlyLeaderboardRepository extends ServiceEntityRepository
         parent::__construct($registry, MonthlyLeaderboard::class);
     }
 
-    public function getMonthlyRank(User $player): ?int
+    public function getMonthlyRank(User $player, DateTimeImmutable $date): ?int
     {
-        $month = new \DateTimeImmutable()->modify('first day of this month')->setTime(0, 0);
+        $month = $date->modify('first day of this month')->setTime(0, 0);
 
         $playerML = $this->getEntityManager()
             ->getRepository(MonthlyLeaderboard::class)

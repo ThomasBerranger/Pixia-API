@@ -141,9 +141,9 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     /**
      * @return list<User>
      */
-    public function getMonthlyLeaderboard(DateTimeImmutable $month): array
+    public function getMonthlyLeaderboard(DateTimeImmutable $date): array
     {
-        $month = $month->modify('first day of this month')->format('Y-m-d');
+        $month = $date->modify('first day of this month')->format('Y-m-d');
 
         /** @var list<string> $userIds */
         $userIds = $this->createQueryBuilder('u')

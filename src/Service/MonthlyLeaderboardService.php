@@ -24,6 +24,11 @@ readonly class MonthlyLeaderboardService
         /** @var DateTimeImmutable $month */
         $month = ($month ?? new DateTimeImmutable())->modify('first day of this month');
 
+        // Les anciens classements sont figés
+        if ($month->format('Y-m') !== new DateTimeImmutable()->format('Y-m')) {
+            return;
+        }
+
         $monthlyLeaderboard = $this->monthlyLeaderboardRepository->findOneBy(['player' => $player, 'month' => $month]);
 
         if (!$monthlyLeaderboard) {
