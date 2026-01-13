@@ -48,9 +48,9 @@ class PlayBotCommand extends Command
             }
 
             $successRate = match ($game->getDifficulty()) {
-                GameDifficulty::HARD => 10,
-                GameDifficulty::MEDIUM => 20,
-                GameDifficulty::EASY => 30,
+                GameDifficulty::HARD => 5,
+                GameDifficulty::MEDIUM => 15,
+                GameDifficulty::EASY => 25,
             };
 
             $successCount = 0;
