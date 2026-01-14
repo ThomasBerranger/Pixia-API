@@ -44,7 +44,7 @@ class GameGroupSerializationTest extends KernelTestCase
 
         $data = json_decode($json, true);
 
-        self::assertEquals(['solution', 'englishSolution'], array_keys($data));
+        self::assertEquals(['solution'], array_keys($data));
     }
 
     public function testHintGroup(): void
@@ -88,6 +88,7 @@ class GameGroupSerializationTest extends KernelTestCase
 
         $data = json_decode($json, true);
 
+        // note ne conserver que ce qui est utile
         self::assertEquals(
             ['id', 'type', 'solution', 'hint', 'date', 'difficulty', 'author', 'image'],
             array_keys($data)

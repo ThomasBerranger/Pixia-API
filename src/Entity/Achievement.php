@@ -22,11 +22,10 @@ class Achievement
     #[ORM\Column(type: UuidType::NAME, unique: true)]
     #[ORM\GeneratedValue(strategy: 'CUSTOM')]
     #[ORM\CustomIdGenerator(class: UuidGenerator::class)]
-    #[Groups('achievement:index')]
     private ?Uuid $id = null;
 
     #[ORM\Column(type: Types::DATE_IMMUTABLE)]
-    #[Groups(['achievement:index', 'user:me'])]
+    #[Groups(['user:me'])]
     private DateTimeImmutable $date;
 
     #[ORM\Column(enumType: GameDifficulty::class)]
@@ -38,7 +37,7 @@ class Achievement
 
     #[ORM\ManyToOne(targetEntity: Game::class)]
     #[ORM\JoinColumn(name: 'game_id', referencedColumnName: 'id', nullable: false)]
-    #[Groups(['achievement:index','user:me', 'user:show'])]
+    #[Groups(['user:me', 'user:show'])]
     private Game $game;
 
     public function __construct()

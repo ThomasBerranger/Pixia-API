@@ -66,7 +66,7 @@ class Game
     private Collection $hintedPlayers;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['game:solution', 'game:show:admin'])]
+    #[Groups(['game:show:admin'])]
     private string $englishSolution;
 
     public function __construct()
