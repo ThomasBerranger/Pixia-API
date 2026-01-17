@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Entity\Achievement;
 use App\Entity\Game;
 use App\Entity\User;
 use App\Repository\AchievementRepository;
@@ -20,27 +21,39 @@ readonly class GameSolutionService
     {
     }
 
-    public function save(Game $game, string $answer, ?User $player): Game|false
+    public function handleAnswer(Game $game, string $answer, ?User $player): Game|false
     {
-        if ($this->wordsMatch($game->getSolution(), $answer) || $this->wordsMatch($game->getEnglishSolution(), $answer)) {
-            if ($player) {
-                $this->handleWin($game, $player);
-            }
+        $game->setAttempts($game->getAttempts() + 1);
 
-            return $game;
+        if (!$this->isCorrectAnswer($game, $answer)) {
+            $this->entityManager->flush();
+            return false;
         }
 
-        return false;
+        if ($player && !$this->hasAlreadyWon($player, $game)) {
+            $this->handleWin($game, $player);
+        }
+
+        $this->entityManager->flush();
+
+        return $game;
     }
 
-    public function handleWin(Game $game, User $player): void
+    private function isCorrectAnswer(Game $game, string $answer): bool
     {
-        if (!$this->achievementRepository->findOneBy(['player' => $player, 'game' => $game])) {
-            $this->achievementService->saveResult($player, $game);
-            $this->userService->addGamePoints($player, $game);
+        return $this->wordsMatch($game->getSolution(), $answer)
+            || $this->wordsMatch($game->getEnglishSolution(), $answer);
+    }
 
-            $this->entityManager->flush();
-        }
+    private function hasAlreadyWon(User $player, Game $game): bool
+    {
+        return $this->achievementRepository->findOneBy(['player' => $player, 'game' => $game]) instanceof Achievement;
+    }
+
+    private function handleWin(Game $game, User $player): void
+    {
+        $this->achievementService->saveResult($player, $game);
+        $this->userService->addGamePoints($player, $game);
     }
 
     public function wordsMatch(string $expectedWords, string $testedWords): bool

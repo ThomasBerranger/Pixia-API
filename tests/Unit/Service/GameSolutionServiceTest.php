@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Service;
 
+use App\Entity\Achievement;
 use App\Entity\Game;
 use App\Entity\User;
 use App\Repository\AchievementRepository;
@@ -61,51 +62,15 @@ class GameSolutionServiceTest extends TestCase
         self::assertTrue($result);
     }
 
-    // note ici
     public function testWordsMatchIgnoresStopWords(): void
     {
-        // Les stopwords (le, la, de, etc.) sont filtrés
         $result = $this->service->wordsMatch('Le Seigneur des Anneaux', 'Seigneur Anneaux');
 
         self::assertTrue($result);
     }
 
-    public function testWordsMatchWithTypo(): void
-    {
-        // Levenshtein distance permet une tolérance sur les fautes de frappe
-        $result = $this->service->wordsMatch('Matrix', 'Matix');
-
-        self::assertTrue($result);
-    }
-
-    public function testWordsMatchWithMultipleTypos(): void
-    {
-        // Trop de différences = pas de match
-        $result = $this->service->wordsMatch('Matrix', 'Mtx');
-
-        self::assertFalse($result);
-    }
-
-    public function testWordsMatchWith80PercentThreshold(): void
-    {
-        // 4 mots attendus, 3 matchent = 75% < 80% → false
-        $result = $this->service->wordsMatch('Star Wars Episode Four', 'Star Wars Episode');
-
-        self::assertFalse($result);
-    }
-
-    public function testWordsMatchExactly80Percent(): void
-    {
-        // 5 mots, 4 matchent = 80% → true
-        $result = $this->service->wordsMatch('Harry Potter Chamber Secrets Five', 'Harry Potter Chamber Secrets');
-
-        self::assertTrue($result);
-    }
-
-    // note ici
     public function testWordsMatchFiltersShortWords(): void
     {
-        // Les mots de <= 2 caractères sont ignorés
         $result = $this->service->wordsMatch('The Lord of the Rings', 'Lord Rings');
 
         self::assertTrue($result);
@@ -113,74 +78,71 @@ class GameSolutionServiceTest extends TestCase
 
     public function testWordsMatchWithSpecialCharacters(): void
     {
-        // Les caractères spéciaux sont retirés par la regex [a-z]+
         $result = $this->service->wordsMatch('Spider-Man', 'Spider Man');
 
         self::assertTrue($result);
     }
 
-    // ========== Tests save() ==========
-
-    public function testSaveReturnsFalseWhenNoMatch(): void
+    public function testWordsMatchWithTypo(): void
     {
-        $game = $this->createMock(Game::class);
-        $game->method('getSolution')->willReturn('Matrix');
-        $game->method('getEnglishSolution')->willReturn('The Matrix');
+        $result = $this->service->wordsMatch('Matrix', 'Matix');
 
-        $result = $this->service->save($game, 'Avatar', null);
+        self::assertTrue($result);
+    }
+
+    public function testWordsMatchWithMultipleTypos(): void
+    {
+        $result = $this->service->wordsMatch('Matrix', 'Mtx');
 
         self::assertFalse($result);
     }
 
-    public function testSaveReturnsGameWhenMatchWithoutPlayer(): void
+    public function testWordsMatchWith80PercentThreshold(): void
     {
-        $game = $this->createMock(Game::class);
-        $game->method('getSolution')->willReturn('Matrix');
-        $game->method('getEnglishSolution')->willReturn('The Matrix');
+        $result = $this->service->wordsMatch('Star Wars Episode Four', 'Star Wars Episode');
 
-        $result = $this->service->save($game, 'Matrix', null);
-
-        self::assertSame($game, $result);
+        self::assertFalse($result);
     }
 
-    public function testSaveCallsHandleWinWhenMatchWithPlayer(): void
+    public function testWordsMatchExactly80Percent(): void
+    {
+        $result = $this->service->wordsMatch('Harry Potter Chamber Secrets Five', 'Harry Potter Chamber Secrets');
+
+        self::assertTrue($result);
+    }
+
+    // ========== Tests handleAnswer() ==========
+
+    public function testHandleAnswerReturnsFalseWhenNoMatch(): void
     {
         $game = $this->createMock(Game::class);
         $game->method('getSolution')->willReturn('Matrix');
         $game->method('getEnglishSolution')->willReturn('The Matrix');
+        $game->method('getAttempts')->willReturn(0);
 
-        $player = $this->createMock(User::class);
-
-        $this->achievementRepository
-            ->expects(self::once())
-            ->method('findOneBy')
-            ->with(['player' => $player, 'game' => $game])
-            ->willReturn(null);
-
-        $this->achievementService
-            ->expects(self::once())
-            ->method('saveResult')
-            ->with($player, $game);
-
-        $this->userService
-            ->expects(self::once())
-            ->method('addGamePoints')
-            ->with($player, $game);
+        $game->expects(self::once())
+            ->method('setAttempts')
+            ->with(1);
 
         $this->entityManager
             ->expects(self::once())
             ->method('flush');
 
-        $result = $this->service->save($game, 'Matrix', $player);
+        $result = $this->service->handleAnswer($game, 'Avatar', null);
 
-        self::assertSame($game, $result);
+        self::assertFalse($result);
     }
 
-    public function testSaveMatchesEnglishSolution(): void
+    public function testHandleAnswerMatchesSolution(): void
     {
         $game = $this->createMock(Game::class);
         $game->method('getSolution')->willReturn('Retour vers le futur');
         $game->method('getEnglishSolution')->willReturn('Back to the Future');
+        $game->method('getAttempts')->willReturn(2);
+
+        $game->expects(self::once())
+            ->method('setAttempts')
+            ->with(3);
 
         $player = $this->createMock(User::class);
 
@@ -188,34 +150,72 @@ class GameSolutionServiceTest extends TestCase
             ->method('findOneBy')
             ->willReturn(null);
 
-        $result = $this->service->save($game, 'Back to the Future', $player);
+        $this->entityManager
+            ->expects(self::once())
+            ->method('flush');
+
+        $result = $this->service->handleAnswer($game, 'Retour vers le futur', $player);
 
         self::assertSame($game, $result);
     }
 
-    // ========== Tests handleWin() ==========
-
-    public function testHandleWinDoesNothingWhenAchievementExists(): void
+    public function testHandleAnswerMatchesEnglishSolution(): void
     {
         $game = $this->createMock(Game::class);
+        $game->method('getSolution')->willReturn('Retour vers le futur');
+        $game->method('getEnglishSolution')->willReturn('Back to the Future');
+        $game->method('getAttempts')->willReturn(3);
+
+        $game->expects(self::once())
+            ->method('setAttempts')
+            ->with(4);
+
         $player = $this->createMock(User::class);
 
         $this->achievementRepository
-            ->expects(self::once())
             ->method('findOneBy')
-            ->with(['player' => $player, 'game' => $game])
-            ->willReturn(new \stdClass());
+            ->willReturn(null);
 
-        $this->achievementService->expects(self::never())->method('saveResult');
-        $this->userService->expects(self::never())->method('addGamePoints');
-        $this->entityManager->expects(self::never())->method('flush');
+        $this->entityManager
+            ->expects(self::once())
+            ->method('flush');
 
-        $this->service->handleWin($game, $player);
+        $result = $this->service->handleAnswer($game, 'Back to the Future', $player);
+
+        self::assertSame($game, $result);
     }
 
-    public function testHandleWinSavesNewAchievement(): void
+    public function testHandleAnswerReturnsGameWhenMatchWithoutPlayer(): void
     {
         $game = $this->createMock(Game::class);
+        $game->method('getSolution')->willReturn('Matrix');
+        $game->method('getEnglishSolution')->willReturn('The Matrix');
+        $game->method('getAttempts')->willReturn(0);
+
+        $game->expects(self::once())
+            ->method('setAttempts')
+            ->with(1);
+
+        $this->entityManager
+            ->expects(self::once())
+            ->method('flush');
+
+        $result = $this->service->handleAnswer($game, 'Matrix', null);
+
+        self::assertSame($game, $result);
+    }
+
+    public function testHandleAnswerCallsHandleWinWhenMatchWithPlayer(): void
+    {
+        $game = $this->createMock(Game::class);
+        $game->method('getSolution')->willReturn('Matrix');
+        $game->method('getEnglishSolution')->willReturn('The Matrix');
+        $game->method('getAttempts')->willReturn(0);
+
+        $game->expects(self::once())
+            ->method('setAttempts')
+            ->with(1);
+
         $player = $this->createMock(User::class);
 
         $this->achievementRepository
@@ -238,6 +238,39 @@ class GameSolutionServiceTest extends TestCase
             ->expects(self::once())
             ->method('flush');
 
-        $this->service->handleWin($game, $player);
+        $result = $this->service->handleAnswer($game, 'Matrix', $player);
+
+        self::assertSame($game, $result);
+    }
+
+    public function testHandleAnswerDoesNotCallHandleWinWhenAlreadyWon(): void
+    {
+        $game = $this->createMock(Game::class);
+        $game->method('getSolution')->willReturn('Matrix');
+        $game->method('getEnglishSolution')->willReturn('The Matrix');
+        $game->method('getAttempts')->willReturn(0);
+
+        $game->expects(self::once())
+            ->method('setAttempts')
+            ->with(1);
+
+        $player = $this->createMock(User::class);
+
+        $this->achievementRepository
+            ->expects(self::once())
+            ->method('findOneBy')
+            ->with(['player' => $player, 'game' => $game])
+            ->willReturn(new Achievement());
+
+        $this->achievementService->expects(self::never())->method('saveResult');
+        $this->userService->expects(self::never())->method('addGamePoints');
+
+        $this->entityManager
+            ->expects(self::once())
+            ->method('flush');
+
+        $result = $this->service->handleAnswer($game, 'Matrix', $player);
+
+        self::assertSame($game, $result);
     }
 }
