@@ -15,7 +15,7 @@ class ContributionCreateRequest
     public string $title;
 
     #[Assert\NotBlank(message: 'Une description est requis.')]
-    #[Assert\Length(min: 2, max: 255, minMessage: 'Ta description doit faire au moins {{ limit }} caractères.', maxMessage: 'Ta description doit faire moins de {{ limit }} caractères.')]
+    #[Assert\Length(min: 2, max: 1000, minMessage: 'Ta description doit faire au moins {{ limit }} caractères.', maxMessage: 'Ta description doit faire moins de {{ limit }} caractères.')]
     public string $description;
 
     #[Assert\NotBlank(message: 'Un type est requis.')]
