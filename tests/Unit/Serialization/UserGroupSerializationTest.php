@@ -69,7 +69,7 @@ class UserGroupSerializationTest extends KernelTestCase
 
         self::assertEquals(['game'], array_keys($data['achievements'][0]));
 
-        self::assertEquals(['date', 'image', 'type'], array_keys($data['achievements'][0]['game']));
+        self::assertEquals(['type', 'date', 'image'], array_keys($data['achievements'][0]['game']));
     }
 
     public function testIndexGroup(): void
