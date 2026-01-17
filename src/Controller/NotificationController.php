@@ -50,7 +50,6 @@ final class NotificationController extends AbstractController
         $player = $this->authenticatedUserService->getUserOrThrow();
         $notifications = $this->notificationRepository->findAllByNewestFor($player);
 
-        // note $notification->getReaders()->contains($player) mérite un helper | Parmi les notif du joueur si notif not contains joueur dans reader -> notif non lue
         if (array_any($notifications, fn ($notification) => !$notification->getReaders()->contains($player))) {
             return $this->json(data: true);
         }

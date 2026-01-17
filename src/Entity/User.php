@@ -113,7 +113,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(['user:me', 'user:index'])]
     private Collection $monthlyLeaderboards;
 
-    #[Groups(['user:me'])]
+    #[Groups(['user:me', 'user:index'])]
     private ?int $rank = null;
 
     public function __construct()
