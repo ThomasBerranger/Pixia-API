@@ -32,7 +32,7 @@ class Contribution
     private string $title;
 
     #[ORM\Column(length: 1000)]
-    #[Groups(['contribution:show', 'user:me'])]
+    #[Groups(['contribution:show'])]
     private string $description;
 
     #[ORM\Column(length: 255)]

@@ -71,10 +71,9 @@ class AuthController extends AbstractController
     public function show(): JsonResponse
     {
         $player = $this->authenticatedUserService->getUserOrThrow();
+        $player->setRank($this->userRepository->getRank($player));
 
         $data['user'] = $player;
-        $data['rank'] = $this->userRepository->getRank($player);
-
         $data['games'] = $this->entityManager->getRepository(Game::class)->countAvailableGames();
 
         $achievementData = $this->entityManager->getRepository(Achievement::class)->findLastWithCountFor($player, 3);

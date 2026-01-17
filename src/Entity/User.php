@@ -51,7 +51,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private string $username;
 
     #[ORM\Column]
-    #[Groups(['user:me', 'user:show', 'user:index:admin'])]
+    #[Groups(['user:index:admin'])]
     private DateTimeImmutable $createdAt;
 
     /**
@@ -103,7 +103,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @var array<string, int>
      */
-    #[Groups(['user:show', 'user:index'])]
+    #[Groups(['user:index'])]
     private array $streaks = ['current' => 0, 'best' => 0];
 
     /**
@@ -113,7 +113,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(['user:me', 'user:index'])]
     private Collection $monthlyLeaderboards;
 
-    #[Groups(['user:index'])]
+    #[Groups(['user:me'])]
     private ?int $rank = null;
 
     public function __construct()
@@ -246,6 +246,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setCreatedAt(DateTimeImmutable $createdAt): static
     {
         $this->createdAt = $createdAt;
+
+        return $this;
+    }
+
+    public function addAchievement(Achievement $achievement): static
+    {
+        if (!$this->achievements->contains($achievement)) {
+            $this->achievements->add($achievement);
+        }
 
         return $this;
     }

@@ -1,0 +1,39 @@
+doctrine:
+    dbal:
+        url: '%env(resolve:DATABASE_URL)%'
+        # OPTIMISATIONS CONNEXION
+        options:
+            # Persistent connections
+            persistent: true
+            # Connection pool
+            pooled: true
+        # Timeout plus court
+        default_table_options:
+            charset: utf8mb4
+            collate: utf8mb4_unicode_ci
+
+    orm:
+        auto_generate_proxy_classes: true
+        enable_lazy_ghost_objects: true
+        auto_mapping: true
+        # CACHE METADATA en dev aussi pour perfs
+        metadata_cache_driver:
+            type: pool
+            pool: doctrine.system_cache_pool
+        # CACHE QUERIES
+        query_cache_driver:
+            type: pool
+            pool: doctrine.system_cache_pool
+        mappings:
+            App:
+                type: attribute
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Entity'
+                prefix: 'App\Entity'
+                alias: App
+
+framework:
+    cache:
+        pools:
+            doctrine.system_cache_pool:
+                adapter: cache.adapter.filesystem

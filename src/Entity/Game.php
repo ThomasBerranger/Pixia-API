@@ -29,7 +29,7 @@ class Game
     private ?Uuid $id = null;
 
     #[ORM\Column(enumType: GameType::class)]
-    #[Groups(['game:show', 'game:show:admin', 'game:index:admin', 'user:show'])]
+    #[Groups(['game:show', 'game:show:admin', 'game:index:admin'])]
     private GameType $type;
 
     #[ORM\Column(length: 255)]
