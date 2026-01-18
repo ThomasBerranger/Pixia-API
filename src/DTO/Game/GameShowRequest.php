@@ -15,17 +15,22 @@ class GameShowRequest
             format: 'Y-m-d',
             message: 'La date doit être au format YYYY-MM-DD'
         )]
-        public ?string $date,
+        public ?string   $date,
 
         public ?GameType $type,
-    ) {
+    )
+    {
     }
 
     public function getDate(): DateTimeImmutable
     {
-        return $this->date && DateTimeImmutable::createFromFormat('Y-m-d', $this->date) ?
-            DateTimeImmutable::createFromFormat('Y-m-d', $this->date) :
-            new DateTimeImmutable('today');
+        if ($this->date) {
+            if ($date = DateTimeImmutable::createFromFormat('Y-m-d', $this->date)) {
+                return $date;
+            }
+        }
+
+        return new DateTimeImmutable('today');
     }
 
     public function getType(): GameType

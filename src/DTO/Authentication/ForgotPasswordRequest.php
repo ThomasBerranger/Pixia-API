@@ -8,7 +8,8 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 class ForgotPasswordRequest
 {
-    #[Assert\NotBlank(message: 'Email is required')]
-    #[Assert\Email(message: 'Invalid email format')]
+    #[Assert\NotBlank(message: 'Un email est requis.')]
+    #[Assert\Email(message: "Cet email n'est pas valide.")]
+    #[Assert\Length(max: 255)]
     public string $email;
 }

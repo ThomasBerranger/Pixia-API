@@ -11,11 +11,20 @@ class GoogleAuthRequest
     /**
      * @var array{access_token: string}
      */
-    #[Assert\NotBlank]
-    #[Assert\Type('array')]
+    #[Assert\Collection(
+        fields: [
+            'access_token' => [
+                new Assert\NotBlank(),
+                new Assert\Type('string'),
+            ],
+        ],
+        allowExtraFields: true,
+        allowMissingFields: false
+    )]
     public array $googleAccessToken;
 
-    #[Assert\Regex(pattern: '/^[a-z0-9\-àâäéèêëïîôùûüÿæœç]+$/u')]
+    #[Assert\Length(min: 2, max: 255)]
+    #[Assert\Regex(pattern: '/^[a-z0-9àâäéèêëïîôùûüÿæœç-]+$/u')]
     public ?string $sponsor = null;
 
     public function getAccessToken(): string

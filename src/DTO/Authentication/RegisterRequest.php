@@ -30,6 +30,7 @@ class RegisterRequest
     #[Assert\Regex(pattern: '/^[a-zA-Z0-9_\-\s\p{L}]+$/u', message: "Ce pseudo n'est pas valide.")]
     public string $username;
 
+    #[Assert\Length(min: 2, max: 255)]
     #[Assert\Regex(pattern: '/^[a-z0-9\-àâäéèêëïîôùûüÿæœç]+$/u')]
     public ?string $sponsor = null;
 
