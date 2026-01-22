@@ -7,16 +7,11 @@ namespace App\Controller\Authentication;
 use App\Attribute\RateLimit;
 use App\DTO\Authentication\GoogleAuthRequest;
 use App\DTO\Authentication\RegisterRequest;
-use App\Entity\Achievement;
 use App\Entity\Badge;
-use App\Entity\Game;
 use App\Entity\User;
 use App\Enum\BadgeName;
-use App\Repository\UserRepository;
-use App\Service\AuthenticatedUserService;
 use App\Service\GoogleApiService;
 use App\Service\UserService;
-use Doctrine\DBAL\Exception;
 use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Random\RandomException;
@@ -25,7 +20,6 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
@@ -37,11 +31,9 @@ class AuthController extends AbstractController
     public function __construct(
         private readonly JWTTokenManagerInterface    $JWTTokenManager,
         private readonly EntityManagerInterface      $entityManager,
-        private readonly AuthenticatedUserService    $authenticatedUserService,
         private readonly UserService                 $userService,
         private readonly GoogleApiService            $googleApiService,
         private readonly UserPasswordHasherInterface $userPasswordHasher,
-        private readonly UserRepository              $userRepository,
     )
     {
     }
@@ -61,32 +53,6 @@ class AuthController extends AbstractController
         $token = $this->JWTTokenManager->create($user);
 
         return $this->json(['token' => $token], 201);
-    }
-
-    /**
-     * @throws Exception
-     */
-    #[Route('/me', name: 'me', methods: ['GET'])]
-    #[IsGranted('IS_AUTHENTICATED_FULLY')]
-    public function show(): JsonResponse
-    {
-        $player = $this->authenticatedUserService->getUserOrThrow();
-        $player->setRank($this->userRepository->getRank($player));
-
-        $data['user'] = $player;
-        $data['games'] = $this->entityManager->getRepository(Game::class)->countAvailableGames();
-
-        $achievementData = $this->entityManager->getRepository(Achievement::class)->findLastWithCountFor($player, 3);
-        $data['success'] = $achievementData['count'];
-        $data['history'] = $achievementData['history'];
-
-        $data = [
-            ...$data,
-            'streak' => [...$this->userRepository->getStreaks($player)],
-            'playerCount' => $this->userRepository->count()
-        ];
-
-        return $this->json($data, context: ['groups' => ['user:me']]);
     }
 
     /**

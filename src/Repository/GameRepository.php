@@ -7,6 +7,7 @@ namespace App\Repository;
 use App\Entity\Achievement;
 use App\Entity\Game;
 use App\Entity\User;
+use App\Enum\GameDifficulty;
 use App\Enum\GameType;
 use DateTimeImmutable;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
@@ -105,5 +106,25 @@ class GameRepository extends ServiceEntityRepository
             ->setParameter('today', new DateTimeImmutable('today'))
             ->getQuery()
             ->getSingleScalarResult();
+    }
+
+    /**
+     * @return list<array{month: string, difficulty: GameDifficulty, total: int, won: int, hinted: int}>
+     */
+    public function getPlayerStatsByMonthAndDifficulty(User $player): array
+    {
+        /** @var list<array{month: string, difficulty: GameDifficulty, total: int, won: int, hinted: int}> */
+        return $this->createQueryBuilder('g')
+            ->select("SUBSTRING(g.date, 1, 7) AS month")
+            ->addSelect('g.difficulty, COUNT(DISTINCT g.id) AS total')
+            ->addSelect('SUM(CASE WHEN a.id IS NOT NULL THEN 1 ELSE 0 END) AS won')
+            ->addSelect('SUM(CASE WHEN hp.id IS NOT NULL THEN 1 ELSE 0 END) AS hinted')
+            ->leftJoin(Achievement::class, 'a', 'WITH', 'a.game = g AND a.player = :playerId')
+            ->leftJoin('g.hintedPlayers', 'hp', 'WITH', 'hp.id = :playerId')
+            ->setParameter('playerId', $player->getId(), UuidType::NAME)
+            ->groupBy('month, g.difficulty')
+            ->orderBy('month', 'DESC')
+            ->getQuery()
+            ->getResult();
     }
 }

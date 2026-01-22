@@ -29,7 +29,7 @@ class Game
     private ?Uuid $id = null;
 
     #[ORM\Column(enumType: GameType::class)]
-    #[Groups(['game:show', 'game:show:admin', 'game:index:admin', 'user:show'])]
+    #[Groups(['game:show', 'game:index', 'game:show:admin', 'game:index:admin', 'user:show'])]
     private GameType $type;
 
     #[ORM\Column(length: 255)]
@@ -41,11 +41,11 @@ class Game
     private string $hint;
 
     #[ORM\Column(type: Types::DATE_IMMUTABLE)]
-    #[Groups(['game:show', 'game:show:admin', 'game:index:admin', 'user:show'])]
+    #[Groups(['game:show', 'game:index', 'game:show:admin', 'game:index:admin', 'user:show'])]
     private DateTimeImmutable $date;
 
     #[ORM\Column(enumType: GameDifficulty::class)]
-    #[Groups(['game:show', 'game:show:admin', 'game:index:admin'])]
+    #[Groups(['game:show', 'game:index', 'game:show:admin', 'game:index:admin'])]
     private GameDifficulty $difficulty;
 
     #[ORM\ManyToOne]
@@ -54,7 +54,7 @@ class Game
     private User $author;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['game:show', 'game:show:admin', 'game:index:admin', 'user:show'])]
+    #[Groups(['game:show', 'game:index', 'game:show:admin', 'game:index:admin', 'user:show'])]
     private ?string $image;
 
     private string $imageUrl;
