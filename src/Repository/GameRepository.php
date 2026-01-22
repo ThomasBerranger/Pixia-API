@@ -120,6 +120,8 @@ class GameRepository extends ServiceEntityRepository
             ->addSelect('COUNT(g.id) AS total')
             ->addSelect('COUNT(a.id) AS won')
             ->leftJoin(Achievement::class, 'a', 'WITH', 'a.game = g AND a.player = :playerId')
+            ->where('g.date <= :today')
+            ->setParameter('today', new DateTimeImmutable('today'))
             ->setParameter('playerId', $player->getId(), UuidType::NAME)
             ->groupBy('month, g.difficulty')
             ->orderBy('month', 'DESC')
