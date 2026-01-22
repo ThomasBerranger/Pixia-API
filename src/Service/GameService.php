@@ -13,17 +13,17 @@ final readonly class GameService
     }
 
     /**
-     * @param list<array{month: string, difficulty: GameDifficulty, total: int, won: int, hinted: int}> $stats
+     * @param list<array{month: string, difficulty: GameDifficulty, total: int, won: int}> $stats
      * @return array{
-     *     total: array{total: int, won: int, hinted: int},
-     *     byDifficulty: array<string, array{total: int, won: int, hinted: int}>,
-     *     byMonth: array<string, array{total: int, won: int, hinted: int}>
+     *     total: array{total: int, won: int},
+     *     byDifficulty: array<string, array{total: int, won: int}>,
+     *     byMonth: array<string, array{total: int, won: int}>
      * }
      */
     public function formatUserGamesData(array $stats): array
     {
         $formattedStats = [
-            'total' => ['total' => 0, 'won' => 0, 'hinted' => 0],
+            'total' => ['total' => 0, 'won' => 0],
             'byDifficulty' => [],
             'byMonth' => [],
         ];
@@ -33,22 +33,22 @@ final readonly class GameService
             $difficulty = $stat['difficulty']->value;
             $total = (int)$stat['total'];
             $won = (int)$stat['won'];
-            $hinted = (int)$stat['hinted'];
 
             $formattedStats['total']['total'] += $total;
             $formattedStats['total']['won'] += $won;
-            $formattedStats['total']['hinted'] += $hinted;
 
-            $formattedStats['byDifficulty'][$difficulty] ??= ['total' => 0, 'won' => 0, 'hinted' => 0];
+            $formattedStats['byDifficulty'][$difficulty] ??= ['total' => 0, 'won' => 0];
             $formattedStats['byDifficulty'][$difficulty]['total'] += $total;
             $formattedStats['byDifficulty'][$difficulty]['won'] += $won;
-            $formattedStats['byDifficulty'][$difficulty]['hinted'] += $hinted;
 
-            $formattedStats['byMonth'][$month] ??= ['total' => 0, 'won' => 0, 'hinted' => 0];
+            $formattedStats['byMonth'][$month] ??= ['total' => 0, 'won' => 0];
             $formattedStats['byMonth'][$month]['total'] += $total;
             $formattedStats['byMonth'][$month]['won'] += $won;
-            $formattedStats['byMonth'][$month]['hinted'] += $hinted;
         }
+
+        uksort($formattedStats['byDifficulty'], fn (string $a, string $b) =>
+            GameDifficulty::from($a)->getOrder() <=> GameDifficulty::from($b)->getOrder()
+        );
 
         return $formattedStats;
     }

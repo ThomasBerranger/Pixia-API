@@ -22,4 +22,13 @@ enum GameDifficulty: string
             self::HARD => 50,
         };
     }
+
+    public function getOrder(): int
+    {
+        return match($this) {
+            self::EASY => 1,
+            self::MEDIUM => 2,
+            self::HARD => 3,
+        };
+    }
 }

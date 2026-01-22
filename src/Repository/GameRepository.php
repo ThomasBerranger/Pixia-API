@@ -116,14 +116,35 @@ class GameRepository extends ServiceEntityRepository
         /** @var list<array{month: string, difficulty: GameDifficulty, total: int, won: int, hinted: int}> */
         return $this->createQueryBuilder('g')
             ->select("SUBSTRING(g.date, 1, 7) AS month")
-            ->addSelect('g.difficulty, COUNT(DISTINCT g.id) AS total')
-            ->addSelect('SUM(CASE WHEN a.id IS NOT NULL THEN 1 ELSE 0 END) AS won')
-            ->addSelect('SUM(CASE WHEN hp.id IS NOT NULL THEN 1 ELSE 0 END) AS hinted')
+            ->addSelect('g.difficulty')
+            ->addSelect('COUNT(g.id) AS total')
+            ->addSelect('COUNT(a.id) AS won')
             ->leftJoin(Achievement::class, 'a', 'WITH', 'a.game = g AND a.player = :playerId')
-            ->leftJoin('g.hintedPlayers', 'hp', 'WITH', 'hp.id = :playerId')
             ->setParameter('playerId', $player->getId(), UuidType::NAME)
             ->groupBy('month, g.difficulty')
             ->orderBy('month', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * @return list<array{game: Game, won: bool, hintRequested: bool}>
+     * @throws \DateMalformedStringException
+     */
+    public function getPlayerGamesByMonth(User $player, DateTimeImmutable $month): array
+    {
+        /** @var list<array{game: Game, won: bool, hintRequested: bool}> */
+        return $this->createQueryBuilder('g')
+            ->select('g AS game')
+            ->addSelect('CASE WHEN a.id IS NOT NULL THEN true ELSE false END AS won')
+            ->addSelect('CASE WHEN hp.id IS NOT NULL THEN true ELSE false END AS hintRequested')
+            ->leftJoin(Achievement::class, 'a', 'WITH', 'a.game = g AND a.player = :playerId')
+            ->leftJoin('g.hintedPlayers', 'hp', 'WITH', 'hp.id = :playerId')
+            ->where('g.date BETWEEN :start AND :end')
+            ->setParameter('playerId', $player->getId(), UuidType::NAME)
+            ->setParameter('start', $month->modify('first day of this month'))
+            ->setParameter('end', $month->modify('last day of this month'))
+            ->orderBy('g.date', 'ASC')
             ->getQuery()
             ->getResult();
     }

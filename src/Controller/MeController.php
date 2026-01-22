@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\DTO\MonthRequest;
 use App\Entity\Achievement;
 use App\Entity\Game;
 use App\Repository\GameRepository;
@@ -14,6 +15,7 @@ use Doctrine\DBAL\Exception;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -57,11 +59,22 @@ class MeController extends AbstractController
     }
 
     #[Route(path: '/games-stats', name: 'games_stats', methods: ['GET'])]
-    public function gameIndex(): JsonResponse
+    public function gameStats(): JsonResponse
     {
         $player = $this->authenticatedUserService->getUserOrThrow();
         $stats = $this->gameRepository->getPlayerStatsByMonthAndDifficulty($player);
 
         return $this->json($this->gameService->formatUserGamesData($stats));
+    }
+
+    /**
+     * @throws \DateMalformedStringException
+     */
+    #[Route(path: '/games', name: 'games', methods: ['GET'])]
+    public function gameIndex(#[MapQueryString] MonthRequest $month): JsonResponse
+    {
+        $player = $this->authenticatedUserService->getUserOrThrow();
+
+        return $this->json($this->gameRepository->getPlayerGamesByMonth($player, $month->getMonth()), context: ['groups' => ['game:index']]);
     }
 }
