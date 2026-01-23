@@ -148,7 +148,7 @@ class GameRepository extends ServiceEntityRepository
             ->setParameter('end', $month->modify('last day of this month')->format('Y-m-d'))
             ->setParameter('today', (new DateTimeImmutable('today'))->format('Y-m-d'))
             ->setParameter('playerId', $player->getId(), UuidType::NAME)
-            ->orderBy('g.date', 'ASC')
+            ->orderBy('g.date', 'DESC')
             ->getQuery()
             ->getResult();
     }
