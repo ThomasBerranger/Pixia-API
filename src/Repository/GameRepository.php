@@ -144,10 +144,10 @@ class GameRepository extends ServiceEntityRepository
             ->leftJoin('g.hintedPlayers', 'hp', 'WITH', 'hp.id = :playerId')
             ->where('g.date BETWEEN :start AND :end')
             ->andWhere('g.date <= :today')
-            ->setParameter('today', new DateTimeImmutable('today'))
+            ->setParameter('start', $month->modify('first day of this month')->format('Y-m-d'))
+            ->setParameter('end', $month->modify('last day of this month')->format('Y-m-d'))
+            ->setParameter('today', (new DateTimeImmutable('today'))->format('Y-m-d'))
             ->setParameter('playerId', $player->getId(), UuidType::NAME)
-            ->setParameter('start', $month->modify('first day of this month'))
-            ->setParameter('end', $month->modify('last day of this month'))
             ->orderBy('g.date', 'ASC')
             ->getQuery()
             ->getResult();
