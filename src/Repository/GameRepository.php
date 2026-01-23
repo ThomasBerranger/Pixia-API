@@ -143,6 +143,8 @@ class GameRepository extends ServiceEntityRepository
             ->leftJoin(Achievement::class, 'a', 'WITH', 'a.game = g AND a.player = :playerId')
             ->leftJoin('g.hintedPlayers', 'hp', 'WITH', 'hp.id = :playerId')
             ->where('g.date BETWEEN :start AND :end')
+            ->andWhere('g.date <= :today')
+            ->setParameter('today', new DateTimeImmutable('today'))
             ->setParameter('playerId', $player->getId(), UuidType::NAME)
             ->setParameter('start', $month->modify('first day of this month'))
             ->setParameter('end', $month->modify('last day of this month'))
