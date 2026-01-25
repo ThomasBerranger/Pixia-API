@@ -115,6 +115,10 @@ class GameRepository extends ServiceEntityRepository
      */
     public function getPlayerStatsByMonthAndDifficulty(User $player, array $difficulties): array
     {
+        if (count($difficulties) === 0) {
+            return [];
+        }
+
         $qb = $this->createQueryBuilder('g')
             ->select("SUBSTRING(g.date, 1, 7) AS month")
             ->addSelect('g.difficulty')
@@ -140,6 +144,10 @@ class GameRepository extends ServiceEntityRepository
      */
     public function getPlayerGamesByMonth(User $player, DateTimeImmutable $month, array $difficulties): array
     {
+        if (count($difficulties) === 0) {
+            return [];
+        }
+
         $qb = $this->createQueryBuilder('g')
             ->select('g AS game')
             ->addSelect('CASE WHEN a.id IS NOT NULL THEN true ELSE false END AS won')
