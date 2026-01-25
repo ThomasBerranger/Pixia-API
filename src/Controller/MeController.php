@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\DTO\Game\DifficultiesRequest;
 use App\DTO\MonthRequest;
 use App\Entity\Achievement;
 use App\Entity\Game;
@@ -59,10 +60,15 @@ class MeController extends AbstractController
     }
 
     #[Route(path: '/games-stats', name: 'games_stats', methods: ['GET'])]
-    public function gameStats(): JsonResponse
-    {
+    public function gamesStats(
+        #[MapQueryString] ?DifficultiesRequest $difficultiesRequest = null,
+    ): JsonResponse {
         $player = $this->authenticatedUserService->getUserOrThrow();
-        $stats = $this->gameRepository->getPlayerStatsByMonthAndDifficulty($player);
+
+        $stats = $this->gameRepository->getPlayerStatsByMonthAndDifficulty(
+            $player,
+            $difficultiesRequest?->getDifficulties() ?? []
+        );
 
         return $this->json($this->gameService->formatUserGamesData($stats));
     }
@@ -71,10 +77,19 @@ class MeController extends AbstractController
      * @throws \DateMalformedStringException
      */
     #[Route(path: '/games', name: 'games', methods: ['GET'])]
-    public function gameIndex(#[MapQueryString] MonthRequest $month): JsonResponse
-    {
+    public function gamesIndex(
+        #[MapQueryString] MonthRequest $month,
+        #[MapQueryString] ?DifficultiesRequest $difficultiesRequest = null,
+    ): JsonResponse {
         $player = $this->authenticatedUserService->getUserOrThrow();
 
-        return $this->json($this->gameRepository->getPlayerGamesByMonth($player, $month->getMonth()), context: ['groups' => ['game:index']]);
+        return $this->json(
+            $this->gameRepository->getPlayerGamesByMonth(
+                $player,
+                $month->getMonth(),
+                $difficultiesRequest?->getDifficulties() ?? []
+            ),
+            context: ['groups' => ['game:index']]
+        );
     }
 }

@@ -11,6 +11,7 @@ use App\Enum\GameDifficulty;
 use App\Enum\GameType;
 use DateTimeImmutable;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use Exception;
 use Symfony\Bridge\Doctrine\Types\UuidType;
@@ -100,7 +101,7 @@ class GameRepository extends ServiceEntityRepository
 
     public function countAvailableGames(): int
     {
-        return (int) $this->createQueryBuilder('g')
+        return (int)$this->createQueryBuilder('g')
             ->select('COUNT(g.id)')
             ->where('g.date <= :today')
             ->setParameter('today', new DateTimeImmutable('today'))
@@ -109,12 +110,12 @@ class GameRepository extends ServiceEntityRepository
     }
 
     /**
-     * @return list<array{month: string, difficulty: GameDifficulty, total: int, won: int, hinted: int}>
+     * @param list<GameDifficulty> $difficulties
+     * @return list<array{month: string, difficulty: GameDifficulty, total: int, won: int}>
      */
-    public function getPlayerStatsByMonthAndDifficulty(User $player): array
+    public function getPlayerStatsByMonthAndDifficulty(User $player, array $difficulties): array
     {
-        /** @var list<array{month: string, difficulty: GameDifficulty, total: int, won: int, hinted: int}> */
-        return $this->createQueryBuilder('g')
+        $qb = $this->createQueryBuilder('g')
             ->select("SUBSTRING(g.date, 1, 7) AS month")
             ->addSelect('g.difficulty')
             ->addSelect('COUNT(g.id) AS total')
@@ -124,32 +125,47 @@ class GameRepository extends ServiceEntityRepository
             ->setParameter('today', new DateTimeImmutable('today'))
             ->setParameter('playerId', $player->getId(), UuidType::NAME)
             ->groupBy('month, g.difficulty')
-            ->orderBy('month', 'DESC')
-            ->getQuery()
-            ->getResult();
+            ->orderBy('month', 'DESC');
+
+        $this->applyDifficultyFilter($qb, $difficulties);
+
+        /** @var list<array{month: string, difficulty: GameDifficulty, total: int, won: int}> */
+        return $qb->getQuery()->getResult();
     }
 
     /**
-     * @return list<array{game: Game, won: bool, hintRequested: bool}>
+     * @param list<GameDifficulty> $difficulties
+     * @return list<array{game: Game, won: bool}>
      * @throws \DateMalformedStringException
      */
-    public function getPlayerGamesByMonth(User $player, DateTimeImmutable $month): array
+    public function getPlayerGamesByMonth(User $player, DateTimeImmutable $month, array $difficulties): array
     {
-        /** @var list<array{game: Game, won: bool, hintRequested: bool}> */
-        return $this->createQueryBuilder('g')
+        $qb = $this->createQueryBuilder('g')
             ->select('g AS game')
             ->addSelect('CASE WHEN a.id IS NOT NULL THEN true ELSE false END AS won')
-            ->addSelect('CASE WHEN hp.id IS NOT NULL THEN true ELSE false END AS hintRequested')
             ->leftJoin(Achievement::class, 'a', 'WITH', 'a.game = g AND a.player = :playerId')
-            ->leftJoin('g.hintedPlayers', 'hp', 'WITH', 'hp.id = :playerId')
             ->where('g.date BETWEEN :start AND :end')
             ->andWhere('g.date <= :today')
             ->setParameter('start', $month->modify('first day of this month')->format('Y-m-d'))
             ->setParameter('end', $month->modify('last day of this month')->format('Y-m-d'))
             ->setParameter('today', (new DateTimeImmutable('today'))->format('Y-m-d'))
             ->setParameter('playerId', $player->getId(), UuidType::NAME)
-            ->orderBy('g.date', 'DESC')
-            ->getQuery()
-            ->getResult();
+            ->orderBy('g.date', 'DESC');
+
+        $this->applyDifficultyFilter($qb, $difficulties);
+
+        /** @var list<array{game: Game, won: bool}> */
+        return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * @param list<GameDifficulty> $difficulties
+     */
+    private function applyDifficultyFilter(QueryBuilder $qb, array $difficulties): void
+    {
+        if (count($difficulties) > 0) {
+            $qb->andWhere('g.difficulty IN (:difficulties)')
+                ->setParameter('difficulties', $difficulties);
+        }
     }
 }
