@@ -12,13 +12,15 @@ use Doctrine\ORM\EntityManagerInterface;
 
 readonly class GameSolutionService
 {
+    private const float RECALL_THRESHOLD = 0.8;
+    private const float PRECISION_THRESHOLD = 0.3;
+
     public function __construct(
         private EntityManagerInterface $entityManager,
         private AchievementService     $achievementService,
         private UserService            $userService,
         private AchievementRepository  $achievementRepository,
-    )
-    {
+    ) {
     }
 
     public function handleAnswer(Game $game, string $answer, ?User $player): Game|false
@@ -56,59 +58,55 @@ readonly class GameSolutionService
         $this->userService->addGamePoints($player, $game);
     }
 
-    public function wordsMatch(string $expectedWords, string $testedWords): bool
+    public function wordsMatch(string $expected, string $tested): bool
     {
-        $normalizedExpectedWords = $this->normalizeAndExtractWords($expectedWords);
-        $normalizedTestedWords = $this->normalizeAndExtractWords($testedWords);
+        $expectedWords = $this->extractWords($expected);
+        $testedWords = $this->extractWords($tested);
 
-        if (empty($normalizedExpectedWords)) {
+        if (empty($expectedWords) || empty($testedWords)) {
             return false;
         }
 
-        $matchedWords = 0;
-        $totalExpectedWords = count($normalizedExpectedWords);
+        $matchedCount = 0;
 
-        foreach ($normalizedExpectedWords as $normalizedExpectedWord) {
-            foreach ($normalizedTestedWords as $normalizedTestedWord) {
-                if ($normalizedExpectedWord === $normalizedTestedWord || $this->isSimilar($normalizedExpectedWord, $normalizedTestedWord)) {
-                    ++$matchedWords;
+        foreach ($expectedWords as $expectedWord) {
+            foreach ($testedWords as $testedWord) {
+                if ($this->wordsAreEquivalent($expectedWord, $testedWord)) {
+                    ++$matchedCount;
                     break;
                 }
             }
         }
 
-        return $matchedWords / $totalExpectedWords >= 0.8;
+        $recall = $matchedCount / count($expectedWords);
+        $precision = $matchedCount / count($testedWords);
+
+        return $recall >= self::RECALL_THRESHOLD && $precision >= self::PRECISION_THRESHOLD;
     }
 
     /**
      * @return array<int, string>
      */
-    private function normalizeAndExtractWords(string $text): array
+    private function extractWords(string $text): array
     {
-        $text = strtolower($this->removeAccents($text));
+        $normalized = strtolower($this->removeAccents($text));
 
-        $stopWords = [
-            // Français
-            'le', 'la', 'les', 'un', 'une', 'des', 'du', 'de', 'et', 'ou', 'à', 'au', 'aux', 'en', 'dans',
-            // Anglais
-            'the', 'and', 'for', 'with', 'from', 'into', 'this', 'that', 'these', 'those'
-        ];
+        preg_match_all('/[a-z0-9]+/', $normalized, $matches);
 
-        preg_match_all('/[a-z]+/', $text, $matches);
-        $words = $matches[0];
+        return $matches[0];
+    }
 
-        return array_filter($words, function ($word) use ($stopWords) {
-            return strlen($word) > 2 && !in_array($word, $stopWords, true);
-        });
+    private function wordsAreEquivalent(string $word1, string $word2): bool
+    {
+        return $word1 === $word2 || $this->isSimilar($word1, $word2);
     }
 
     private function isSimilar(string $word1, string $word2): bool
     {
-        $maxLength = max(strlen($word1), strlen($word2));
-        $distance = levenshtein($word1, $word2);
-        $tolerance = $maxLength < 6 ? 1 : 2;
+        $maxLen = max(strlen($word1), strlen($word2));
+        $tolerance = $maxLen < 6 ? 1 : 2;
 
-        return $distance <= $tolerance;
+        return levenshtein($word1, $word2) <= $tolerance;
     }
 
     private function removeAccents(string $text): string
