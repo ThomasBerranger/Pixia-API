@@ -37,14 +37,6 @@ final class AdminController extends AbstractController
     {
     }
 
-    #[Route(path: '/users', name: 'users_index', methods: ['GET'])]
-    public function userIndex(): JsonResponse
-    {
-        $users = $this->entityManager->getRepository(User::class)->findAll();
-
-        return $this->json(data: $users, context: ['groups' => 'user:index:admin']);
-    }
-
     #[Route(path: '/games', name: 'games_create', methods: ['POST'], format: 'json')]
     public function create(
         #[MapRequestPayload] GameCreateRequest $gameCreateRequest

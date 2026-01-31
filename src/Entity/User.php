@@ -165,7 +165,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $roles = $this->roles;
         // guarantee every user at least has ROLE_USER
-        if (!in_array('ROLE_BOT', $roles, true)) {
+        if (!in_array('ROLE_BOT', $roles, true) && !in_array('ROLE_BANNED', $roles, true)) {
             $roles[] = 'ROLE_USER';
         }
 

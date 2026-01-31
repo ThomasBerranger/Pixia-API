@@ -34,4 +34,12 @@ final class SuperAdminController extends AbstractController
 
         return $this->json(['token' => $token]);
     }
+
+    #[Route(path: '/users', name: 'users_index', methods: ['GET'])]
+    public function userIndex(): JsonResponse
+    {
+        $users = $this->entityManager->getRepository(User::class)->findAll();
+
+        return $this->json(data: $users, context: ['groups' => 'user:index:admin']);
+    }
 }
