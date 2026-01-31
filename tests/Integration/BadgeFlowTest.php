@@ -14,6 +14,7 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 /**
  * Tests the badge attribution flows.
+ * Uses real JWT authentication to properly test the stateless firewall.
  */
 class BadgeFlowTest extends WebTestCase
 {
@@ -24,13 +25,27 @@ class BadgeFlowTest extends WebTestCase
         $client = static::createClient();
         $em = self::getContainer()->get('doctrine')->getManager();
 
-        // Create a fresh user without any badges
-        $user = $this->createTestUser($em);
+        // Register a user via API
+        $email = 'badgetest-' . uniqid() . '@test.com';
+        $password = 'testpassword123';
+
+        $client->jsonRequest('POST', '/register', [
+            'email' => $email,
+            'password' => $password,
+            'username' => 'badgetest-' . uniqid(),
+        ]);
+        self::assertResponseStatusCodeSame(201);
+        $token = json_decode($client->getResponse()->getContent(), true)['token'];
+
+        // Get the user from database
+        $user = $em->getRepository(User::class)->findOneBy(['email' => $email]);
+        $userId = $user->getId()->toString();
+
+        // Get the fixture author for game creation
+        $fixtureAuthor = $em->getRepository(User::class)->findOneBy(['email' => 'test@test.com']);
 
         // Create a game for this test
-        $game = $this->createTestGame($em, $user);
-
-        $client->loginUser($user);
+        $game = $this->createTestGame($em, $fixtureAuthor);
 
         // Verify user has no WINS_1 badge initially
         $initialBadges = $em->getRepository(Badge::class)->findBy(['player' => $user]);
@@ -40,12 +55,14 @@ class BadgeFlowTest extends WebTestCase
         // Win the game
         $client->jsonRequest('POST', '/games/' . $game->getId() . '/solution', [
             'answer' => $game->getSolution(),
-        ]);
+        ], ['HTTP_AUTHORIZATION' => 'Bearer ' . $token]);
         self::assertResponseIsSuccessful();
 
         // Verify WINS_1 badge was granted
         $em->clear();
-        $updatedBadges = $em->getRepository(Badge::class)->findBy(['player' => $user]);
+        $updatedBadges = $em->createQuery(
+            'SELECT b FROM App\Entity\Badge b WHERE b.player = :userId'
+        )->setParameter('userId', $userId)->getResult();
         $hasWins1Now = $this->userHasBadge($updatedBadges, BadgeName::WINS_1);
         self::assertTrue($hasWins1Now, 'User should have WINS_1 badge after first win');
     }
@@ -57,16 +74,23 @@ class BadgeFlowTest extends WebTestCase
         $client = static::createClient();
         $em = self::getContainer()->get('doctrine')->getManager();
 
-        // Create sponsor
-        $sponsor = $this->createTestUser($em, 'sponsor');
+        // Get the fixture user as sponsor (test@test.com already exists)
+        $sponsor = $em->getRepository(User::class)->findOneBy(['email' => 'test@test.com']);
+        $sponsorId = $sponsor->getId()->toString();
         $sponsorInitialScore = $sponsor->getScore();
 
-        // Create sponsored user with the sponsor
-        $sponsoredUser = $this->createTestUser($em, 'sponsored');
-        $sponsoredUser->setSponsor($sponsor);
-        $em->flush();
+        // Register sponsored user via API with sponsor
+        $email = 'sponsored-' . uniqid() . '@test.com';
+        $password = 'testpassword123';
 
-        $client->loginUser($sponsoredUser);
+        $client->jsonRequest('POST', '/register', [
+            'email' => $email,
+            'password' => $password,
+            'username' => 'sponsored-' . uniqid(),
+            'sponsor' => $sponsor->getSlug(),
+        ]);
+        self::assertResponseStatusCodeSame(201);
+        $token = json_decode($client->getResponse()->getContent(), true)['token'];
 
         // Create 10 games and win them all
         for ($i = 1; $i <= 10; $i++) {
@@ -74,13 +98,13 @@ class BadgeFlowTest extends WebTestCase
 
             $client->jsonRequest('POST', '/games/' . $game->getId() . '/solution', [
                 'answer' => $game->getSolution(),
-            ]);
+            ], ['HTTP_AUTHORIZATION' => 'Bearer ' . $token]);
             self::assertResponseIsSuccessful();
         }
 
         // Verify sponsor received points
         $em->clear();
-        $updatedSponsor = $em->getRepository(User::class)->find($sponsor->getId());
+        $updatedSponsor = $em->getRepository(User::class)->find($sponsorId);
         self::assertGreaterThan(
             $sponsorInitialScore,
             $updatedSponsor->getScore(),
@@ -88,26 +112,14 @@ class BadgeFlowTest extends WebTestCase
         );
 
         // Verify sponsor has SPONSOR badge
-        $sponsorBadges = $em->getRepository(Badge::class)->findBy(['player' => $sponsor]);
+        $sponsorBadges = $em->createQuery(
+            'SELECT b FROM App\Entity\Badge b WHERE b.player = :sponsorId'
+        )->setParameter('sponsorId', $sponsorId)->getResult();
         $hasSponsorBadge = $this->userHasBadge($sponsorBadges, BadgeName::SPONSOR);
         self::assertTrue($hasSponsorBadge, 'Sponsor should have SPONSOR badge');
     }
 
     // ========== Helper Methods ==========
-
-    private function createTestUser($em, string $suffix = ''): User
-    {
-        $uniqueId = uniqid() . $suffix;
-        $user = new User();
-        $user->setEmail("testuser-{$uniqueId}@test.com")
-            ->setUsername("testuser-{$uniqueId}")
-            ->setPassword('hashed');
-
-        $em->persist($user);
-        $em->flush();
-
-        return $user;
-    }
 
     private function createTestGame($em, User $author, string $solution = 'TestSolution', int $dayOffset = 0): Game
     {

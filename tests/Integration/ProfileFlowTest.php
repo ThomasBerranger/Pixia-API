@@ -9,6 +9,7 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 /**
  * Tests the profile management flows.
+ * Uses real JWT authentication to properly test the stateless firewall.
  */
 class ProfileFlowTest extends WebTestCase
 {
@@ -19,17 +20,28 @@ class ProfileFlowTest extends WebTestCase
         $client = static::createClient();
         $em = self::getContainer()->get('doctrine')->getManager();
 
-        $user = $this->createTestUser($em);
-        $originalUsername = $user->getUsername();
+        // Register a user via API
+        $email = 'profiletest-' . uniqid() . '@test.com';
+        $password = 'testpassword123';
+        $originalUsername = 'profiletest-' . uniqid();
 
-        $client->loginUser($user);
+        $client->jsonRequest('POST', '/register', [
+            'email' => $email,
+            'password' => $password,
+            'username' => $originalUsername,
+        ]);
+        self::assertResponseStatusCodeSame(201);
+        $token = json_decode($client->getResponse()->getContent(), true)['token'];
+
+        $user = $em->getRepository(User::class)->findOneBy(['email' => $email]);
+        $userId = $user->getId()->toString();
 
         $newUsername = 'updated-' . uniqid();
 
         // Update profile
         $client->jsonRequest('PATCH', '/users', [
             'username' => $newUsername,
-        ]);
+        ], ['HTTP_AUTHORIZATION' => 'Bearer ' . $token]);
 
         self::assertResponseIsSuccessful();
         $response = json_decode($client->getResponse()->getContent(), true);
@@ -40,7 +52,7 @@ class ProfileFlowTest extends WebTestCase
 
         // Verify username was updated in database
         $em->clear();
-        $updatedUser = $em->getRepository(User::class)->find($user->getId());
+        $updatedUser = $em->getRepository(User::class)->find($userId);
         self::assertSame($newUsername, $updatedUser->getUsername());
         self::assertNotSame($originalUsername, $updatedUser->getUsername());
     }
@@ -48,14 +60,22 @@ class ProfileFlowTest extends WebTestCase
     public function testUpdateProfileWithInvalidEmailFails(): void
     {
         $client = static::createClient();
-        $em = self::getContainer()->get('doctrine')->getManager();
 
-        $user = $this->createTestUser($em);
-        $client->loginUser($user);
+        // Register a user via API
+        $email = 'invalidemailtest-' . uniqid() . '@test.com';
+        $password = 'testpassword123';
+
+        $client->jsonRequest('POST', '/register', [
+            'email' => $email,
+            'password' => $password,
+            'username' => 'invalidemailtest-' . uniqid(),
+        ]);
+        self::assertResponseStatusCodeSame(201);
+        $token = json_decode($client->getResponse()->getContent(), true)['token'];
 
         $client->jsonRequest('PATCH', '/users', [
             'email' => 'not-valid-email',
-        ]);
+        ], ['HTTP_AUTHORIZATION' => 'Bearer ' . $token]);
 
         self::assertResponseStatusCodeSame(422);
     }
@@ -76,18 +96,29 @@ class ProfileFlowTest extends WebTestCase
     public function testGetMeReturnsUserData(): void
     {
         $client = static::createClient();
-        $em = self::getContainer()->get('doctrine')->getManager();
 
-        $user = $this->createTestUser($em);
-        $client->loginUser($user);
+        // Register a user via API
+        $email = 'metest-' . uniqid() . '@test.com';
+        $password = 'testpassword123';
+        $username = 'metest-' . uniqid();
 
-        $client->request('GET', '/me');
+        $client->jsonRequest('POST', '/register', [
+            'email' => $email,
+            'password' => $password,
+            'username' => $username,
+        ]);
+        self::assertResponseStatusCodeSame(201);
+        $token = json_decode($client->getResponse()->getContent(), true)['token'];
+
+        $client->request('GET', '/me', [], [], [
+            'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
+        ]);
 
         self::assertResponseIsSuccessful();
         $response = json_decode($client->getResponse()->getContent(), true);
 
         self::assertArrayHasKey('user', $response);
-        self::assertSame($user->getUsername(), $response['user']['username']);
+        self::assertSame($username, $response['user']['username']);
     }
 
     public function testGetMeRequiresAuthentication(): void
@@ -117,21 +148,5 @@ class ProfileFlowTest extends WebTestCase
 
         self::assertArrayHasKey('user', $response);
         self::assertSame($targetUser->getUsername(), $response['user']['username']);
-    }
-
-    // ========== Helper Methods ==========
-
-    private function createTestUser($em): User
-    {
-        $uniqueId = uniqid();
-        $user = new User();
-        $user->setEmail("testuser-{$uniqueId}@test.com")
-            ->setUsername("testuser-{$uniqueId}")
-            ->setPassword('hashed');
-
-        $em->persist($user);
-        $em->flush();
-
-        return $user;
     }
 }
