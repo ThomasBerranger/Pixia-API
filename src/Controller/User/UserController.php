@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Controller;
+namespace App\Controller\User;
 
 use App\DTO\User\LeaderboardRequest;
 use App\DTO\User\UpdateRequest;
@@ -77,7 +77,7 @@ final class UserController extends AbstractController
     }
 
     #[Route(name: 'update', methods: ['PATCH'])]
-    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    #[IsGranted('ROLE_USER')]
     public function update(
         #[MapRequestPayload] UpdateRequest $updateRequest,
         EntityManagerInterface             $em,

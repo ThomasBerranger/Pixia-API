@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Controller;
+namespace App\Controller\User;
 
 use App\DTO\Contribution\ContributionUpdateRequest;
 use App\DTO\Game\GameCreateRequest;

@@ -53,7 +53,7 @@ final class GameController extends AbstractController
     }
 
     #[Route('/{id}/hint', name: 'hint', methods: ['GET'], format: 'json')]
-    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    #[IsGranted('ROLE_USER')]
     public function hint(Game $game): JsonResponse
     {
         $user = $this->authenticatedUserService->getUserOrThrow();
