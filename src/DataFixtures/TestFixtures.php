@@ -10,22 +10,30 @@ use App\Enum\GameDifficulty;
 use App\Enum\GameType;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class TestFixtures extends Fixture
 {
+    public const TEST_PASSWORD = 'password123';
+
+    public function __construct(
+        private readonly UserPasswordHasherInterface $passwordHasher,
+    ) {
+    }
+
     public function load(ObjectManager $manager): void
     {
         $user = new User();
         $user->setEmail('test@test.com')
             ->setUsername('test-user')
-            ->setPassword('hashed');
+            ->setPassword($this->passwordHasher->hashPassword($user, self::TEST_PASSWORD));
 
         $manager->persist($user);
 
         $admin = new User();
         $admin->setEmail('admin@test.com')
             ->setUsername('admin-user')
-            ->setPassword('hashed')
+            ->setPassword($this->passwordHasher->hashPassword($admin, self::TEST_PASSWORD))
             ->setRoles(['ROLE_ADMIN']);
 
         $manager->persist($admin);

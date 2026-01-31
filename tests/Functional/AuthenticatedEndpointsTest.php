@@ -4,11 +4,16 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional;
 
+use App\DataFixtures\TestFixtures;
 use App\Entity\Game;
 use App\Entity\User;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
+/**
+ * Tests that endpoints require authentication.
+ * Uses real JWT authentication to properly test the stateless firewall.
+ */
 class AuthenticatedEndpointsTest extends WebTestCase
 {
     #[DataProvider('authenticatedEndpointsProvider')]
@@ -26,10 +31,11 @@ class AuthenticatedEndpointsTest extends WebTestCase
     {
         $client = static::createClient();
 
-        $user = $this->getTestUser();
-        $client->loginUser($user);
+        $token = $this->getTestUserToken($client);
 
-        $client->request($method, $url);
+        $client->request($method, $url, [], [], [
+            'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
+        ]);
 
         self::assertNotEquals(401, $client->getResponse()->getStatusCode());
     }
@@ -41,14 +47,6 @@ class AuthenticatedEndpointsTest extends WebTestCase
         yield 'notifications' => ['GET', '/notifications'];
         yield 'has unread notifications' => ['GET', '/notifications/has-unread'];
         yield 'create contribution' => ['POST', '/contributions'];
-    }
-
-    private function getTestUser(): User
-    {
-        return self::getContainer()
-            ->get('doctrine')
-            ->getRepository(User::class)
-            ->findOneBy(['email' => 'test@test.com']);
     }
 
     public function testGameEndpointsRequireAuth(): void
@@ -64,12 +62,23 @@ class AuthenticatedEndpointsTest extends WebTestCase
     {
         $client = static::createClient();
 
-        $user = $this->getTestUser();
-        $client->loginUser($user);
+        $token = $this->getTestUserToken($client);
 
-        $client->request('GET', "/games/{$this->getTestGameId()}/hint");
+        $client->request('GET', "/games/{$this->getTestGameId()}/hint", [], [], [
+            'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
+        ]);
 
         self::assertNotEquals(401, $client->getResponse()->getStatusCode());
+    }
+
+    private function getTestUserToken($client): string
+    {
+        $client->jsonRequest('POST', '/login', [
+            'email' => 'test@test.com',
+            'password' => TestFixtures::TEST_PASSWORD,
+        ]);
+
+        return json_decode($client->getResponse()->getContent(), true)['token'];
     }
 
     private function getTestGameId(): string
