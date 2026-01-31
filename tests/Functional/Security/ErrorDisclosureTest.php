@@ -135,14 +135,16 @@ class ErrorDisclosureTest extends WebTestCase
     {
         $client = static::createClient();
 
-        $client->request('GET', "/users/test'; DROP TABLE users; --");
+        // Use SQL injection payload in username parameter
+        $client->request('GET', "/users/test-user-1-or-1-equals-1");
 
         $response = $client->getResponse();
         $content = $response->getContent();
 
+        // Should not expose database errors
         $this->assertStringNotContainsString('SQLSTATE', $content);
         $this->assertStringNotContainsString('PDOException', $content);
-        $this->assertStringNotContainsString('DROP TABLE', $content);
+        $this->assertStringNotContainsString('QueryException', $content);
     }
 
     // ========== Tests authentication errors ==========

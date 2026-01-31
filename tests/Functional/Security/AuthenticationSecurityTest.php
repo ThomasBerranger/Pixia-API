@@ -89,7 +89,7 @@ class AuthenticationSecurityTest extends WebTestCase
         $this->assertNotEquals(201, $client->getResponse()->getStatusCode());
     }
 
-    public function testRegisterSanitizesXssInUsername(): void
+    public function testRegisterRejectsXssInUsername(): void
     {
         $client = static::createClient();
 
@@ -102,15 +102,9 @@ class AuthenticationSecurityTest extends WebTestCase
         ]);
 
         $response = $client->getResponse();
-        $content = $response->getContent();
 
-        // Either should reject (422) or sanitize the input
-        if ($response->getStatusCode() === 201) {
-            $data = json_decode($content, true);
-            if (isset($data['username'])) {
-                $this->assertStringNotContainsString('<script>', $data['username']);
-            }
-        }
+        // Username with special characters should be rejected by validation
+        $this->assertResponseStatusCodeSame(422);
     }
 
     // ========== Tests Login Security ==========
