@@ -4,15 +4,10 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional;
 
-use App\DataFixtures\TestFixtures;
 use App\Entity\User;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
-/**
- * Tests that admin endpoints require ROLE_ADMIN.
- * Uses real JWT authentication to properly test the stateless firewall.
- */
 class AdminEndpointsTest extends WebTestCase
 {
     #[DataProvider('adminEndpointsProvider')]
@@ -30,10 +25,8 @@ class AdminEndpointsTest extends WebTestCase
     {
         $client = static::createClient();
 
-        $token = $this->getTokenForUser($client, 'test@test.com');
-        $client->request($method, $url, [], [], [
-            'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
-        ]);
+        $client->loginUser($this->getTestUser());
+        $client->request($method, $url);
 
         self::assertResponseStatusCodeSame(403);
     }
@@ -43,10 +36,8 @@ class AdminEndpointsTest extends WebTestCase
     {
         $client = static::createClient();
 
-        $token = $this->getTokenForUser($client, 'admin@test.com');
-        $client->request($method, $url, [], [], [
-            'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
-        ]);
+        $client->loginUser($this->getAdminUser());
+        $client->request($method, $url);
 
         $statusCode = $client->getResponse()->getStatusCode();
 
@@ -64,13 +55,19 @@ class AdminEndpointsTest extends WebTestCase
         yield 'generate image' => ['POST', '/open-api/generate-image'];
     }
 
-    private function getTokenForUser($client, string $email): string
+    private function getTestUser(): User
     {
-        $client->jsonRequest('POST', '/login', [
-            'email' => $email,
-            'password' => TestFixtures::TEST_PASSWORD,
-        ]);
+        return self::getContainer()
+            ->get('doctrine')
+            ->getRepository(User::class)
+            ->findOneBy(['email' => 'test@test.com']);
+    }
 
-        return json_decode($client->getResponse()->getContent(), true)['token'];
+    private function getAdminUser(): User
+    {
+        return self::getContainer()
+            ->get('doctrine')
+            ->getRepository(User::class)
+            ->findOneBy(['email' => 'admin@test.com']);
     }
 }

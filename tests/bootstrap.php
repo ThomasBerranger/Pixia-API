@@ -25,10 +25,9 @@ $kernel->boot();
 
 $container = $kernel->getContainer();
 $entityManager = $container->get('doctrine')->getManager();
-$passwordHasher = $container->get('security.user_password_hasher');
 
 $loader = new \Doctrine\Common\DataFixtures\Loader();
-$loader->addFixture(new \App\DataFixtures\TestFixtures($passwordHasher));
+$loader->addFixture(new \App\DataFixtures\TestFixtures());
 
 $executor = new \Doctrine\Common\DataFixtures\Executor\ORMExecutor($entityManager);
 $executor->execute($loader->getFixtures(), true);
