@@ -12,41 +12,66 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
  */
 class AuthenticationFlowTest extends WebTestCase
 {
-    // ========== Register + Login Flow ==========
+    // ========== Register Flow ==========
+
+    public function testRegisterCreatesUserInDatabase(): void
+    {
+        $client = static::createClient();
+        $email = 'newuser-' . uniqid() . '@test.com';
+        $username = 'newuser-' . uniqid();
+
+        $client->jsonRequest('POST', '/register', [
+            'email' => $email,
+            'password' => 'password123',
+            'username' => $username,
+        ]);
+
+        self::assertResponseStatusCodeSame(201);
+        $response = json_decode($client->getResponse()->getContent(), true);
+        self::assertArrayHasKey('token', $response);
+
+        // Verify user exists in database
+        $user = self::getContainer()
+            ->get('doctrine')
+            ->getRepository(User::class)
+            ->findOneBy(['email' => $email]);
+
+        self::assertNotNull($user);
+        self::assertSame($username, $user->getUsername());
+    }
 
     public function testRegisterAndLoginFlow(): void
     {
         $client = static::createClient();
-        $email = 'newuser-' . uniqid() . '@test.com';
+        $email = 'flowuser-' . uniqid() . '@test.com';
+        $password = 'password123';
 
-        // Step 1: Register
+        // Register
         $client->jsonRequest('POST', '/register', [
             'email' => $email,
-            'password' => 'password123',
-            'username' => 'newuser-' . uniqid(),
+            'password' => $password,
+            'username' => 'flowuser-' . uniqid(),
         ]);
-
         self::assertResponseStatusCodeSame(201);
-        $registerResponse = json_decode($client->getResponse()->getContent(), true);
-        self::assertArrayHasKey('token', $registerResponse);
 
-        // Step 2: Login with same credentials
+        // Login with same credentials
         $client->jsonRequest('POST', '/login', [
             'email' => $email,
-            'password' => 'password123',
+            'password' => $password,
         ]);
 
         self::assertResponseStatusCodeSame(200);
         $loginResponse = json_decode($client->getResponse()->getContent(), true);
         self::assertArrayHasKey('token', $loginResponse);
 
-        // Step 3: Use token to access protected endpoint
+        // Use token to access protected endpoint
         $client->request('GET', '/me', [], [], [
             'HTTP_AUTHORIZATION' => 'Bearer ' . $loginResponse['token'],
         ]);
-
         self::assertResponseIsSuccessful();
     }
+
+    // ========== Validation Tests ==========
 
     public function testRegisterWithInvalidEmailFails(): void
     {
@@ -55,7 +80,7 @@ class AuthenticationFlowTest extends WebTestCase
         $client->jsonRequest('POST', '/register', [
             'email' => 'not-an-email',
             'password' => 'password123',
-            'username' => 'testuser',
+            'username' => 'testuser-' . uniqid(),
         ]);
 
         self::assertResponseStatusCodeSame(422);
@@ -66,9 +91,9 @@ class AuthenticationFlowTest extends WebTestCase
         $client = static::createClient();
 
         $client->jsonRequest('POST', '/register', [
-            'email' => 'valid@email.com',
+            'email' => 'valid-' . uniqid() . '@email.com',
             'password' => 'abc',
-            'username' => 'testuser',
+            'username' => 'testuser-' . uniqid(),
         ]);
 
         self::assertResponseStatusCodeSame(422);
@@ -77,9 +102,19 @@ class AuthenticationFlowTest extends WebTestCase
     public function testLoginWithWrongPasswordFails(): void
     {
         $client = static::createClient();
+        $email = 'wrongpw-' . uniqid() . '@test.com';
 
+        // First create a user
+        $client->jsonRequest('POST', '/register', [
+            'email' => $email,
+            'password' => 'correctpassword',
+            'username' => 'wrongpw-' . uniqid(),
+        ]);
+        self::assertResponseStatusCodeSame(201);
+
+        // Try login with wrong password
         $client->jsonRequest('POST', '/login', [
-            'email' => 'test@test.com',
+            'email' => $email,
             'password' => 'wrongpassword',
         ]);
 
@@ -91,7 +126,7 @@ class AuthenticationFlowTest extends WebTestCase
         $client = static::createClient();
 
         $client->jsonRequest('POST', '/login', [
-            'email' => 'nonexistent@test.com',
+            'email' => 'nonexistent-' . uniqid() . '@test.com',
             'password' => 'password123',
         ]);
 
@@ -104,7 +139,6 @@ class AuthenticationFlowTest extends WebTestCase
     {
         $client = static::createClient();
 
-        // Get sponsor's slug
         $sponsor = self::getContainer()
             ->get('doctrine')
             ->getRepository(User::class)
@@ -121,7 +155,7 @@ class AuthenticationFlowTest extends WebTestCase
 
         self::assertResponseStatusCodeSame(201);
 
-        // Verify the new user has the sponsor set
+        // Verify sponsor is set in database
         $newUser = self::getContainer()
             ->get('doctrine')
             ->getRepository(User::class)
