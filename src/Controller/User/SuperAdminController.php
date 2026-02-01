@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller\User;
 
 use App\Entity\User;
+use App\Enum\UserRole;
 use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -24,15 +25,23 @@ final class SuperAdminController extends AbstractController
     #[Route('/impersonate/{email}', name: 'impersonate', methods: ['POST'])]
     public function impersonate(string $email): JsonResponse
     {
-        $targetUser = $this->entityManager->getRepository(User::class)->findOneBy(['email' => $email]);
+        $player = $this->entityManager->getRepository(User::class)->findOneBy(['email' => $email]);
 
-        if (!$targetUser) {
-            return $this->json(['error' => 'Utilisateur introuvable'], 404);
-        }
-
-        $token = $this->jwtManager->create($targetUser);
+        $token = $this->jwtManager->create($player);
 
         return $this->json(['token' => $token]);
+    }
+
+    #[Route('/toggle-ban/{email}', name: 'toggle_ban', methods: ['POST'])]
+    public function ban(string $email): JsonResponse
+    {
+        $player = $this->entityManager->getRepository(User::class)->findOneBy(['email' => $email]);
+
+        $player->setRoles($player->isBanned() ? [] : [UserRole::BANNED->value]);
+
+        $this->entityManager->flush();
+
+        return $this->json($player, context: ['groups' => ['user:show:admin']]);
     }
 
     #[Route(path: '/users', name: 'users_index', methods: ['GET'])]
