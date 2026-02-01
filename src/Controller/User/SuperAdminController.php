@@ -25,7 +25,7 @@ final class SuperAdminController extends AbstractController
     #[Route('/impersonate/{email}', name: 'impersonate', methods: ['POST'])]
     public function impersonate(string $email): JsonResponse
     {
-        $player = $this->entityManager->getRepository(User::class)->findOneBy(['email' => $email]);
+        $player = $this->getPlayerFor($email);
 
         $token = $this->jwtManager->create($player);
 
@@ -35,13 +35,24 @@ final class SuperAdminController extends AbstractController
     #[Route('/toggle-ban/{email}', name: 'toggle_ban', methods: ['POST'])]
     public function ban(string $email): JsonResponse
     {
-        $player = $this->entityManager->getRepository(User::class)->findOneBy(['email' => $email]);
+        $player = $this->getPlayerFor($email);
 
         $player->setRoles($player->isBanned() ? [] : [UserRole::BANNED->value]);
 
         $this->entityManager->flush();
 
         return $this->json($player, context: ['groups' => ['user:show:admin']]);
+    }
+
+    private function getPlayerFor(string $email): User
+    {
+        $player = $this->entityManager->getRepository(User::class)->findOneBy(['email' => $email]);
+
+        if (!$player) {
+            throw $this->createNotFoundException('User not found');
+        }
+
+        return $player;
     }
 
     #[Route(path: '/users', name: 'users_index', methods: ['GET'])]

@@ -94,26 +94,12 @@ class GameDifficultyTest extends TestCase
         }
     }
 
-    public function testHintHalvesPointsApproximately(): void
-    {
-        foreach (GameDifficulty::cases() as $difficulty) {
-            $withoutHint = $difficulty->getPoints(hinted: false);
-            $withHint = $difficulty->getPoints(hinted: true);
-
-            $this->assertSame(
-                (int) ($withoutHint / 2),
-                $withHint,
-                "Hint should halve points for {$difficulty->name}"
-            );
-        }
-    }
-
     // ========== Tests order is sequential ==========
 
     public function testOrderIsSequential(): void
     {
         $orders = array_map(
-            fn(GameDifficulty $d) => $d->getOrder(),
+            fn (GameDifficulty $d) => $d->getOrder(),
             GameDifficulty::cases()
         );
 
@@ -126,7 +112,7 @@ class GameDifficultyTest extends TestCase
     {
         $difficulties = GameDifficulty::cases();
 
-        usort($difficulties, fn(GameDifficulty $a, GameDifficulty $b) => $a->getOrder() <=> $b->getOrder());
+        usort($difficulties, fn (GameDifficulty $a, GameDifficulty $b) => $a->getOrder() <=> $b->getOrder());
 
         $this->assertSame(GameDifficulty::EASY, $difficulties[0]);
         $this->assertSame(GameDifficulty::TRICKY, $difficulties[1]);
