@@ -7,6 +7,7 @@ namespace App\Controller\User;
 use App\DTO\User\LeaderboardRequest;
 use App\DTO\User\UpdateRequest;
 use App\Entity\User;
+use App\Enum\UserRole;
 use App\Repository\MonthlyLeaderboardRepository;
 use App\Repository\UserRepository;
 use App\Service\AuthenticatedUserService;
@@ -77,7 +78,7 @@ final class UserController extends AbstractController
     }
 
     #[Route(name: 'update', methods: ['PATCH'])]
-    #[IsGranted('ROLE_USER')]
+    #[IsGranted(UserRole::USER->value)]
     public function update(
         #[MapRequestPayload] UpdateRequest $updateRequest,
         EntityManagerInterface             $em,

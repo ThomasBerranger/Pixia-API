@@ -8,6 +8,7 @@ use App\Entity\Game;
 use App\Entity\User;
 use App\Enum\GameDifficulty;
 use App\Enum\GameType;
+use App\Enum\UserRole;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
 
@@ -26,7 +27,7 @@ class TestFixtures extends Fixture
         $admin->setEmail('admin@test.com')
             ->setUsername('admin-user')
             ->setPassword('hashed')
-            ->setRoles(['ROLE_ADMIN']);
+            ->setRoles([UserRole::ADMIN->value]);
 
         $manager->persist($admin);
 

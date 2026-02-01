@@ -39,7 +39,7 @@ final class UserVoter extends Voter
 
     private function canView(User $currentUser, User $targetUser): bool
     {
-        if ($currentUser->isAdmin()) {
+        if ($currentUser->isSuperAdmin() || $currentUser->isAdmin()) {
             return true;
         }
 

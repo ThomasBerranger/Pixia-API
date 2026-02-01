@@ -9,8 +9,8 @@ use App\DTO\Game\GameCreateRequest;
 use App\DTO\Game\GameUpdateRequest;
 use App\Entity\Contribution;
 use App\Entity\Game;
-use App\Entity\User;
 use App\Enum\ContributionStatus;
+use App\Enum\UserRole;
 use App\Service\ContributionService;
 use App\Service\GameCreationService;
 use App\Service\ImageService;
@@ -25,7 +25,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/admin', name: 'admin_')]
-#[IsGranted('ROLE_ADMIN')]
+#[IsGranted(UserRole::ADMIN->value)]
 final class AdminController extends AbstractController
 {
     public function __construct(

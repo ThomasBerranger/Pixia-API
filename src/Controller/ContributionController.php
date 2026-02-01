@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\DTO\Contribution\ContributionCreateRequest;
+use App\Enum\UserRole;
 use App\Service\AuthenticatedUserService;
 use App\Service\ContributionService;
 use App\Service\MailService;
@@ -16,7 +17,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/contributions', name: 'contributions_')]
-#[IsGranted('ROLE_USER')]
+#[IsGranted(UserRole::USER->value)]
 final class ContributionController extends AbstractController
 {
     public function __construct(

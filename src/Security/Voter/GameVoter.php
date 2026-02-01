@@ -41,7 +41,7 @@ final class GameVoter extends Voter
 
     private function canEdit(User $currentUser, Game $targetGame): bool
     {
-        if ($currentUser->isAdmin() && $currentUser === $targetGame->getAuthor()) {
+        if ($currentUser->isSuperAdmin() || ($currentUser->isAdmin() && $currentUser === $targetGame->getAuthor())) {
             return true;
         }
 

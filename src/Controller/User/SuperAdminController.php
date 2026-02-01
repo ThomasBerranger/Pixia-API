@@ -14,7 +14,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/super-admin', name: 'super_admin_')]
-#[IsGranted('ROLE_SUPER_ADMIN')]
+#[IsGranted(UserRole::SUPER_ADMIN->value)]
 final class SuperAdminController extends AbstractController
 {
     public function __construct(

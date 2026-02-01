@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\DTO\OpenAiRequest;
+use App\Enum\UserRole;
 use App\Service\OpenApiService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -26,7 +27,7 @@ final class OpenApiController extends AbstractController
     }
 
     #[Route('/generate-content', name: 'generate_content', methods: ['POST'], format: 'json')]
-    #[IsGranted('ROLE_ADMIN')]
+    #[IsGranted(UserRole::ADMIN->value)]
     public function generateGameContent(
         #[MapRequestPayload] OpenAiRequest $request,
     ): JsonResponse {
@@ -47,7 +48,7 @@ final class OpenApiController extends AbstractController
      * @throws ClientExceptionInterface
      */
     #[Route('/generate-image', name: 'generate_image', methods: ['POST'], format: 'json')]
-    #[IsGranted('ROLE_ADMIN')]
+    #[IsGranted(UserRole::ADMIN->value)]
     public function generateGameImage(
         #[MapRequestPayload] OpenAiRequest $request,
     ): JsonResponse {

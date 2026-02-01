@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
-use App\Entity\Enum\Role;
 use App\Enum\UserRole;
 use App\Repository\UserRepository;
 use DateTimeImmutable;
@@ -226,6 +225,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function isAdmin(): bool
     {
         return in_array(UserRole::ADMIN->value, $this->getRoles(), true);
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return in_array(UserRole::SUPER_ADMIN->value, $this->getRoles(), true);
     }
 
     public function isBanned(): bool
