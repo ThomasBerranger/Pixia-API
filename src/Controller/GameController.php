@@ -8,6 +8,7 @@ use App\Attribute\RateLimit;
 use App\DTO\Game\GameAnswerRequest;
 use App\DTO\Game\GameShowRequest;
 use App\Entity\Game;
+use App\Enum\UserRole;
 use App\Repository\GameRepository;
 use App\Service\AuthenticatedUserService;
 use App\Service\GameSolutionService;
@@ -53,7 +54,7 @@ final class GameController extends AbstractController
     }
 
     #[Route('/{id}/hint', name: 'hint', methods: ['GET'], format: 'json')]
-    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    #[IsGranted(UserRole::USER->value)]
     public function hint(Game $game): JsonResponse
     {
         $user = $this->authenticatedUserService->getUserOrThrow();

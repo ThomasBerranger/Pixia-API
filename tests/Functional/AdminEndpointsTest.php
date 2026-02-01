@@ -46,7 +46,6 @@ class AdminEndpointsTest extends WebTestCase
 
     public static function adminEndpointsProvider(): iterable
     {
-        yield 'users index' => ['GET', '/admin/users'];
         yield 'games index' => ['GET', '/admin/games'];
         yield 'games create' => ['POST', '/admin/games'];
         yield 'games solution exist' => ['GET', '/admin/games/solution-exist?solution=Inception'];

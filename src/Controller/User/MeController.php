@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
-namespace App\Controller;
+namespace App\Controller\User;
 
 use App\DTO\Game\DifficultiesRequest;
 use App\DTO\MonthRequest;
 use App\Entity\Achievement;
 use App\Entity\Game;
+use App\Enum\UserRole;
 use App\Repository\GameRepository;
 use App\Repository\UserRepository;
 use App\Service\AuthenticatedUserService;
@@ -21,7 +22,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/me', name: 'me_')]
-#[IsGranted('IS_AUTHENTICATED_FULLY')]
+#[IsGranted(UserRole::USER->value)]
 class MeController extends AbstractController
 {
     public function __construct(

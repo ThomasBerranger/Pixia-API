@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Enum\UserRole;
 use App\Repository\NotificationRepository;
 use App\Service\AuthenticatedUserService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -13,7 +14,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/notifications', name: 'notifications_')]
-#[IsGranted('IS_AUTHENTICATED_FULLY')]
+#[IsGranted(UserRole::USER->value)]
 final class NotificationController extends AbstractController
 {
     public function __construct(

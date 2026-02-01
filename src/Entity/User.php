@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use App\Enum\UserRole;
 use App\Repository\UserRepository;
 use DateTimeImmutable;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -37,6 +38,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * @var list<string> The user roles
      */
     #[ORM\Column]
+    #[Groups(['user:show:admin', 'user:index:admin'])]
     private array $roles;
 
     #[ORM\Column]
@@ -164,8 +166,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getRoles(): array
     {
         $roles = $this->roles;
-        // guarantee every user at least has ROLE_USER
-        $roles[] = 'ROLE_USER';
+
+        if (!in_array(UserRole::BOT->value, $roles, true) && !in_array(UserRole::BANNED->value, $roles, true)) {
+            $roles[] = UserRole::USER->value;
+        }
 
         return array_unique($roles);
     }
@@ -220,7 +224,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function isAdmin(): bool
     {
-        return in_array('ROLE_ADMIN', $this->getRoles(), true);
+        return in_array(UserRole::ADMIN->value, $this->getRoles(), true);
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return in_array(UserRole::SUPER_ADMIN->value, $this->getRoles(), true);
+    }
+
+    public function isBanned(): bool
+    {
+        return in_array(UserRole::BANNED->value, $this->getRoles(), true);
     }
 
     public function getUsername(): string

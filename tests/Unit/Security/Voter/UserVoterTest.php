@@ -88,6 +88,64 @@ class UserVoterTest extends TestCase
         $this->assertEquals(VoterInterface::ACCESS_DENIED, $result);
     }
 
+    // ========== Tests voteOnAttribute() - SuperAdmin access ==========
+
+    public function testGrantsViewToSuperAdmin(): void
+    {
+        $superAdmin = $this->createMock(User::class);
+        $superAdmin->method('isSuperAdmin')->willReturn(true);
+        $superAdmin->method('isAdmin')->willReturn(false);
+        $superAdmin->method('getUserIdentifier')->willReturn('superadmin@test.com');
+
+        $targetUser = $this->createMock(User::class);
+        $targetUser->method('getUserIdentifier')->willReturn('other@test.com');
+
+        $token = $this->createMock(TokenInterface::class);
+        $token->method('getUser')->willReturn($superAdmin);
+
+        $result = $this->voter->vote($token, $targetUser, [UserVoter::VIEW]);
+
+        $this->assertEquals(VoterInterface::ACCESS_GRANTED, $result);
+    }
+
+    public function testSuperAdminCanViewAnyUser(): void
+    {
+        $superAdmin = $this->createMock(User::class);
+        $superAdmin->method('isSuperAdmin')->willReturn(true);
+        $superAdmin->method('isAdmin')->willReturn(false);
+        $superAdmin->method('getUserIdentifier')->willReturn('superadmin@test.com');
+
+        $targetUser1 = $this->createMock(User::class);
+        $targetUser1->method('getUserIdentifier')->willReturn('user1@test.com');
+
+        $targetUser2 = $this->createMock(User::class);
+        $targetUser2->method('getUserIdentifier')->willReturn('user2@test.com');
+
+        $token = $this->createMock(TokenInterface::class);
+        $token->method('getUser')->willReturn($superAdmin);
+
+        $result1 = $this->voter->vote($token, $targetUser1, [UserVoter::VIEW]);
+        $result2 = $this->voter->vote($token, $targetUser2, [UserVoter::VIEW]);
+
+        $this->assertEquals(VoterInterface::ACCESS_GRANTED, $result1);
+        $this->assertEquals(VoterInterface::ACCESS_GRANTED, $result2);
+    }
+
+    public function testSuperAdminViewingSelf(): void
+    {
+        $superAdmin = $this->createMock(User::class);
+        $superAdmin->method('isSuperAdmin')->willReturn(true);
+        $superAdmin->method('isAdmin')->willReturn(false);
+        $superAdmin->method('getUserIdentifier')->willReturn('superadmin@test.com');
+
+        $token = $this->createMock(TokenInterface::class);
+        $token->method('getUser')->willReturn($superAdmin);
+
+        $result = $this->voter->vote($token, $superAdmin, [UserVoter::VIEW]);
+
+        $this->assertEquals(VoterInterface::ACCESS_GRANTED, $result);
+    }
+
     // ========== Tests voteOnAttribute() - Admin access ==========
 
     public function testGrantsViewToAdmin(): void
