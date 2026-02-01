@@ -21,7 +21,7 @@ class MonthRequest
     public function validateNotFuture(ExecutionContextInterface $context): void
     {
         if ($this->getMonth() > new DateTimeImmutable('today')) {
-            $context->buildViolation('La date ne peut pas être dans le futur')
+            $context->buildViolation('La date ne peut pas être dans le futur ')
                 ->atPath('month')
                 ->addViolation();
         }
@@ -29,7 +29,7 @@ class MonthRequest
 
     public function getMonth(): DateTimeImmutable
     {
-        return $this->month && ($date = DateTimeImmutable::createFromFormat('Y-m-d', $this->month))
+        return $this->month && ($date = DateTimeImmutable::createFromFormat('!Y-m-d', $this->month))
             ? $date
             : new DateTimeImmutable('today');
     }
