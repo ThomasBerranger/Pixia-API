@@ -229,6 +229,90 @@ class GameVoterTest extends TestCase
         $this->assertEquals(VoterInterface::ACCESS_DENIED, $result);
     }
 
+    // ========== Tests voteOnAttribute() - SuperAdmin ==========
+
+    public function testGrantsViewWhenSuperAdmin(): void
+    {
+        $superAdmin = $this->createMock(User::class);
+        $superAdmin->method('isSuperAdmin')->willReturn(true);
+        $superAdmin->method('isAdmin')->willReturn(false);
+
+        $author = $this->createMock(User::class);
+
+        $game = $this->createMock(Game::class);
+        $game->method('getAuthor')->willReturn($author);
+
+        $token = $this->createMock(TokenInterface::class);
+        $token->method('getUser')->willReturn($superAdmin);
+
+        $result = $this->voter->vote($token, $game, [GameVoter::VIEW]);
+
+        $this->assertEquals(VoterInterface::ACCESS_GRANTED, $result);
+    }
+
+    public function testGrantsEditWhenSuperAdmin(): void
+    {
+        $superAdmin = $this->createMock(User::class);
+        $superAdmin->method('isSuperAdmin')->willReturn(true);
+        $superAdmin->method('isAdmin')->willReturn(false);
+
+        $author = $this->createMock(User::class);
+
+        $game = $this->createMock(Game::class);
+        $game->method('getAuthor')->willReturn($author);
+
+        $token = $this->createMock(TokenInterface::class);
+        $token->method('getUser')->willReturn($superAdmin);
+
+        $result = $this->voter->vote($token, $game, [GameVoter::EDIT]);
+
+        $this->assertEquals(VoterInterface::ACCESS_GRANTED, $result);
+    }
+
+    public function testSuperAdminCanEditAnyGame(): void
+    {
+        $superAdmin = $this->createMock(User::class);
+        $superAdmin->method('isSuperAdmin')->willReturn(true);
+        $superAdmin->method('isAdmin')->willReturn(false);
+
+        $author1 = $this->createMock(User::class);
+        $author2 = $this->createMock(User::class);
+
+        $game1 = $this->createMock(Game::class);
+        $game1->method('getAuthor')->willReturn($author1);
+
+        $game2 = $this->createMock(Game::class);
+        $game2->method('getAuthor')->willReturn($author2);
+
+        $token = $this->createMock(TokenInterface::class);
+        $token->method('getUser')->willReturn($superAdmin);
+
+        $result1 = $this->voter->vote($token, $game1, [GameVoter::EDIT]);
+        $result2 = $this->voter->vote($token, $game2, [GameVoter::EDIT]);
+
+        $this->assertEquals(VoterInterface::ACCESS_GRANTED, $result1);
+        $this->assertEquals(VoterInterface::ACCESS_GRANTED, $result2);
+    }
+
+    public function testSuperAdminCanViewAnyGame(): void
+    {
+        $superAdmin = $this->createMock(User::class);
+        $superAdmin->method('isSuperAdmin')->willReturn(true);
+        $superAdmin->method('isAdmin')->willReturn(false);
+
+        $author = $this->createMock(User::class);
+
+        $game = $this->createMock(Game::class);
+        $game->method('getAuthor')->willReturn($author);
+
+        $token = $this->createMock(TokenInterface::class);
+        $token->method('getUser')->willReturn($superAdmin);
+
+        $result = $this->voter->vote($token, $game, [GameVoter::VIEW]);
+
+        $this->assertEquals(VoterInterface::ACCESS_GRANTED, $result);
+    }
+
     // ========== Tests edge cases ==========
 
     public function testDeniesWhenUserIsNotGameAuthor(): void

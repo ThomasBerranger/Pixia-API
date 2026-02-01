@@ -31,6 +31,14 @@ class TestFixtures extends Fixture
 
         $manager->persist($admin);
 
+        $superAdmin = new User();
+        $superAdmin->setEmail('superadmin@test.com')
+            ->setUsername('super-admin-user')
+            ->setPassword('hashed')
+            ->setRoles([UserRole::SUPER_ADMIN->value]);
+
+        $manager->persist($superAdmin);
+
         $game = new Game();
         $game->setSolution('Matrix')
             ->setEnglishSolution('Matrix')
