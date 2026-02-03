@@ -55,7 +55,6 @@ class UserServiceTest extends TestCase
         $player->expects($this->once())
             ->method('setScore')
             ->with($this->callback(function ($score) {
-                // Le score exact dépend de la méthode getPoints() de l'enum
                 return $score > 100;
             }));
 
@@ -81,11 +80,12 @@ class UserServiceTest extends TestCase
         $player->expects($this->once())
             ->method('setScore')
             ->with($this->callback(function ($score) {
-                // Avec hint, les points sont réduits
                 return $score > 50;
             }));
 
-        $this->monthlyLeaderboardService->method('addMonthlyPoints');
+        $this->monthlyLeaderboardService
+            ->expects($this->once())
+            ->method('addMonthlyPoints');
 
         $this->service->addGamePoints($player, $game);
     }
@@ -109,7 +109,7 @@ class UserServiceTest extends TestCase
             ->method('addMonthlyPoints')
             ->with(
                 $player,
-                $this->anything(), // Les points exacts dépendent de l'enum
+                $this->anything(),
                 $gameDate
             );
 
@@ -127,42 +127,20 @@ class UserServiceTest extends TestCase
             ->method('setScore')
             ->with(125);
 
-        $this->monthlyLeaderboardService
-            ->expects($this->once())
-            ->method('addMonthlyPoints')
-            ->with($player, 25, null);
-
         $this->service->addPoints($player, 25);
     }
 
-    public function testAddPointsCallsMonthlyLeaderboardService(): void
+    public function testAddPointsDoesNotCallMonthlyLeaderboardService(): void
     {
         $player = $this->createMock(User::class);
         $player->method('getScore')->willReturn(50);
         $player->method('setScore');
 
         $this->monthlyLeaderboardService
-            ->expects($this->once())
-            ->method('addMonthlyPoints')
-            ->with($player, 10, null);
+            ->expects($this->never())
+            ->method('addMonthlyPoints');
 
         $this->service->addPoints($player, 10);
-    }
-
-    public function testAddPointsWithSpecificMonth(): void
-    {
-        $month = new \DateTimeImmutable('2025-02-01');
-
-        $player = $this->createMock(User::class);
-        $player->method('getScore')->willReturn(200);
-        $player->method('setScore');
-
-        $this->monthlyLeaderboardService
-            ->expects($this->once())
-            ->method('addMonthlyPoints')
-            ->with($player, 15, $month);
-
-        $this->service->addPoints($player, 15, $month);
     }
 
     public function testAddPointsDoesNotFlush(): void
@@ -170,8 +148,6 @@ class UserServiceTest extends TestCase
         $player = $this->createMock(User::class);
         $player->method('getScore')->willReturn(100);
         $player->method('setScore');
-
-        $this->monthlyLeaderboardService->method('addMonthlyPoints');
 
         $this->entityManager
             ->expects($this->never())
@@ -200,8 +176,6 @@ class UserServiceTest extends TestCase
             ->with(['slug' => 'test-sponsor'])
             ->willReturn($sponsor);
 
-        $this->monthlyLeaderboardService->method('addMonthlyPoints');
-
         $result = $this->service->findAndRewardSponsor('test-sponsor');
 
         $this->assertSame($sponsor, $result);
@@ -225,7 +199,7 @@ class UserServiceTest extends TestCase
         $this->service->findAndRewardSponsor('non-existent');
     }
 
-    public function testFindAndRewardSponsorAdds5Points(): void
+    public function testFindAndRewardSponsorAdds5PointsWithoutAffectingMonthly(): void
     {
         $sponsor = $this->createMock(User::class);
         $sponsor->method('getScore')->willReturn(50);
@@ -246,9 +220,8 @@ class UserServiceTest extends TestCase
             ->willReturn($sponsor);
 
         $this->monthlyLeaderboardService
-            ->expects($this->once())
-            ->method('addMonthlyPoints')
-            ->with($sponsor, 5, null);
+            ->expects($this->never())
+            ->method('addMonthlyPoints');
 
         $this->service->findAndRewardSponsor('sponsor-slug');
     }
@@ -275,8 +248,6 @@ class UserServiceTest extends TestCase
             ->method('findOneBy')
             ->willReturn($sponsor);
 
-        $this->monthlyLeaderboardService->method('addMonthlyPoints');
-
         $this->service->findAndRewardSponsor('sponsor-slug');
     }
 
@@ -300,7 +271,7 @@ class UserServiceTest extends TestCase
             ->method('addBadge')
             ->willReturnCallback(function ($badge) use (&$badgesAdded, $sponsor) {
                 $badgesAdded[] = $badge->getName();
-                return $sponsor; // Fluent interface
+                return $sponsor;
             });
 
         $this->entityManager
@@ -311,11 +282,8 @@ class UserServiceTest extends TestCase
             ->method('findOneBy')
             ->willReturn($sponsor);
 
-        $this->monthlyLeaderboardService->method('addMonthlyPoints');
-
         $this->service->findAndRewardSponsor('sponsor-slug');
 
-        // Vérifie que les deux badges ont été ajoutés
         $this->assertContains(BadgeName::SPONSOR, $badgesAdded);
         $this->assertContains(BadgeName::SPONSOR_5, $badgesAdded);
     }
@@ -343,8 +311,6 @@ class UserServiceTest extends TestCase
         $this->genericUserRepository
             ->method('findOneBy')
             ->willReturn($sponsor);
-
-        $this->monthlyLeaderboardService->method('addMonthlyPoints');
 
         $this->service->findAndRewardSponsor('sponsor-slug');
     }
@@ -463,7 +429,7 @@ class UserServiceTest extends TestCase
 
     // ========== Tests d'intégration ==========
 
-    public function testAddPointsAndFindAndRewardSponsorWorkTogether(): void
+    public function testFindAndRewardSponsorDoesNotAffectMonthlyLeaderboard(): void
     {
         $sponsor = $this->createMock(User::class);
         $sponsor->method('getScore')->willReturn(100);
@@ -480,9 +446,8 @@ class UserServiceTest extends TestCase
             ->willReturn($sponsor);
 
         $this->monthlyLeaderboardService
-            ->expects($this->once())
-            ->method('addMonthlyPoints')
-            ->with($sponsor, 5, null);
+            ->expects($this->never())
+            ->method('addMonthlyPoints');
 
         $result = $this->service->findAndRewardSponsor('sponsor-slug');
 
@@ -491,17 +456,14 @@ class UserServiceTest extends TestCase
 
     public function testServiceDoesNotFlushAnywhere(): void
     {
-        // Test addPoints
         $player = $this->createMock(User::class);
         $player->method('getScore')->willReturn(100);
         $player->method('setScore');
-        $this->monthlyLeaderboardService->method('addMonthlyPoints');
 
         $this->entityManager->expects($this->never())->method('flush');
 
         $this->service->addPoints($player, 10);
 
-        // Test findAndRewardSponsor
         $sponsor = $this->createMock(User::class);
         $sponsor->method('getScore')->willReturn(100);
         $sponsor->method('setScore');

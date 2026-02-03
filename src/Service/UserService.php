@@ -27,14 +27,13 @@ readonly class UserService
     {
         $points = $game->getDifficulty()->getPoints($player->getHintedGames()->contains($game));
 
-        $this->addPoints($player, $points, $game->getDate());
+        $this->addPoints($player, $points);
+        $this->monthlyLeaderboardService->addMonthlyPoints($player, $points, $game->getDate());
     }
 
-    public function addPoints(User $player, int $points, ?DateTimeImmutable $month = null): void
+    public function addPoints(User $player, int $points): void
     {
         $player->setScore($player->getScore() + $points);
-
-        $this->monthlyLeaderboardService->addMonthlyPoints($player, $points, $month);
     }
 
     public function findAndRewardSponsor(string $sponsorSlug): User
