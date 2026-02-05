@@ -60,23 +60,64 @@ class GameSolutionServiceTest extends TestCase
 
             // Different order (valid)
             'reversed order' => ['Le Roi Lion et Babe', 'Babe et Le Roi Lion', true],
-            'mixed order' => ['Le Roi Lion et Babe', 'Babe Lion Roi Le et', true],
+            'mixed order' => ['Le Roi Lion et Babe', 'Babe Lion Roi Le', true],
 
             // Missing one film (invalid)
             'only first film' => ['Le Roi Lion et Babe', 'Le Roi Lion', false],
             'only second film' => ['Le Roi Lion et Babe', 'Babe', false],
 
             // With typos (valid)
-            'typo in long word' => ['Interstellar et Inception', 'Intersteler et Incepton', true],
-            'typo chihiro' => ['Le Voyage de Chihiro et Totoro', 'Le Voyage de Shihiro et Totoro', true],
+            'typo in long word' => ['Interstellar et Inception', 'Intersteler Incepton', true],
+            'typo chihiro' => ['Le Voyage de Chihiro et Totoro', 'Le Voyage de Shihiro Totoro', true],
 
             // Extra words within limit (valid)
-            'extra words ok' => ['Matrix et Inception', 'Matrix film et Inception movie', true],
+            'extra words ok' => ['Matrix et Inception', 'Matrix film Inception movie', true],
 
             // Real film combinations
-            'amelie poulain + intouchables' => ['Amelie Poulain et Intouchables', 'Amelie Poulain et Intouchables', true],
-            'amelie poulain + intouchables scrambled' => ['Amelie Poulain et Intouchables', 'Intouchables et Amelie Poulain', true],
-            'back to future + ghostbusters' => ['Back to the Future et Ghostbusters', 'Ghostbusters et Back to the Future', true],
+            'amelie poulain + intouchables' => ['Amelie Poulain et Intouchables', 'Amelie Poulain Intouchables', true],
+            'amelie poulain + intouchables scrambled' => ['Amelie Poulain et Intouchables', 'Intouchables Amelie Poulain', true],
+            'back to future + ghostbusters' => ['Back to the Future et Ghostbusters', 'Ghostbusters Back to the Future', true],
+        ];
+    }
+
+    // ========================================================================
+    // IGNORED WORDS - "et" and "and" filtering
+    // ========================================================================
+
+    #[DataProvider('ignoredWordsProvider')]
+    public function testWordsMatchIgnoredWords(string $solution, string $answer, bool $expected): void
+    {
+        $result = $this->service->wordsMatch($solution, $answer);
+
+        self::assertSame($expected, $result);
+    }
+
+    /**
+     * @return array<string, array{string, string, bool}>
+     */
+    public static function ignoredWordsProvider(): array
+    {
+        return [
+            // "et" is filtered - player can omit it
+            'omit et' => ['Matrix et Inception', 'Matrix Inception', true],
+            'include et' => ['Matrix et Inception', 'Matrix et Inception', true],
+            'replace et with x' => ['Matrix et Inception', 'Matrix x Inception', true],
+            'replace et with plus' => ['Matrix et Inception', 'Matrix + Inception', true],
+
+            // "and" is filtered - player can omit it
+            'omit and' => ['The Matrix and Inception', 'The Matrix Inception', true],
+            'include and' => ['The Matrix and Inception', 'The Matrix and Inception', true],
+
+            // Films with "et" in title (Thelma et Louise)
+            'thelma et louise complete' => ['Thelma et Louise et Babe', 'Thelma Louise Babe', true],
+            'thelma et louise with et' => ['Thelma et Louise et Babe', 'Thelma et Louise et Babe', true],
+
+            // Films with "and" in title (Romeo and Juliet)
+            'romeo and juliet' => ['Romeo and Juliet and Up', 'Romeo Juliet Up', true],
+
+            // Multiple "et" or "and"
+            'multiple et' => ['A et B et C', 'A B C', true],
+            'multiple and' => ['A and B and C', 'A B C', true],
         ];
     }
 

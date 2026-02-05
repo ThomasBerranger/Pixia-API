@@ -13,6 +13,7 @@ use Doctrine\ORM\EntityManagerInterface;
 readonly class GameSolutionService
 {
     private const int MAX_WORDS_MULTIPLIER = 2;
+    private const array IGNORED_WORDS = ['et', 'and'];
 
     public function __construct(
         private EntityManagerInterface $entityManager,
@@ -105,7 +106,10 @@ readonly class GameSolutionService
 
         preg_match_all('/[a-z0-9]+/', $normalized, $matches);
 
-        return $matches[0];
+        return array_values(array_filter(
+            $matches[0],
+            static fn (string $word): bool => !in_array($word, self::IGNORED_WORDS, true)
+        ));
     }
 
     private function wordsAreEquivalent(string $word1, string $word2): bool
