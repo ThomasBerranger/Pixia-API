@@ -60,22 +60,6 @@ class GameSolutionServiceTest extends TestCase
         self::assertTrue($result);
     }
 
-    // ========== Tests wordsMatch() - Typos (Levenshtein) ==========
-
-    public function testWordsMatchWithTypo(): void
-    {
-        $result = $this->service->wordsMatch('Matrix', 'Matix');
-
-        self::assertTrue($result);
-    }
-
-    public function testWordsMatchWithMultipleTypos(): void
-    {
-        $result = $this->service->wordsMatch('Matrix', 'Mtx');
-
-        self::assertFalse($result);
-    }
-
     public function testWordsMatchWithSpecialCharacters(): void
     {
         $result = $this->service->wordsMatch('Spider-Man', 'Spider Man');
@@ -83,100 +67,169 @@ class GameSolutionServiceTest extends TestCase
         self::assertTrue($result);
     }
 
-    public function testWordsMatchToleratesOneCharForShortWords(): void
+    // ========== Tests wordsMatch() - Word order ==========
+
+    public function testWordsMatchWithDifferentOrder(): void
     {
-        $result = $this->service->wordsMatch('Leon', 'Leon');
-        self::assertTrue($result);
-
-        $result = $this->service->wordsMatch('Leon', 'Leom');
-        self::assertTrue($result);
-
-        $result = $this->service->wordsMatch('Leon', 'Lexx');
-        self::assertFalse($result);
-    }
-
-    public function testWordsMatchTolerateTwoCharsForLongWords(): void
-    {
-        $result = $this->service->wordsMatch('Interstellar', 'Intersteler');
-        self::assertTrue($result);
-
-        $result = $this->service->wordsMatch('Interstellar', 'Interstlar');
-        self::assertTrue($result);
-
-        $result = $this->service->wordsMatch('Interstellar', 'Intrstar');
-        self::assertFalse($result);
-    }
-
-    // ========== Tests wordsMatch() - Recall threshold (80%) ==========
-
-    public function testWordsMatchWith80PercentThreshold(): void
-    {
-        $result = $this->service->wordsMatch('Star Wars Episode Four', 'Star Wars Episode');
-
-        self::assertFalse($result); // 75% recall
-    }
-
-    public function testWordsMatchExactly80Percent(): void
-    {
-        $result = $this->service->wordsMatch('Harry Potter Chamber Secrets Five', 'Harry Potter Chamber Secrets');
-
-        self::assertTrue($result); // 80% recall
-    }
-
-    // ========== Tests wordsMatch() - Precision threshold (30%) ==========
-
-    public function testWordsMatchRejectsSpam(): void
-    {
-        $spam = 'Matrix Inception Avatar Titanic Alien Predator Terminator Rocky Rambo Jaws';
-
-        $result = $this->service->wordsMatch('Matrix Inception', $spam);
-
-        self::assertFalse($result); // recall=100%, precision=20%
-    }
-
-    public function testWordsMatchAcceptsReasonableExtraWords(): void
-    {
-        $result = $this->service->wordsMatch('Matrix Inception', 'Matrix et Inception film');
-
-        self::assertTrue($result); // recall=100%, precision=50%
-    }
-
-    public function testWordsMatchPrecisionAt30Percent(): void
-    {
-        // 2 mots attendus, joueur tape ~6 mots → precision ~33%
-        $result = $this->service->wordsMatch('Matrix Inception', 'Matrix Inception un deux trois quatre');
+        $result = $this->service->wordsMatch('Le Roi Lion', 'Lion Roi Le');
 
         self::assertTrue($result);
     }
 
-    public function testWordsMatchPrecisionBelow30Percent(): void
+    public function testWordsMatchWithMixedOrder(): void
     {
-        // 2 mots attendus, joueur tape 8 mots → precision = 25%
-        $result = $this->service->wordsMatch('Matrix Inception', 'Matrix Inception un deux trois quatre cinq six');
+        $result = $this->service->wordsMatch('Le Roi Lion et Babe', 'Babe et Lion Roi Le');
+
+        self::assertTrue($result);
+    }
+
+    // ========== Tests wordsMatch() - Word consumption ==========
+
+    public function testWordsMatchRequiresDuplicateWords(): void
+    {
+        $result = $this->service->wordsMatch('La La Land', 'La Land');
 
         self::assertFalse($result);
     }
 
-    // ========== Tests wordsMatch() - All words count ==========
-
-    public function testWordsMatchAllWordsCount(): void
-    {
-        // Sans stop words filter, tous les mots comptent
-        $result = $this->service->wordsMatch('Le Seigneur des Anneaux', 'Seigneur Anneaux');
-
-        self::assertFalse($result); // recall = 2/4 = 50%
-    }
-
-    public function testWordsMatchLaLaLand(): void
+    public function testWordsMatchWithDuplicateWordsProvided(): void
     {
         $result = $this->service->wordsMatch('La La Land', 'La La Land');
 
         self::assertTrue($result);
     }
 
-    public function testWordsMatchShortWordsIncluded(): void
+    public function testWordsMatchConsumesWords(): void
+    {
+        $result = $this->service->wordsMatch('New York New York', 'New York');
+
+        self::assertFalse($result);
+    }
+
+    public function testWordsMatchWithExtraWordsInResponse(): void
+    {
+        $result = $this->service->wordsMatch('Le Roi Lion', 'Le Roi Lion Film');
+
+        self::assertTrue($result);
+    }
+
+    // ========== Tests wordsMatch() - Typos tolerance by word length ==========
+
+    public function testWordsMatchNoToleranceForVeryShortWords(): void
+    {
+        // <= 3 chars: exact match required
+        $result = $this->service->wordsMatch('Up', 'Us');
+        self::assertFalse($result);
+
+        $result = $this->service->wordsMatch('It', 'Is');
+        self::assertFalse($result);
+
+        $result = $this->service->wordsMatch('Ca', 'Sa');
+        self::assertFalse($result);
+    }
+
+    public function testWordsMatchExactMatchForShortWords(): void
     {
         $result = $this->service->wordsMatch('Up', 'Up');
+        self::assertTrue($result);
+
+        $result = $this->service->wordsMatch('It', 'It');
+        self::assertTrue($result);
+    }
+
+    public function testWordsMatchToleratesOneCharForMediumWords(): void
+    {
+        // 4-5 chars: 1 error tolerated
+        $result = $this->service->wordsMatch('Leon', 'Leom');
+        self::assertTrue($result);
+
+        $result = $this->service->wordsMatch('Rocky', 'Roky');
+        self::assertTrue($result);
+    }
+
+    public function testWordsMatchRejectsTwoErrorsForMediumWords(): void
+    {
+        $result = $this->service->wordsMatch('Leon', 'Lexx');
+        self::assertFalse($result);
+
+        $result = $this->service->wordsMatch('Rocky', 'Rxxy');
+        self::assertFalse($result);
+    }
+
+    public function testWordsMatchTolerateTwoCharsForLongWords(): void
+    {
+        // 6+ chars: 2 errors tolerated
+        $result = $this->service->wordsMatch('Interstellar', 'Intersteler');
+        self::assertTrue($result);
+
+        $result = $this->service->wordsMatch('Interstellar', 'Interstlar');
+        self::assertTrue($result);
+
+        $result = $this->service->wordsMatch('Chihiro', 'Shihiro');
+        self::assertTrue($result);
+    }
+
+    public function testWordsMatchRejectsThreeErrorsForLongWords(): void
+    {
+        $result = $this->service->wordsMatch('Interstellar', 'Intrstar');
+        self::assertFalse($result);
+    }
+
+    // ========== Tests wordsMatch() - Numbers exact match ==========
+
+    public function testWordsMatchNumbersRequireExactMatch(): void
+    {
+        $result = $this->service->wordsMatch('1917', '1918');
+        self::assertFalse($result);
+
+        $result = $this->service->wordsMatch('300', '301');
+        self::assertFalse($result);
+
+        $result = $this->service->wordsMatch('2001', '2002');
+        self::assertFalse($result);
+    }
+
+    public function testWordsMatchNumbersExactMatch(): void
+    {
+        $result = $this->service->wordsMatch('1917', '1917');
+        self::assertTrue($result);
+
+        $result = $this->service->wordsMatch('Apollo 13', 'Apollo 13');
+        self::assertTrue($result);
+    }
+
+    // ========== Tests wordsMatch() - Max words limit (anti-spam) ==========
+
+    public function testWordsMatchRejectsTooManyWords(): void
+    {
+        // Expected: 2 words, Max allowed: 4 words (2x multiplier)
+        $spam = 'Matrix Inception Avatar Titanic Alien';
+
+        $result = $this->service->wordsMatch('Matrix Inception', $spam);
+
+        self::assertFalse($result);
+    }
+
+    public function testWordsMatchAcceptsWithinLimit(): void
+    {
+        // Expected: 2 words, Response: 4 words (exactly 2x)
+        $result = $this->service->wordsMatch('Matrix Inception', 'Matrix et Inception film');
+
+        self::assertTrue($result);
+    }
+
+    // ========== Tests wordsMatch() - All words must be found ==========
+
+    public function testWordsMatchRequiresAllWords(): void
+    {
+        $result = $this->service->wordsMatch('Le Roi Lion', 'Le Roi');
+
+        self::assertFalse($result);
+    }
+
+    public function testWordsMatchAllWordsFound(): void
+    {
+        $result = $this->service->wordsMatch('Le Roi Lion', 'Le Roi Lion');
 
         self::assertTrue($result);
     }

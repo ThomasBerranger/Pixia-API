@@ -12,8 +12,7 @@ use Doctrine\ORM\EntityManagerInterface;
 
 readonly class GameSolutionService
 {
-    private const float RECALL_THRESHOLD = 0.8;
-    private const float PRECISION_THRESHOLD = 0.3;
+    private const int MAX_WORDS_MULTIPLIER = 2;
 
     public function __construct(
         private EntityManagerInterface $entityManager,
@@ -67,21 +66,34 @@ readonly class GameSolutionService
             return false;
         }
 
-        $matchedCount = 0;
+        $maxAllowedWords = count($expectedWords) * self::MAX_WORDS_MULTIPLIER;
+        if (count($testedWords) > $maxAllowedWords) {
+            return false;
+        }
+
+        $usedIndices = [];
 
         foreach ($expectedWords as $expectedWord) {
-            foreach ($testedWords as $testedWord) {
+            $found = false;
+
+            foreach ($testedWords as $index => $testedWord) {
+                if (in_array($index, $usedIndices, true)) {
+                    continue;
+                }
+
                 if ($this->wordsAreEquivalent($expectedWord, $testedWord)) {
-                    ++$matchedCount;
+                    $usedIndices[] = $index;
+                    $found = true;
                     break;
                 }
             }
+
+            if (!$found) {
+                return false;
+            }
         }
 
-        $recall = $matchedCount / count($expectedWords);
-        $precision = $matchedCount / count($testedWords);
-
-        return $recall >= self::RECALL_THRESHOLD && $precision >= self::PRECISION_THRESHOLD;
+        return true;
     }
 
     /**
@@ -103,10 +115,24 @@ readonly class GameSolutionService
 
     private function isSimilar(string $word1, string $word2): bool
     {
+        if ($this->isNumeric($word1) || $this->isNumeric($word2)) {
+            return false;
+        }
+
         $maxLen = max(strlen($word1), strlen($word2));
-        $tolerance = $maxLen < 6 ? 1 : 2;
+
+        if ($maxLen <= 3) {
+            return false;
+        }
+
+        $tolerance = $maxLen <= 5 ? 1 : 2;
 
         return levenshtein($word1, $word2) <= $tolerance;
+    }
+
+    private function isNumeric(string $word): bool
+    {
+        return preg_match('/^\d+$/', $word) === 1;
     }
 
     private function removeAccents(string $text): string
