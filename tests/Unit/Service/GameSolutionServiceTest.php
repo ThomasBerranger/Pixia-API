@@ -10,10 +10,9 @@ use App\Service\AchievementService;
 use App\Service\GameSolutionService;
 use App\Service\UserService;
 use Doctrine\ORM\EntityManagerInterface;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
-#[AllowMockObjectsWithoutExpectations]
 class GameSolutionServiceTest extends TestCase
 {
     private GameSolutionService $service;
@@ -37,235 +36,379 @@ class GameSolutionServiceTest extends TestCase
         );
     }
 
-    // ========== Tests wordsMatch() - Exact match ==========
+    // ========================================================================
+    // REAL USE CASES - 2 films combined
+    // ========================================================================
 
-    public function testWordsMatchWithExactMatch(): void
+    #[DataProvider('twoFilmsCombinedProvider')]
+    public function testWordsMatchWithTwoFilmsCombined(string $solution, string $answer, bool $expected): void
     {
-        $result = $this->service->wordsMatch('Retour vers le futur', 'Retour vers le futur');
+        $result = $this->service->wordsMatch($solution, $answer);
 
-        self::assertTrue($result);
+        self::assertSame($expected, $result);
     }
 
-    public function testWordsMatchWithDifferentCase(): void
+    /**
+     * @return array<string, array{string, string, bool}>
+     */
+    public static function twoFilmsCombinedProvider(): array
     {
-        $result = $this->service->wordsMatch('Retour vers le futur', 'RETOUR VERS LE FUTUR');
+        return [
+            // Exact matches
+            'exact match FR' => ['Le Roi Lion et Babe', 'Le Roi Lion et Babe', true],
+            'exact match EN' => ['The Lion King and Babe', 'The Lion King and Babe', true],
 
-        self::assertTrue($result);
+            // Different order (valid)
+            'reversed order' => ['Le Roi Lion et Babe', 'Babe et Le Roi Lion', true],
+            'mixed order' => ['Le Roi Lion et Babe', 'Babe Lion Roi Le et', true],
+
+            // Missing one film (invalid)
+            'only first film' => ['Le Roi Lion et Babe', 'Le Roi Lion', false],
+            'only second film' => ['Le Roi Lion et Babe', 'Babe', false],
+
+            // With typos (valid)
+            'typo in long word' => ['Interstellar et Inception', 'Intersteler et Incepton', true],
+            'typo chihiro' => ['Le Voyage de Chihiro et Totoro', 'Le Voyage de Shihiro et Totoro', true],
+
+            // Extra words within limit (valid)
+            'extra words ok' => ['Matrix et Inception', 'Matrix film et Inception movie', true],
+
+            // Real film combinations
+            'amelie poulain + intouchables' => ['Amelie Poulain et Intouchables', 'Amelie Poulain et Intouchables', true],
+            'amelie poulain + intouchables scrambled' => ['Amelie Poulain et Intouchables', 'Intouchables et Amelie Poulain', true],
+            'back to future + ghostbusters' => ['Back to the Future et Ghostbusters', 'Ghostbusters et Back to the Future', true],
+        ];
     }
 
-    public function testWordsMatchRemovesAccents(): void
-    {
-        $result = $this->service->wordsMatch('Lé Fäbuleûx Dèstïn', 'Le Fabuleux Destin');
+    // ========================================================================
+    // NORMALISATION - Case, accents, special chars
+    // ========================================================================
 
-        self::assertTrue($result);
+    #[DataProvider('normalisationProvider')]
+    public function testWordsMatchNormalisation(string $solution, string $answer, bool $expected): void
+    {
+        $result = $this->service->wordsMatch($solution, $answer);
+
+        self::assertSame($expected, $result);
     }
 
-    public function testWordsMatchWithSpecialCharacters(): void
+    /**
+     * @return array<string, array{string, string, bool}>
+     */
+    public static function normalisationProvider(): array
     {
-        $result = $this->service->wordsMatch('Spider-Man', 'Spider Man');
+        return [
+            // Case insensitive
+            'uppercase answer' => ['Matrix', 'MATRIX', true],
+            'lowercase answer' => ['MATRIX', 'matrix', true],
+            'mixed case' => ['The Matrix', 'tHe MaTrIx', true],
 
-        self::assertTrue($result);
+            // Accents
+            'accents in solution' => ['Amélie Poulain', 'Amelie Poulain', true],
+            'accents in answer' => ['Amelie Poulain', 'Amélie Poulain', true],
+            'both have accents' => ['Léon', 'Léon', true],
+            'complex accents' => ['Lé Fäbuleûx Dèstïn', 'Le Fabuleux Destin', true],
+
+            // Special characters become word separators
+            'hyphen' => ['Spider-Man', 'Spider Man', true],
+            'apostrophe splits' => ["Ocean's Eleven", "Ocean's Eleven", true],
+            'colon' => ['Star Wars: A New Hope', 'Star Wars A New Hope', true],
+            'dot' => ['Dr. Strange', 'Dr Strange', true],
+
+            // Wall-E special case
+            'wall-e exact' => ['Wall-E', 'Wall E', true],
+            'wall-e with hyphen' => ['Wall-E', 'Wall-E', true],
+        ];
     }
 
-    // ========== Tests wordsMatch() - Word order ==========
+    // ========================================================================
+    // WORD CONSUMPTION - Duplicate words
+    // ========================================================================
 
-    public function testWordsMatchWithDifferentOrder(): void
+    #[DataProvider('wordConsumptionProvider')]
+    public function testWordsMatchWordConsumption(string $solution, string $answer, bool $expected): void
     {
-        $result = $this->service->wordsMatch('Le Roi Lion', 'Lion Roi Le');
+        $result = $this->service->wordsMatch($solution, $answer);
 
-        self::assertTrue($result);
+        self::assertSame($expected, $result);
     }
 
-    public function testWordsMatchWithMixedOrder(): void
+    /**
+     * @return array<string, array{string, string, bool}>
+     */
+    public static function wordConsumptionProvider(): array
     {
-        $result = $this->service->wordsMatch('Le Roi Lion et Babe', 'Babe et Lion Roi Le');
+        return [
+            // Duplicate words in solution
+            'la la land complete' => ['La La Land', 'La La Land', true],
+            'la la land missing one la' => ['La La Land', 'La Land', false],
+            'new york new york complete' => ['New York New York', 'New York New York', true],
+            'new york new york incomplete' => ['New York New York', 'New York', false],
 
-        self::assertTrue($result);
+            // Duplicate words in answer (extra, within limit)
+            'extra duplicate ok' => ['Matrix', 'Matrix Matrix', true],
+            'triple word over limit' => ['Inception', 'Inception Inception Inception', false],
+
+            // Both have duplicates
+            'matching duplicates' => ['Bang Bang', 'Bang Bang', true],
+            'insufficient duplicates' => ['Bang Bang Bang', 'Bang Bang', false],
+        ];
     }
 
-    // ========== Tests wordsMatch() - Word consumption ==========
+    // ========================================================================
+    // TOLERANCE - By word length
+    // ========================================================================
 
-    public function testWordsMatchRequiresDuplicateWords(): void
+    #[DataProvider('toleranceProvider')]
+    public function testWordsMatchTolerance(string $solution, string $answer, bool $expected): void
     {
-        $result = $this->service->wordsMatch('La La Land', 'La Land');
+        $result = $this->service->wordsMatch($solution, $answer);
 
-        self::assertFalse($result);
+        self::assertSame($expected, $result);
     }
 
-    public function testWordsMatchWithDuplicateWordsProvided(): void
+    /**
+     * @return array<string, array{string, string, bool}>
+     */
+    public static function toleranceProvider(): array
     {
-        $result = $this->service->wordsMatch('La La Land', 'La La Land');
+        return [
+            // <= 3 chars: NO tolerance (exact match)
+            'up exact' => ['Up', 'Up', true],
+            'up typo' => ['Up', 'Us', false],
+            'it exact' => ['It', 'It', true],
+            'it typo' => ['It', 'Is', false],
+            'ca exact' => ['Ca', 'Ca', true],
+            'ca typo' => ['Ca', 'Sa', false],
+            'the exact' => ['The', 'The', true],
+            'the typo' => ['The', 'Tho', false],
+            '3 chars exact' => ['Her', 'Her', true],
+            '3 chars typo' => ['Her', 'Hir', false],
 
-        self::assertTrue($result);
+            // 4-5 chars: 1 error tolerated
+            'leon 1 error' => ['Leon', 'Leom', true],
+            'leon 2 errors' => ['Leon', 'Lexx', false],
+            'rocky 1 error' => ['Rocky', 'Roky', true],
+            'rocky 1 error sub' => ['Rocky', 'Ricky', true],
+            'rocky 2 errors' => ['Rocky', 'Rxxy', false],
+            'alien 1 error' => ['Alien', 'Aliem', true],
+            'alien 2 errors' => ['Alien', 'Alixx', false],
+            '4 chars boundary' => ['Jaws', 'Jows', true],
+            '5 chars boundary' => ['Drive', 'Drivr', true],
+
+            // 6+ chars: 2 errors tolerated
+            'matrix 1 error' => ['Matrix', 'Matrik', true],
+            'matrix 2 errors' => ['Matrix', 'Matrxx', true],
+            'matrix 3 errors' => ['Matrix', 'Mxxxxx', false],
+            'chihiro typo' => ['Chihiro', 'Shihiro', true],
+            'chihiro 2 typos' => ['Chihiro', 'Shihira', true],
+            'chihiro 3 typos' => ['Chihiro', 'Shihixx', false],
+            'interstellar 2 errors' => ['Interstellar', 'Intersteler', true],
+            'interstellar 3 errors' => ['Interstellar', 'Intrstar', false],
+            'inception 2 errors' => ['Inception', 'Incepton', true],
+            'gladiator 2 errors' => ['Gladiator', 'Gladiater', true],
+        ];
     }
 
-    public function testWordsMatchConsumesWords(): void
-    {
-        $result = $this->service->wordsMatch('New York New York', 'New York');
+    // ========================================================================
+    // NUMBERS - Exact match required
+    // ========================================================================
 
-        self::assertFalse($result);
+    #[DataProvider('numbersProvider')]
+    public function testWordsMatchNumbers(string $solution, string $answer, bool $expected): void
+    {
+        $result = $this->service->wordsMatch($solution, $answer);
+
+        self::assertSame($expected, $result);
     }
 
-    public function testWordsMatchWithExtraWordsInResponse(): void
+    /**
+     * @return array<string, array{string, string, bool}>
+     */
+    public static function numbersProvider(): array
     {
-        $result = $this->service->wordsMatch('Le Roi Lion', 'Le Roi Lion Film');
+        return [
+            // Exact numbers
+            '1917 exact' => ['1917', '1917', true],
+            '300 exact' => ['300', '300', true],
+            '2001 exact' => ['2001', '2001', true],
+            'apollo 13 exact' => ['Apollo 13', 'Apollo 13', true],
+            '21 jump street' => ['21 Jump Street', '21 Jump Street', true],
 
-        self::assertTrue($result);
+            // Similar numbers (must be rejected)
+            '1917 vs 1918' => ['1917', '1918', false],
+            '300 vs 301' => ['300', '301', false],
+            '2001 vs 2002' => ['2001', '2002', false],
+            'apollo 13 vs 14' => ['Apollo 13', 'Apollo 14', false],
+            '21 vs 22 jump street' => ['21 Jump Street', '22 Jump Street', false],
+
+            // Numbers in film titles
+            'ocean 11' => ['Ocean Eleven', 'Ocean Eleven', true],
+            'se7en' => ['Se7en', 'Se7en', true],
+        ];
     }
 
-    // ========== Tests wordsMatch() - Typos tolerance by word length ==========
+    // ========================================================================
+    // ANTI-SPAM - Max words limit
+    // ========================================================================
 
-    public function testWordsMatchNoToleranceForVeryShortWords(): void
+    #[DataProvider('antiSpamProvider')]
+    public function testWordsMatchAntiSpam(string $solution, string $answer, bool $expected): void
     {
-        // <= 3 chars: exact match required
-        $result = $this->service->wordsMatch('Up', 'Us');
-        self::assertFalse($result);
+        $result = $this->service->wordsMatch($solution, $answer);
 
-        $result = $this->service->wordsMatch('It', 'Is');
-        self::assertFalse($result);
-
-        $result = $this->service->wordsMatch('Ca', 'Sa');
-        self::assertFalse($result);
+        self::assertSame($expected, $result);
     }
 
-    public function testWordsMatchExactMatchForShortWords(): void
+    /**
+     * @return array<string, array{string, string, bool}>
+     */
+    public static function antiSpamProvider(): array
     {
-        $result = $this->service->wordsMatch('Up', 'Up');
-        self::assertTrue($result);
+        return [
+            // Within limit (2x expected words)
+            '2 words, 4 answer ok' => ['Matrix Inception', 'Matrix et Inception film', true],
+            '3 words, 6 answer ok' => ['Le Roi Lion', 'Le Roi Lion est genial', true],
+            '2 words, exactly 4' => ['Matrix Inception', 'un deux Matrix Inception', true],
 
-        $result = $this->service->wordsMatch('It', 'It');
-        self::assertTrue($result);
+            // Over limit
+            '2 words, 5 answer' => ['Matrix Inception', 'Matrix Inception Avatar Alien Jaws', false],
+            '3 words, 7 answer' => ['Le Roi Lion', 'Le Roi Lion un deux trois quatre', false],
+            'spam multiple films' => ['Matrix', 'Matrix Inception Avatar Titanic', false],
+
+            // Edge: exactly at limit
+            '1 word, 2 answer' => ['Matrix', 'Matrix film', true],
+            '1 word, 3 answer' => ['Matrix', 'Matrix film genial', false],
+        ];
     }
 
-    public function testWordsMatchToleratesOneCharForMediumWords(): void
-    {
-        // 4-5 chars: 1 error tolerated
-        $result = $this->service->wordsMatch('Leon', 'Leom');
-        self::assertTrue($result);
+    // ========================================================================
+    // EDGE CASES
+    // ========================================================================
 
-        $result = $this->service->wordsMatch('Rocky', 'Roky');
-        self::assertTrue($result);
+    #[DataProvider('edgeCasesProvider')]
+    public function testWordsMatchEdgeCases(string $solution, string $answer, bool $expected): void
+    {
+        $result = $this->service->wordsMatch($solution, $answer);
+
+        self::assertSame($expected, $result);
     }
 
-    public function testWordsMatchRejectsTwoErrorsForMediumWords(): void
+    /**
+     * @return array<string, array{string, string, bool}>
+     */
+    public static function edgeCasesProvider(): array
     {
-        $result = $this->service->wordsMatch('Leon', 'Lexx');
-        self::assertFalse($result);
+        return [
+            // Empty strings
+            'empty solution' => ['', 'Matrix', false],
+            'empty answer' => ['Matrix', '', false],
+            'both empty' => ['', '', false],
 
-        $result = $this->service->wordsMatch('Rocky', 'Rxxy');
-        self::assertFalse($result);
+            // Only special chars (no words extracted)
+            'only special chars solution' => ['---', 'Matrix', false],
+            'only special chars answer' => ['Matrix', '---', false],
+
+            // Single word
+            'single word exact' => ['Titanic', 'Titanic', true],
+            'single word typo ok' => ['Titanic', 'Titanik', true],
+            'single word wrong' => ['Titanic', 'Avatar', false],
+
+            // Very long title
+            'long title' => [
+                'Le Fabuleux Destin Amelie Poulain',
+                'Le Fabuleux Destin Amelie Poulain',
+                true,
+            ],
+            'long title scrambled' => [
+                'Le Fabuleux Destin Amelie Poulain',
+                'Amelie Poulain Le Fabuleux Destin',
+                true,
+            ],
+
+            // Whitespace variations
+            'extra spaces' => ['The Matrix', 'The    Matrix', true],
+            'tabs' => ["The Matrix", "The\tMatrix", true],
+        ];
     }
 
-    public function testWordsMatchTolerateTwoCharsForLongWords(): void
+    // ========================================================================
+    // REAL FILM TITLES - Comprehensive tests
+    // ========================================================================
+
+    #[DataProvider('realFilmTitlesProvider')]
+    public function testWordsMatchRealFilmTitles(string $solution, string $answer, bool $expected): void
     {
-        // 6+ chars: 2 errors tolerated
-        $result = $this->service->wordsMatch('Interstellar', 'Intersteler');
-        self::assertTrue($result);
+        $result = $this->service->wordsMatch($solution, $answer);
 
-        $result = $this->service->wordsMatch('Interstellar', 'Interstlar');
-        self::assertTrue($result);
-
-        $result = $this->service->wordsMatch('Chihiro', 'Shihiro');
-        self::assertTrue($result);
+        self::assertSame($expected, $result);
     }
 
-    public function testWordsMatchRejectsThreeErrorsForLongWords(): void
+    /**
+     * @return array<string, array{string, string, bool}>
+     */
+    public static function realFilmTitlesProvider(): array
     {
-        $result = $this->service->wordsMatch('Interstellar', 'Intrstar');
-        self::assertFalse($result);
+        return [
+            // Short titles
+            'up' => ['Up', 'Up', true],
+            'it' => ['It', 'It', true],
+            'her' => ['Her', 'Her', true],
+            'jaws' => ['Jaws', 'Jaws', true],
+
+            // Titles with hyphens
+            'spider-man' => ['Spider-Man', 'Spider Man', true],
+            'x-men' => ['X-Men', 'X Men', true],
+            'wall-e' => ['Wall-E', 'Wall E', true],
+            'ant-man' => ['Ant-Man', 'Ant Man', true],
+
+            // Titles with numbers
+            'se7en' => ['Se7en', 'Se7en', true],
+            'district 9' => ['District 9', 'District 9', true],
+            '12 angry men' => ['12 Angry Men', '12 Angry Men', true],
+
+            // French titles with accents
+            'amelie' => ['Amélie', 'Amelie', true],
+            'leon pro' => ['Léon', 'Leon', true],
+            'les miserables' => ['Les Misérables', 'Les Miserables', true],
+
+            // Apostrophes (apostrophe splits words: Ocean's -> ocean + s)
+            'schindlers list' => ["Schindler's List", "Schindler's List", true],
+            'oceans eleven' => ["Ocean's Eleven", "Ocean's Eleven", true],
+
+            // Long titles
+            'eternal sunshine' => [
+                'Eternal Sunshine of the Spotless Mind',
+                'Eternal Sunshine of the Spotless Mind',
+                true,
+            ],
+            'lord of rings' => [
+                'The Lord of the Rings',
+                'The Lord of the Rings',
+                true,
+            ],
+
+            // Typos in real titles
+            'avatar typo' => ['Avatar', 'Avater', true],
+            'inception typo' => ['Inception', 'Incepton', true],
+            'gladiator typo' => ['Gladiator', 'Gladiater', true],
+            'braveheart typo' => ['Braveheart', 'Bravehart', true],
+        ];
     }
 
-    // ========== Tests wordsMatch() - Numbers exact match ==========
-
-    public function testWordsMatchNumbersRequireExactMatch(): void
-    {
-        $result = $this->service->wordsMatch('1917', '1918');
-        self::assertFalse($result);
-
-        $result = $this->service->wordsMatch('300', '301');
-        self::assertFalse($result);
-
-        $result = $this->service->wordsMatch('2001', '2002');
-        self::assertFalse($result);
-    }
-
-    public function testWordsMatchNumbersExactMatch(): void
-    {
-        $result = $this->service->wordsMatch('1917', '1917');
-        self::assertTrue($result);
-
-        $result = $this->service->wordsMatch('Apollo 13', 'Apollo 13');
-        self::assertTrue($result);
-    }
-
-    // ========== Tests wordsMatch() - Max words limit (anti-spam) ==========
-
-    public function testWordsMatchRejectsTooManyWords(): void
-    {
-        // Expected: 2 words, Max allowed: 4 words (2x multiplier)
-        $spam = 'Matrix Inception Avatar Titanic Alien';
-
-        $result = $this->service->wordsMatch('Matrix Inception', $spam);
-
-        self::assertFalse($result);
-    }
-
-    public function testWordsMatchAcceptsWithinLimit(): void
-    {
-        // Expected: 2 words, Response: 4 words (exactly 2x)
-        $result = $this->service->wordsMatch('Matrix Inception', 'Matrix et Inception film');
-
-        self::assertTrue($result);
-    }
-
-    // ========== Tests wordsMatch() - All words must be found ==========
-
-    public function testWordsMatchRequiresAllWords(): void
-    {
-        $result = $this->service->wordsMatch('Le Roi Lion', 'Le Roi');
-
-        self::assertFalse($result);
-    }
-
-    public function testWordsMatchAllWordsFound(): void
-    {
-        $result = $this->service->wordsMatch('Le Roi Lion', 'Le Roi Lion');
-
-        self::assertTrue($result);
-    }
-
-    // ========== Tests wordsMatch() - Edge cases ==========
-
-    public function testWordsMatchEmptyExpected(): void
-    {
-        $result = $this->service->wordsMatch('', 'Matrix');
-
-        self::assertFalse($result);
-    }
-
-    public function testWordsMatchEmptyTested(): void
-    {
-        $result = $this->service->wordsMatch('Matrix', '');
-
-        self::assertFalse($result);
-    }
-
-    // ========== Tests handleAnswer() ==========
+    // ========================================================================
+    // handleAnswer() tests
+    // ========================================================================
 
     public function testHandleAnswerReturnsFalseWhenNoMatch(): void
     {
         $game = $this->createMock(Game::class);
-        $game->method('getSolution')->willReturn('Matrix Inception');
+        $game->method('getSolution')->willReturn('Matrix et Inception');
         $game->method('getEnglishSolution')->willReturn('The Matrix and Inception');
         $game->method('getAttempts')->willReturn(0);
 
-        $game->expects(self::once())
-            ->method('setAttempts')
-            ->with(1);
-
-        $this->entityManager
-            ->expects(self::once())
-            ->method('flush');
+        $game->expects(self::once())->method('setAttempts')->with(1);
+        $this->entityManager->expects(self::once())->method('flush');
 
         $result = $this->service->handleAnswer($game, 'Avatar', null);
 
@@ -275,14 +418,14 @@ class GameSolutionServiceTest extends TestCase
     public function testHandleAnswerMatchesFrenchSolution(): void
     {
         $game = $this->createMock(Game::class);
-        $game->method('getSolution')->willReturn('Retour vers le futur');
-        $game->method('getEnglishSolution')->willReturn('Back to the Future');
+        $game->method('getSolution')->willReturn('Le Roi Lion et Babe');
+        $game->method('getEnglishSolution')->willReturn('The Lion King and Babe');
         $game->method('getAttempts')->willReturn(0);
 
         $game->expects(self::once())->method('setAttempts')->with(1);
         $this->entityManager->expects(self::once())->method('flush');
 
-        $result = $this->service->handleAnswer($game, 'Retour vers le futur', null);
+        $result = $this->service->handleAnswer($game, 'Le Roi Lion et Babe', null);
 
         self::assertInstanceOf(Game::class, $result);
     }
@@ -290,16 +433,61 @@ class GameSolutionServiceTest extends TestCase
     public function testHandleAnswerMatchesEnglishSolution(): void
     {
         $game = $this->createMock(Game::class);
-        $game->method('getSolution')->willReturn('Retour vers le futur');
-        $game->method('getEnglishSolution')->willReturn('Back to the Future');
+        $game->method('getSolution')->willReturn('Le Roi Lion et Babe');
+        $game->method('getEnglishSolution')->willReturn('The Lion King and Babe');
         $game->method('getAttempts')->willReturn(0);
 
         $game->expects(self::once())->method('setAttempts')->with(1);
         $this->entityManager->expects(self::once())->method('flush');
 
-        $result = $this->service->handleAnswer($game, 'Back to the Future', null);
+        $result = $this->service->handleAnswer($game, 'The Lion King and Babe', null);
 
         self::assertInstanceOf(Game::class, $result);
+    }
+
+    public function testHandleAnswerMatchesWithTypos(): void
+    {
+        $game = $this->createMock(Game::class);
+        $game->method('getSolution')->willReturn('Interstellar et Inception');
+        $game->method('getEnglishSolution')->willReturn('Interstellar and Inception');
+        $game->method('getAttempts')->willReturn(0);
+
+        $game->expects(self::once())->method('setAttempts')->with(1);
+        $this->entityManager->expects(self::once())->method('flush');
+
+        $result = $this->service->handleAnswer($game, 'Intersteler et Incepton', null);
+
+        self::assertInstanceOf(Game::class, $result);
+    }
+
+    public function testHandleAnswerMatchesWithDifferentOrder(): void
+    {
+        $game = $this->createMock(Game::class);
+        $game->method('getSolution')->willReturn('Matrix et Inception');
+        $game->method('getEnglishSolution')->willReturn('The Matrix and Inception');
+        $game->method('getAttempts')->willReturn(0);
+
+        $game->expects(self::once())->method('setAttempts')->with(1);
+        $this->entityManager->expects(self::once())->method('flush');
+
+        $result = $this->service->handleAnswer($game, 'Inception et Matrix', null);
+
+        self::assertInstanceOf(Game::class, $result);
+    }
+
+    public function testHandleAnswerRejectsSpam(): void
+    {
+        $game = $this->createMock(Game::class);
+        $game->method('getSolution')->willReturn('Matrix et Inception');
+        $game->method('getEnglishSolution')->willReturn('The Matrix and Inception');
+        $game->method('getAttempts')->willReturn(0);
+
+        $game->expects(self::once())->method('setAttempts')->with(1);
+        $this->entityManager->expects(self::once())->method('flush');
+
+        $result = $this->service->handleAnswer($game, 'Matrix Inception Avatar Titanic Alien Jaws Rocky', null);
+
+        self::assertFalse($result);
     }
 
     public function testHandleAnswerIncrementsAttempts(): void
@@ -309,10 +497,7 @@ class GameSolutionServiceTest extends TestCase
         $game->method('getEnglishSolution')->willReturn('The Matrix');
         $game->method('getAttempts')->willReturn(5);
 
-        $game->expects(self::once())
-            ->method('setAttempts')
-            ->with(6);
-
+        $game->expects(self::once())->method('setAttempts')->with(6);
         $this->entityManager->expects(self::once())->method('flush');
 
         $this->service->handleAnswer($game, 'Wrong answer', null);
