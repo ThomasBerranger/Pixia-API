@@ -72,18 +72,18 @@ readonly class GameSolutionService
             return false;
         }
 
-        $usedIndices = [];
+        $matchedPositions = [];
 
         foreach ($expectedWords as $expectedWord) {
             $found = false;
 
-            foreach ($testedWords as $index => $testedWord) {
-                if (in_array($index, $usedIndices, true)) {
+            foreach ($testedWords as $position => $testedWord) {
+                if (in_array($position, $matchedPositions, true)) {
                     continue;
                 }
 
                 if ($this->wordsAreEquivalent($expectedWord, $testedWord)) {
-                    $usedIndices[] = $index;
+                    $matchedPositions[] = $position;
                     $found = true;
                     break;
                 }
