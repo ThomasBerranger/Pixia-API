@@ -2,7 +2,7 @@ framework:
     rate_limiter:
         global_api:
             policy: 'sliding_window'
-            limit: 400
+            limit: 800
             interval: '1 hour'
 
         game_answer:
