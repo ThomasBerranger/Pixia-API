@@ -67,7 +67,8 @@ class MeController extends AbstractController
     #[Route(path: '/games-stats', name: 'games_stats', methods: ['GET'])]
     public function gamesStats(
         #[MapQueryString] ?DifficultiesRequest $difficultiesRequest = null,
-    ): JsonResponse {
+    ): JsonResponse
+    {
         $player = $this->authenticatedUserService->getUserOrThrow();
 
         $stats = $this->gameRepository->getPlayerStatsByMonthAndDifficulty(
@@ -85,7 +86,8 @@ class MeController extends AbstractController
     public function gamesIndex(
         #[MapQueryString] PreviousDateRequest  $month,
         #[MapQueryString] ?DifficultiesRequest $difficultiesRequest = null,
-    ): JsonResponse {
+    ): JsonResponse
+    {
         $player = $this->authenticatedUserService->getUserOrThrow();
 
         return $this->json(

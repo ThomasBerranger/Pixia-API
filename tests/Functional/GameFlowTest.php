@@ -6,6 +6,7 @@ namespace App\Tests\Functional;
 
 use App\Entity\Game;
 use App\Entity\User;
+use App\Enum\GameType;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 class GameFlowTest extends WebTestCase
@@ -15,7 +16,7 @@ class GameFlowTest extends WebTestCase
         $client = static::createClient();
         $game = $this->getTestGame();
 
-        $client->jsonRequest('GET', '/games/daily?date=' . $game->getDate()->format('Y-m-d') . '&type=multivers');
+        $client->jsonRequest('GET', '/games/daily?date=' . $game->getDate()->format('Y-m-d') . '&type='. GameType::MULTIVERS->value);
 
         self::assertResponseIsSuccessful();
 
@@ -32,11 +33,11 @@ class GameFlowTest extends WebTestCase
     public function testDailyGameHidesSensitiveFieldsForUnansweredGame(): void
     {
         $client = static::createClient();
-        $user = $this->getTestUser();
+        $user = $this->getAdminUser();
         $game = $this->getTestGame();
 
         $client->loginUser($user);
-        $client->jsonRequest('GET', '/games/daily?date=' . $game->getDate()->format('Y-m-d') . '&type=multivers');
+        $client->jsonRequest('GET', '/games/daily?date=' . $game->getDate()->format('Y-m-d') . '&type=' . GameType::MULTIVERS->value);
 
         self::assertResponseIsSuccessful();
 

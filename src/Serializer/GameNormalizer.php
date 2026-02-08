@@ -65,7 +65,7 @@ class GameNormalizer implements NormalizerInterface
             $data['image'] = $this->imageService->getDirectoryPath(
                 GameType::from($data['type']),
                 new DateTimeImmutable($data['date'])
-            ).'/'.$data['image'];
+            ) . '/' . $data['image'];
         }
     }
 
@@ -75,9 +75,9 @@ class GameNormalizer implements NormalizerInterface
      */
     private function filterSensitiveFields(Game $object, array &$data, array $context): void
     {
-        $isGameStakeholder = $this->security->isGranted(GameVoter::VIEW, $object);
+        $isGameplayContext = array_key_exists(self::SHOW_SOLUTION, $context) || array_key_exists(self::SHOW_HINT, $context);
 
-        if ($isGameStakeholder) {
+        if (!$isGameplayContext && $this->security->isGranted(GameVoter::VIEW, $object)) {
             return;
         }
 
@@ -89,6 +89,7 @@ class GameNormalizer implements NormalizerInterface
             unset($data['hint']);
         }
     }
+
 
     public function supportsNormalization(mixed $data, ?string $format = null, array $context = []): bool
     {

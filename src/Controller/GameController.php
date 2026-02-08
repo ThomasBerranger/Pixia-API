@@ -73,11 +73,6 @@ final class GameController extends AbstractController
         #[MapRequestPayload] GameAnswerRequest $gameAnswerRequest,
     ): JsonResponse
     {
-        $result = $this->gameAnswerService->handleAnswer($game, $gameAnswerRequest->answer, $this->authenticatedUserService->getUser());
-
-        return $this->json(data: $result, context: [
-            'groups' => ['game:show'],
-            GameNormalizer::SHOW_SOLUTION => $result instanceof Game,
-        ]);
+        return $this->json(data: $this->gameAnswerService->handleAnswer($game, $gameAnswerRequest->answer, $this->authenticatedUserService->getUser()));
     }
 }
