@@ -70,8 +70,8 @@ class GameSolutionServiceTest extends TestCase
             'typo in long word' => ['Interstellar et Inception', 'Intersteler Incepton', true],
             'typo chihiro' => ['Le Voyage de Chihiro et Totoro', 'Le Voyage de Shihiro Totoro', true],
 
-            // Extra words within limit (valid)
-            'extra words ok' => ['Matrix et Inception', 'Matrix film Inception movie', true],
+            // Extra words over limit (invalid with 1.5x multiplier: 2 words → max 3)
+            'extra words over limit' => ['Matrix et Inception', 'Matrix film Inception movie', false],
 
             // Real film combinations
             'amelie poulain + intouchables' => ['Amelie Poulain et Intouchables', 'Amelie Poulain Intouchables', true],
@@ -186,8 +186,8 @@ class GameSolutionServiceTest extends TestCase
             'new york new york complete' => ['New York New York', 'New York New York', true],
             'new york new york incomplete' => ['New York New York', 'New York', false],
 
-            // Duplicate words in answer (extra, within limit)
-            'extra duplicate ok' => ['Matrix', 'Matrix Matrix', true],
+            // Duplicate words in answer (over limit with 1.5x: 1 word → max 1.5)
+            'extra duplicate over limit' => ['Matrix', 'Matrix Matrix', false],
             'triple word over limit' => ['Inception', 'Inception Inception Inception', false],
 
             // Both have duplicates
@@ -307,19 +307,19 @@ class GameSolutionServiceTest extends TestCase
     public static function antiSpamProvider(): array
     {
         return [
-            // Within limit (2x expected words)
-            '2 words, 4 answer ok' => ['Matrix Inception', 'Matrix et Inception film', true],
-            '3 words, 6 answer ok' => ['Le Roi Lion', 'Le Roi Lion est genial', true],
-            '2 words, exactly 4' => ['Matrix Inception', 'un deux Matrix Inception', true],
+            // Within limit (1.5x expected words)
+            '2 words, 3 answer ok' => ['Matrix Inception', 'Matrix et Inception', true],
+            '3 words, 4 answer ok' => ['Le Roi Lion', 'Le Roi Lion est', true],
+            '2 words, exactly at limit' => ['Matrix Inception', 'Matrix Inception un', true],
 
             // Over limit
-            '2 words, 5 answer' => ['Matrix Inception', 'Matrix Inception Avatar Alien Jaws', false],
-            '3 words, 7 answer' => ['Le Roi Lion', 'Le Roi Lion un deux trois quatre', false],
+            '2 words, 4 answer' => ['Matrix Inception', 'un deux Matrix Inception', false],
+            '3 words, 5 answer' => ['Le Roi Lion', 'Le Roi Lion est genial', false],
             'spam multiple films' => ['Matrix', 'Matrix Inception Avatar Titanic', false],
 
-            // Edge: exactly at limit
-            '1 word, 2 answer' => ['Matrix', 'Matrix film', true],
-            '1 word, 3 answer' => ['Matrix', 'Matrix film genial', false],
+            // Edge: 1 word, max 1.5 → only 1 answer word allowed
+            '1 word, 1 answer' => ['Matrix', 'Matrix', true],
+            '1 word, 2 answer' => ['Matrix', 'Matrix film', false],
         ];
     }
 
@@ -468,7 +468,7 @@ class GameSolutionServiceTest extends TestCase
 
         $result = $this->service->handleAnswer($game, 'Le Roi Lion et Babe', null);
 
-        self::assertInstanceOf(Game::class, $result);
+        self::assertSame('Le Roi Lion et Babe', $result);
     }
 
     public function testHandleAnswerMatchesEnglishSolution(): void
@@ -483,7 +483,7 @@ class GameSolutionServiceTest extends TestCase
 
         $result = $this->service->handleAnswer($game, 'The Lion King and Babe', null);
 
-        self::assertInstanceOf(Game::class, $result);
+        self::assertSame('Le Roi Lion et Babe', $result);
     }
 
     public function testHandleAnswerMatchesWithTypos(): void
@@ -498,7 +498,7 @@ class GameSolutionServiceTest extends TestCase
 
         $result = $this->service->handleAnswer($game, 'Intersteler et Incepton', null);
 
-        self::assertInstanceOf(Game::class, $result);
+        self::assertSame('Interstellar et Inception', $result);
     }
 
     public function testHandleAnswerMatchesWithDifferentOrder(): void
@@ -513,7 +513,7 @@ class GameSolutionServiceTest extends TestCase
 
         $result = $this->service->handleAnswer($game, 'Inception et Matrix', null);
 
-        self::assertInstanceOf(Game::class, $result);
+        self::assertSame('Matrix et Inception', $result);
     }
 
     public function testHandleAnswerRejectsSpam(): void

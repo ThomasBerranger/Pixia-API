@@ -31,4 +31,5 @@ phpstan.dist.neon
 ###> phpunit/phpunit ###
 /phpunit.xml
 /.phpunit.cache/
+.phpunit.result.cache
 ###< phpunit/phpunit ###
