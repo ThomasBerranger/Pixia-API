@@ -17,6 +17,8 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 class GameNormalizer implements NormalizerInterface
 {
     private const ALREADY_CALLED = 'GAME_NORMALIZER_ALREADY_CALLED';
+    public const SHOW_SOLUTION = 'show_solution';
+    public const SHOW_HINT = 'show_hint';
 
     public function __construct(
         #[Autowire(service: 'serializer.normalizer.object')]
@@ -70,13 +72,11 @@ class GameNormalizer implements NormalizerInterface
             return;
         }
 
-        $groups = $context['groups'] ?? [];
-
-        if (!in_array('game:solution', $groups, true)) {
+        if (!($context[self::SHOW_SOLUTION] ?? false)) {
             unset($data['solution'], $data['englishSolution']);
         }
 
-        if (!in_array('game:hint', $groups, true)) {
+        if (!($context[self::SHOW_HINT] ?? false)) {
             unset($data['hint']);
         }
     }
