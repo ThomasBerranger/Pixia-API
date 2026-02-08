@@ -17,6 +17,8 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 class GameNormalizer implements NormalizerInterface
 {
     private const ALREADY_CALLED = 'GAME_NORMALIZER_ALREADY_CALLED';
+    public const SHOW_SOLUTION = 'show_solution';
+    public const SHOW_HINT = 'show_hint';
 
     public function __construct(
         #[Autowire(service: 'serializer.normalizer.object')]
@@ -39,7 +41,7 @@ class GameNormalizer implements NormalizerInterface
         $data = $this->objectNormalizer->normalize($object, $format, $context);
 
         $this->transformImagePath($data);
-        $this->filterSensitiveFields($object, $data);
+        $this->filterSensitiveFields($object, $data, $context);
 
         return $data;
     }
@@ -62,10 +64,16 @@ class GameNormalizer implements NormalizerInterface
         }
     }
 
-    private function filterSensitiveFields(Game $object, array &$data): void
+    private function filterSensitiveFields(Game $object, array &$data, array $context): void
     {
-        if (!$this->security->isGranted(GameVoter::VIEW, $object)) {
-            unset($data['solution'], $data['hint'], $data['englishSolution']);
+        $isGameStakeholder = $this->security->isGranted(GameVoter::VIEW, $object);
+
+        if (!$isGameStakeholder && !($context[self::SHOW_SOLUTION] ?? false)) {
+            unset($data['solution'], $data['englishSolution']);
+        }
+
+        if (!$isGameStakeholder && !($context[self::SHOW_HINT] ?? false)) {
+            unset($data['hint']);
         }
     }
 

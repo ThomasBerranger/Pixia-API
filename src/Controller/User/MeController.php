@@ -10,6 +10,7 @@ use App\Entity\Achievement;
 use App\Entity\Game;
 use App\Enum\UserRole;
 use App\Repository\GameRepository;
+use App\Serializer\GameNormalizer;
 use App\Repository\UserRepository;
 use App\Service\AuthenticatedUserService;
 use App\Service\GameService;
@@ -57,7 +58,10 @@ class MeController extends AbstractController
             'playerCount' => $this->userRepository->count()
         ];
 
-        return $this->json($data, context: ['groups' => ['user:me']]);
+        return $this->json($data, context: [
+            'groups' => ['user:me'],
+            GameNormalizer::SHOW_SOLUTION => true,
+        ]);
     }
 
     #[Route(path: '/games-stats', name: 'games_stats', methods: ['GET'])]
