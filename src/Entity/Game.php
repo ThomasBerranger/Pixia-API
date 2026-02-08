@@ -73,7 +73,7 @@ class Game
     private int $attempts = 0;
 
     #[ORM\Column]
-    private ?\DateTimeImmutable $createdAt = null;
+    private DateTimeImmutable $createdAt;
 
     #[ORM\ManyToOne]
     #[Groups(['game:index:admin'])]
@@ -87,6 +87,7 @@ class Game
         $this->type = GameType::MULTIVERS;
         $this->difficulty = GameDifficulty::EASY;
         $this->hintedPlayers = new ArrayCollection();
+        $this->createdAt = new DateTimeImmutable();
     }
 
     public function getId(): ?Uuid
@@ -241,12 +242,12 @@ class Game
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTimeImmutable
+    public function getCreatedAt(): DateTimeImmutable
     {
         return $this->createdAt;
     }
 
-    public function setCreatedAt(\DateTimeImmutable $createdAt): static
+    public function setCreatedAt(DateTimeImmutable $createdAt): static
     {
         $this->createdAt = $createdAt;
 

@@ -177,8 +177,13 @@ class GameRepository extends ServiceEntityRepository
         }
     }
 
+    /**
+     * @return array<Game>
+     * @throws \DateMalformedStringException
+     */
     public function getGamesByMonth(DateTimeImmutable $month): array
     {
+        /** @var array<Game> */
         return $this->createQueryBuilder('g')
             ->leftJoin('g.author', 'a')->addSelect('a')
             ->leftJoin('g.supervisor', 's')->addSelect('s')

@@ -41,12 +41,17 @@ class GameNormalizer implements NormalizerInterface
         $data = $this->objectNormalizer->normalize($object, $format, $context);
 
         $this->transformImagePath($data);
+        /**
+         * @var Game $object
+         * @var array<string, mixed> $context
+         */
         $this->filterSensitiveFields($object, $data, $context);
 
         return $data;
     }
 
     /**
+     * @param array<string, mixed> $data
      * @throws \DateMalformedStringException
      */
     private function transformImagePath(array &$data): void
@@ -58,12 +63,16 @@ class GameNormalizer implements NormalizerInterface
             && is_string($data['date'])
         ) {
             $data['image'] = $this->imageService->getDirectoryPath(
-                    GameType::from($data['type']),
-                    new DateTimeImmutable($data['date'])
-                ).'/'.$data['image'];
+                GameType::from($data['type']),
+                new DateTimeImmutable($data['date'])
+            ).'/'.$data['image'];
         }
     }
 
+    /**
+     * @param array<string, mixed> $data
+     * @param array<string, mixed> $context
+     */
     private function filterSensitiveFields(Game $object, array &$data, array $context): void
     {
         $isGameStakeholder = $this->security->isGranted(GameVoter::VIEW, $object);
