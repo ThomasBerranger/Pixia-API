@@ -13,7 +13,6 @@ use App\Entity\Game;
 use App\Enum\ContributionStatus;
 use App\Enum\UserRole;
 use App\Repository\GameRepository;
-use App\Serializer\GameNormalizer;
 use App\Service\ContributionService;
 use App\Service\GameCreationService;
 use App\Service\ImageService;
@@ -55,8 +54,6 @@ final class AdminController extends AbstractController
 
         return $this->json(data: $game, status: Response::HTTP_CREATED, context: [
             'groups' => ['game:show:admin'],
-            GameNormalizer::SHOW_SOLUTION => true,
-            GameNormalizer::SHOW_HINT => true,
         ]);
     }
 
@@ -66,11 +63,7 @@ final class AdminController extends AbstractController
     {
         $games = $this->gameRepository->getGamesByMonth($month->getMonth());
 
-        return $this->json(data: $games, context: [
-            'groups' => ['game:index:admin'],
-            GameNormalizer::SHOW_SOLUTION => true,
-            GameNormalizer::SHOW_HINT => true,
-        ]);
+        return $this->json(data: $games, context: ['groups' => ['game:index:admin']]);
     }
 
     #[Route(path: '/games/solution-exist', name: 'games_solution_exist', methods: ['GET'], format: 'json')]
@@ -85,11 +78,7 @@ final class AdminController extends AbstractController
     #[IsGranted('view', subject: 'game')]
     public function gameShow(Game $game): JsonResponse
     {
-        return $this->json(data: $game, context: [
-            'groups' => ['game:show:admin'],
-            GameNormalizer::SHOW_SOLUTION => true,
-            GameNormalizer::SHOW_HINT => true,
-        ]);
+        return $this->json(data: $game, context: ['groups' => ['game:show:admin']]);
     }
 
     #[Route('/games/{id}', name: 'game_update', methods: ['PATCH'], format: 'json')]
@@ -110,11 +99,7 @@ final class AdminController extends AbstractController
             $this->imageService->move($oldGameDate, $game->getType(), $game->getDate(), $game->getImage());
         }
 
-        return $this->json(data: $game, context: [
-            'groups' => ['game:show:admin'],
-            GameNormalizer::SHOW_SOLUTION => true,
-            GameNormalizer::SHOW_HINT => true,
-        ]);
+        return $this->json(data: $game, context: ['groups' => ['game:show:admin']]);
     }
 
     #[Route('/games/{id}/image', name: 'games_update_image', methods: ['POST'], format: 'json')]

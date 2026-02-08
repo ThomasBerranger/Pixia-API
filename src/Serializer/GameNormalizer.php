@@ -17,8 +17,6 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 class GameNormalizer implements NormalizerInterface
 {
     private const ALREADY_CALLED = 'GAME_NORMALIZER_ALREADY_CALLED';
-    public const SHOW_SOLUTION = 'show_solution';
-    public const SHOW_HINT = 'show_hint';
 
     public function __construct(
         #[Autowire(service: 'serializer.normalizer.object')]
@@ -68,11 +66,17 @@ class GameNormalizer implements NormalizerInterface
     {
         $isGameStakeholder = $this->security->isGranted(GameVoter::VIEW, $object);
 
-        if (!$isGameStakeholder && !($context[self::SHOW_SOLUTION] ?? false)) {
+        if ($isGameStakeholder) {
+            return;
+        }
+
+        $groups = $context['groups'] ?? [];
+
+        if (!in_array('game:solution', $groups, true)) {
             unset($data['solution'], $data['englishSolution']);
         }
 
-        if (!$isGameStakeholder && !($context[self::SHOW_HINT] ?? false)) {
+        if (!in_array('game:hint', $groups, true)) {
             unset($data['hint']);
         }
     }

@@ -8,7 +8,6 @@ use App\Entity\Game;
 use App\Entity\User;
 use App\Enum\GameDifficulty;
 use App\Enum\GameType;
-use App\Serializer\GameNormalizer;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Serializer\SerializerInterface;
 
@@ -22,12 +21,12 @@ class GameGroupSerializationTest extends KernelTestCase
         $this->serializer = self::getContainer()->get(SerializerInterface::class);
     }
 
-    public function testShowGroupStripsSensitiveFieldsWithoutFlags(): void
+    public function testShowGroup(): void
     {
         $game = $this->createTestGame();
 
         $json = $this->serializer->serialize($game, 'json', [
-            'groups' => ['game:show'],
+            'groups' => ['game:show']
         ]);
 
         $data = json_decode($json, true);
@@ -35,53 +34,30 @@ class GameGroupSerializationTest extends KernelTestCase
         self::assertEquals(['id', 'type', 'date', 'difficulty', 'image'], array_keys($data));
     }
 
-    public function testShowGroupIncludesSolutionWithFlag(): void
+    public function testSolutionGroup(): void
     {
         $game = $this->createTestGame();
 
         $json = $this->serializer->serialize($game, 'json', [
-            'groups' => ['game:show'],
-            GameNormalizer::SHOW_SOLUTION => true,
+            'groups' => ['game:solution']
         ]);
 
         $data = json_decode($json, true);
 
-        self::assertArrayHasKey('solution', $data);
-        self::assertArrayHasKey('englishSolution', $data);
-        self::assertArrayNotHasKey('hint', $data);
+        self::assertEquals(['solution'], array_keys($data));
     }
 
-    public function testShowGroupIncludesHintWithFlag(): void
+    public function testHintGroup(): void
     {
         $game = $this->createTestGame();
 
         $json = $this->serializer->serialize($game, 'json', [
-            'groups' => ['game:show'],
-            GameNormalizer::SHOW_HINT => true,
+            'groups' => ['game:hint']
         ]);
 
         $data = json_decode($json, true);
 
-        self::assertArrayHasKey('hint', $data);
-        self::assertArrayNotHasKey('solution', $data);
-    }
-
-    public function testShowGroupIncludesAllWithBothFlags(): void
-    {
-        $game = $this->createTestGame();
-
-        $json = $this->serializer->serialize($game, 'json', [
-            'groups' => ['game:show'],
-            GameNormalizer::SHOW_SOLUTION => true,
-            GameNormalizer::SHOW_HINT => true,
-        ]);
-
-        $data = json_decode($json, true);
-
-        self::assertEquals(
-            ['id', 'type', 'solution', 'hint', 'date', 'difficulty', 'image', 'englishSolution'],
-            array_keys($data)
-        );
+        self::assertEquals(['hint'], array_keys($data));
     }
 
     public function testShowAdminGroup(): void
@@ -89,9 +65,7 @@ class GameGroupSerializationTest extends KernelTestCase
         $game = $this->createTestGame();
 
         $json = $this->serializer->serialize($game, 'json', [
-            'groups' => ['game:show:admin'],
-            GameNormalizer::SHOW_SOLUTION => true,
-            GameNormalizer::SHOW_HINT => true,
+            'groups' => ['game:show:admin']
         ]);
 
         $data = json_decode($json, true);
@@ -109,9 +83,7 @@ class GameGroupSerializationTest extends KernelTestCase
         $game = $this->createTestGame();
 
         $json = $this->serializer->serialize($game, 'json', [
-            'groups' => ['game:index:admin'],
-            GameNormalizer::SHOW_SOLUTION => true,
-            GameNormalizer::SHOW_HINT => true,
+            'groups' => ['game:index:admin']
         ]);
 
         $data = json_decode($json, true);
@@ -129,7 +101,7 @@ class GameGroupSerializationTest extends KernelTestCase
         $game = $this->createTestGame();
 
         $json = $this->serializer->serialize($game, 'json', [
-            'groups' => ['game:show'],
+            'groups' => ['game:show']
         ]);
 
         $data = json_decode($json, true);

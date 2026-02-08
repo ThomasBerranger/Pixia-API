@@ -33,11 +33,11 @@ class Game
     private GameType $type;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['game:show', 'game:solution', 'game:show:admin', 'game:index:admin', 'user:me'])]
+    #[Groups(['game:solution', 'game:show:admin', 'game:index:admin', 'user:me'])]
     private string $solution;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['game:show', 'game:hint', 'game:show:admin', 'game:index:admin'])]
+    #[Groups(['game:hint', 'game:show:admin', 'game:index:admin'])]
     private string $hint;
 
     #[ORM\Column(type: Types::DATE_IMMUTABLE)]
@@ -66,7 +66,7 @@ class Game
     private Collection $hintedPlayers;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['game:show', 'game:show:admin'])]
+    #[Groups(['game:show:admin'])]
     private string $englishSolution;
 
     #[ORM\Column]

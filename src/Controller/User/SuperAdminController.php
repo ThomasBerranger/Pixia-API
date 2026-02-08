@@ -7,7 +7,6 @@ namespace App\Controller\User;
 use App\Entity\Game;
 use App\Entity\User;
 use App\Enum\UserRole;
-use App\Serializer\GameNormalizer;
 use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -40,15 +39,7 @@ final class SuperAdminController extends AbstractController
     {
         $player = $this->getPlayerFor($email);
 
-        $roles = $player->getRoles();
-
-        if ($player->isBanned()) {
-            $roles = array_diff($roles, [UserRole::BANNED->value]);
-        } else {
-            $roles[] = UserRole::BANNED->value;
-        }
-
-        $player->setRoles(array_values(array_diff($roles, [UserRole::USER->value])));
+        $player->setRoles($player->isBanned() ? [] : [UserRole::BANNED->value]);
 
         $this->entityManager->flush();
 
@@ -81,10 +72,6 @@ final class SuperAdminController extends AbstractController
 
         $games = $this->entityManager->getRepository(Game::class)->findByFields($fields);
 
-        return $this->json(data: $games, context: [
-            'groups' => 'game:index:admin',
-            GameNormalizer::SHOW_SOLUTION => true,
-            GameNormalizer::SHOW_HINT => true,
-        ]);
+        return $this->json(data: $games, context: ['groups' => 'game:index:admin']);
     }
 }
