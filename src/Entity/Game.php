@@ -72,6 +72,16 @@ class Game
     #[ORM\Column]
     private int $attempts = 0;
 
+    #[ORM\Column]
+    private ?\DateTimeImmutable $createdAt = null;
+
+    #[ORM\ManyToOne]
+    #[Groups(['game:index:admin'])]
+    private ?User $supervisor = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $approvedAt = null;
+
     public function __construct()
     {
         $this->type = GameType::MULTIVERS;
@@ -227,6 +237,42 @@ class Game
     public function setAttempts(int $attempts): static
     {
         $this->attempts = $attempts;
+
+        return $this;
+    }
+
+    public function getCreatedAt(): ?\DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+
+    public function setCreatedAt(\DateTimeImmutable $createdAt): static
+    {
+        $this->createdAt = $createdAt;
+
+        return $this;
+    }
+
+    public function getSupervisor(): ?User
+    {
+        return $this->supervisor;
+    }
+
+    public function setSupervisor(?User $supervisor): static
+    {
+        $this->supervisor = $supervisor;
+
+        return $this;
+    }
+
+    public function getApprovedAt(): ?\DateTimeImmutable
+    {
+        return $this->approvedAt;
+    }
+
+    public function setApprovedAt(?\DateTimeImmutable $approvedAt): static
+    {
+        $this->approvedAt = $approvedAt;
 
         return $this;
     }

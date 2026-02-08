@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Controller\User;
 
+use App\DTO\Date\PreviousDateRequest;
 use App\DTO\Game\DifficultiesRequest;
-use App\DTO\MonthRequest;
 use App\Entity\Achievement;
 use App\Entity\Game;
 use App\Enum\UserRole;
@@ -79,7 +79,7 @@ class MeController extends AbstractController
      */
     #[Route(path: '/games', name: 'games', methods: ['GET'])]
     public function gamesIndex(
-        #[MapQueryString] MonthRequest $month,
+        #[MapQueryString] PreviousDateRequest  $month,
         #[MapQueryString] ?DifficultiesRequest $difficultiesRequest = null,
     ): JsonResponse {
         $player = $this->authenticatedUserService->getUserOrThrow();

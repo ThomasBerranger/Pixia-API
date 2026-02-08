@@ -114,8 +114,6 @@ class AuthController extends AbstractController
             $user->setSponsor($sponsor);
         }
 
-        $user->addBadge(new Badge(BadgeName::BETA_TESTER));
-
         $this->entityManager->persist($user);
     }
 }
