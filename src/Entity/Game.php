@@ -33,11 +33,11 @@ class Game
     private GameType $type;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['game:solution', 'game:show:admin', 'game:index:admin', 'user:me'])]
+    #[Groups(['game:show', 'game:show:admin', 'game:index:admin', 'user:me'])]
     private string $solution;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['game:hint', 'game:show:admin', 'game:index:admin'])]
+    #[Groups(['game:show', 'game:show:admin', 'game:index:admin'])]
     private string $hint;
 
     #[ORM\Column(type: Types::DATE_IMMUTABLE)]
@@ -66,17 +66,28 @@ class Game
     private Collection $hintedPlayers;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['game:show:admin'])]
+    #[Groups(['game:show', 'game:show:admin'])]
     private string $englishSolution;
 
     #[ORM\Column]
     private int $attempts = 0;
+
+    #[ORM\Column]
+    private DateTimeImmutable $createdAt;
+
+    #[ORM\ManyToOne]
+    #[Groups(['game:index:admin'])]
+    private ?User $supervisor = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $approvedAt = null;
 
     public function __construct()
     {
         $this->type = GameType::MULTIVERS;
         $this->difficulty = GameDifficulty::EASY;
         $this->hintedPlayers = new ArrayCollection();
+        $this->createdAt = new DateTimeImmutable();
     }
 
     public function getId(): ?Uuid
@@ -227,6 +238,42 @@ class Game
     public function setAttempts(int $attempts): static
     {
         $this->attempts = $attempts;
+
+        return $this;
+    }
+
+    public function getCreatedAt(): DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+
+    public function setCreatedAt(DateTimeImmutable $createdAt): static
+    {
+        $this->createdAt = $createdAt;
+
+        return $this;
+    }
+
+    public function getSupervisor(): ?User
+    {
+        return $this->supervisor;
+    }
+
+    public function setSupervisor(?User $supervisor): static
+    {
+        $this->supervisor = $supervisor;
+
+        return $this;
+    }
+
+    public function getApprovedAt(): ?\DateTimeImmutable
+    {
+        return $this->approvedAt;
+    }
+
+    public function setApprovedAt(?\DateTimeImmutable $approvedAt): static
+    {
+        $this->approvedAt = $approvedAt;
 
         return $this;
     }

@@ -34,17 +34,25 @@ final class GameVoter extends Voter
         $targetGame = $subject;
 
         return match ($attribute) {
-            self::VIEW, self::EDIT => $this->canEdit($currentUser, $targetGame),
+            self::VIEW => $this->canView($currentUser, $targetGame),
+            self::EDIT => $this->canEdit($currentUser, $targetGame),
             default => false,
         };
     }
 
+    private function canView(User $currentUser, Game $targetGame): bool
+    {
+        return $currentUser->isSuperAdmin()
+            || $currentUser === $targetGame->getAuthor()
+            || $currentUser === $targetGame->getSupervisor();
+    }
+
     private function canEdit(User $currentUser, Game $targetGame): bool
     {
-        if ($currentUser->isSuperAdmin() || ($currentUser->isAdmin() && $currentUser === $targetGame->getAuthor())) {
-            return true;
+        if ($targetGame->getApprovedAt()) {
+            return $currentUser->isSuperAdmin();
         }
 
-        return false;
+        return $this->canView($currentUser, $targetGame);
     }
 }

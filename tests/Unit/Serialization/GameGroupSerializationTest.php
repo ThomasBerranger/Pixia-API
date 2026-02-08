@@ -8,6 +8,7 @@ use App\Entity\Game;
 use App\Entity\User;
 use App\Enum\GameDifficulty;
 use App\Enum\GameType;
+use App\Serializer\GameNormalizer;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Serializer\SerializerInterface;
 
@@ -21,79 +22,149 @@ class GameGroupSerializationTest extends KernelTestCase
         $this->serializer = self::getContainer()->get(SerializerInterface::class);
     }
 
-    public function testShowGroup(): void
+    public function testShowGroupWithoutContextHidesSensitiveFields(): void
     {
         $game = $this->createTestGame();
 
         $json = $this->serializer->serialize($game, 'json', [
-            'groups' => ['game:show']
+            'groups' => ['game:show'],
         ]);
 
         $data = json_decode($json, true);
 
-        self::assertEquals(['id', 'type', 'date', 'difficulty', 'image'], array_keys($data));
+        self::assertArrayNotHasKey('solution', $data);
+        self::assertArrayNotHasKey('englishSolution', $data);
+        self::assertArrayNotHasKey('hint', $data);
+        self::assertArrayHasKey('type', $data);
+        self::assertArrayHasKey('date', $data);
+        self::assertArrayHasKey('difficulty', $data);
+        self::assertArrayHasKey('image', $data);
     }
 
-    public function testSolutionGroup(): void
+    public function testShowGroupWithSolutionContextExposesSolution(): void
     {
         $game = $this->createTestGame();
 
         $json = $this->serializer->serialize($game, 'json', [
-            'groups' => ['game:solution']
+            'groups' => ['game:show'],
+            GameNormalizer::SHOW_SOLUTION => true,
         ]);
 
         $data = json_decode($json, true);
 
-        self::assertEquals(['solution'], array_keys($data));
+        self::assertArrayHasKey('solution', $data);
+        self::assertArrayHasKey('englishSolution', $data);
+        self::assertEquals('Film 1', $data['solution']);
+        self::assertEquals('Film 1 EN', $data['englishSolution']);
+        self::assertArrayNotHasKey('hint', $data);
     }
 
-    public function testHintGroup(): void
+    public function testShowGroupWithHintContextExposesHint(): void
     {
         $game = $this->createTestGame();
 
         $json = $this->serializer->serialize($game, 'json', [
-            'groups' => ['game:hint']
+            'groups' => ['game:show'],
+            GameNormalizer::SHOW_HINT => true,
         ]);
 
         $data = json_decode($json, true);
 
-        self::assertEquals(['hint'], array_keys($data));
+        self::assertArrayHasKey('hint', $data);
+        self::assertEquals('Test hint', $data['hint']);
+        self::assertArrayNotHasKey('solution', $data);
+        self::assertArrayNotHasKey('englishSolution', $data);
     }
 
-    public function testShowAdminGroup(): void
+    public function testShowGroupWithBothContextsExposesAll(): void
     {
         $game = $this->createTestGame();
 
         $json = $this->serializer->serialize($game, 'json', [
-            'groups' => ['game:show:admin']
+            'groups' => ['game:show'],
+            GameNormalizer::SHOW_SOLUTION => true,
+            GameNormalizer::SHOW_HINT => true,
         ]);
 
         $data = json_decode($json, true);
 
-        self::assertEquals(
-            ['id', 'type', 'solution', 'hint', 'date', 'difficulty', 'author', 'image', 'englishSolution'],
-            array_keys($data)
-        );
+        self::assertArrayHasKey('solution', $data);
+        self::assertArrayHasKey('englishSolution', $data);
+        self::assertArrayHasKey('hint', $data);
+        self::assertArrayHasKey('type', $data);
+        self::assertArrayHasKey('date', $data);
+    }
 
+    public function testShowAdminGroupExposesAdminFields(): void
+    {
+        $game = $this->createTestGame();
+
+        $json = $this->serializer->serialize($game, 'json', [
+            'groups' => ['game:show:admin'],
+        ]);
+
+        $data = json_decode($json, true);
+
+        // Admin-specific fields are present
+        self::assertArrayHasKey('id', $data);
+        self::assertArrayHasKey('author', $data);
         self::assertEquals(['username'], array_keys($data['author']));
+
+        // Common fields
+        self::assertArrayHasKey('type', $data);
+        self::assertArrayHasKey('date', $data);
+        self::assertArrayHasKey('difficulty', $data);
+        self::assertArrayHasKey('image', $data);
+
+        // Sensitive fields stripped by normalizer (no authenticated stakeholder)
+        self::assertArrayNotHasKey('solution', $data);
+        self::assertArrayNotHasKey('hint', $data);
+        self::assertArrayNotHasKey('englishSolution', $data);
     }
 
-    public function testIndexAdminGroup(): void
+    public function testIndexAdminGroupExposesAdminFields(): void
     {
         $game = $this->createTestGame();
 
         $json = $this->serializer->serialize($game, 'json', [
-            'groups' => ['game:index:admin']
+            'groups' => ['game:index:admin'],
         ]);
 
         $data = json_decode($json, true);
 
-        self::assertEquals(
-            ['id', 'type', 'solution', 'hint', 'date', 'difficulty', 'author', 'image'],
-            array_keys($data)
-        );
+        // Admin-specific fields
+        self::assertArrayHasKey('id', $data);
+        self::assertArrayHasKey('author', $data);
+        self::assertEquals(['username', 'avatarUrl'], array_keys($data['author']));
 
-        self::assertEquals(['email'], array_keys($data['author']));
+        // Common fields
+        self::assertArrayHasKey('type', $data);
+        self::assertArrayHasKey('date', $data);
+        self::assertArrayHasKey('difficulty', $data);
+        self::assertArrayHasKey('image', $data);
+
+        // Sensitive fields stripped by normalizer (no authenticated stakeholder)
+        self::assertArrayNotHasKey('solution', $data);
+        self::assertArrayNotHasKey('hint', $data);
+    }
+
+    public function testIndexGroupDoesNotExposeSensitiveFields(): void
+    {
+        $game = $this->createTestGame();
+
+        $json = $this->serializer->serialize($game, 'json', [
+            'groups' => ['game:index'],
+        ]);
+
+        $data = json_decode($json, true);
+
+        self::assertArrayHasKey('type', $data);
+        self::assertArrayHasKey('date', $data);
+        self::assertArrayHasKey('difficulty', $data);
+        self::assertArrayHasKey('image', $data);
+        self::assertArrayNotHasKey('solution', $data);
+        self::assertArrayNotHasKey('hint', $data);
+        self::assertArrayNotHasKey('englishSolution', $data);
     }
 
     public function testNormalizerTransformsImagePath(): void
@@ -101,7 +172,7 @@ class GameGroupSerializationTest extends KernelTestCase
         $game = $this->createTestGame();
 
         $json = $this->serializer->serialize($game, 'json', [
-            'groups' => ['game:show']
+            'groups' => ['game:show'],
         ]);
 
         $data = json_decode($json, true);

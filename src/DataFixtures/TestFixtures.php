@@ -39,6 +39,14 @@ class TestFixtures extends Fixture
 
         $manager->persist($superAdmin);
 
+        $banned = new User();
+        $banned->setEmail('banned@test.com')
+            ->setUsername('banned-user')
+            ->setPassword('hashed')
+            ->setRoles([UserRole::BANNED->value]);
+
+        $manager->persist($banned);
+
         $game = new Game();
         $game->setSolution('Matrix')
             ->setEnglishSolution('Matrix')
@@ -47,6 +55,7 @@ class TestFixtures extends Fixture
             ->setType(GameType::MULTIVERS)
             ->setDifficulty(GameDifficulty::EASY)
             ->setAuthor($user)
+            ->setCreatedAt(new \DateTimeImmutable())
             ->setImageUrl('')
             ->setImage('test.jpg');
 

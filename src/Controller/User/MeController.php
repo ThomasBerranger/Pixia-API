@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace App\Controller\User;
 
+use App\DTO\Date\PreviousDateRequest;
 use App\DTO\Game\DifficultiesRequest;
-use App\DTO\MonthRequest;
 use App\Entity\Achievement;
 use App\Entity\Game;
 use App\Enum\UserRole;
 use App\Repository\GameRepository;
 use App\Repository\UserRepository;
+use App\Serializer\GameNormalizer;
 use App\Service\AuthenticatedUserService;
 use App\Service\GameService;
 use Doctrine\DBAL\Exception;
@@ -57,13 +58,17 @@ class MeController extends AbstractController
             'playerCount' => $this->userRepository->count()
         ];
 
-        return $this->json($data, context: ['groups' => ['user:me']]);
+        return $this->json($data, context: [
+            'groups' => ['user:me'],
+            GameNormalizer::SHOW_SOLUTION => true,
+        ]);
     }
 
     #[Route(path: '/games-stats', name: 'games_stats', methods: ['GET'])]
     public function gamesStats(
         #[MapQueryString] ?DifficultiesRequest $difficultiesRequest = null,
-    ): JsonResponse {
+    ): JsonResponse
+    {
         $player = $this->authenticatedUserService->getUserOrThrow();
 
         $stats = $this->gameRepository->getPlayerStatsByMonthAndDifficulty(
@@ -79,9 +84,10 @@ class MeController extends AbstractController
      */
     #[Route(path: '/games', name: 'games', methods: ['GET'])]
     public function gamesIndex(
-        #[MapQueryString] MonthRequest $month,
+        #[MapQueryString] PreviousDateRequest  $month,
         #[MapQueryString] ?DifficultiesRequest $difficultiesRequest = null,
-    ): JsonResponse {
+    ): JsonResponse
+    {
         $player = $this->authenticatedUserService->getUserOrThrow();
 
         return $this->json(

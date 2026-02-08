@@ -7,9 +7,7 @@ namespace App\Controller\Authentication;
 use App\Attribute\RateLimit;
 use App\DTO\Authentication\GoogleAuthRequest;
 use App\DTO\Authentication\RegisterRequest;
-use App\Entity\Badge;
 use App\Entity\User;
-use App\Enum\BadgeName;
 use App\Service\GoogleApiService;
 use App\Service\UserService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -113,8 +111,6 @@ class AuthController extends AbstractController
 
             $user->setSponsor($sponsor);
         }
-
-        $user->addBadge(new Badge(BadgeName::BETA_TESTER));
 
         $this->entityManager->persist($user);
     }

@@ -54,7 +54,8 @@ class UserGroupSerializationTest extends KernelTestCase
 
         self::assertEquals(['date', 'game'], array_keys($data));
 
-        self::assertEquals(['solution'], array_keys($data['game']));
+        // Solution is stripped by GameNormalizer because no authenticated stakeholder during this test
+        self::assertArrayNotHasKey('solution', $data['game']);
     }
 
     public function testShowGroup(): void

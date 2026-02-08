@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace App\DTO;
+namespace App\DTO\Date;
 
 use DateTimeImmutable;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
-class MonthRequest
+class PreviousDateRequest
 {
     public function __construct(
         #[Assert\DateTime(format: 'Y-m-d', message: 'La date doit être au format YYYY-MM-DD')]

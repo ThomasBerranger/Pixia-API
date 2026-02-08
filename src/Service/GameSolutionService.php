@@ -12,7 +12,7 @@ use Doctrine\ORM\EntityManagerInterface;
 
 readonly class GameSolutionService
 {
-    private const int MAX_WORDS_MULTIPLIER = 2;
+    private const float MAX_WORDS_MULTIPLIER = 1.5;
     private const array IGNORED_WORDS = ['et', 'and'];
 
     public function __construct(
@@ -23,7 +23,7 @@ readonly class GameSolutionService
     ) {
     }
 
-    public function handleAnswer(Game $game, string $answer, ?User $player): Game|false
+    public function handleAnswer(Game $game, string $answer, ?User $player): string|false
     {
         $game->setAttempts($game->getAttempts() + 1);
 
@@ -38,7 +38,7 @@ readonly class GameSolutionService
 
         $this->entityManager->flush();
 
-        return $game;
+        return $game->getSolution();
     }
 
     private function isCorrectAnswer(Game $game, string $answer): bool
