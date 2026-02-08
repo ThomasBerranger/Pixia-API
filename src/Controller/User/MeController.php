@@ -99,4 +99,12 @@ class MeController extends AbstractController
             context: ['groups' => ['game:index']]
         );
     }
+
+    #[Route(path: '/games-generated', name: 'games_generated', methods: ['GET'], format: 'json')]
+    public function generatedGamesIndex(): JsonResponse
+    {
+        $generatedGames = $this->gameRepository->findBy(['author' => $this->authenticatedUserService->getUserOrThrow()], ['date' => 'DESC']);
+
+        return $this->json(data: $generatedGames, context: ['groups' => ['game:index']]);
+    }
 }

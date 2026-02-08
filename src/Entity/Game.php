@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use App\Enum\GameDifficulty;
+use App\Enum\GameStatus;
 use App\Enum\GameType;
 use App\Repository\GameRepository;
 use DateTimeImmutable;
@@ -25,12 +26,12 @@ class Game
     #[ORM\Column(type: UuidType::NAME, unique: true)]
     #[ORM\GeneratedValue(strategy: 'CUSTOM')]
     #[ORM\CustomIdGenerator(class: UuidGenerator::class)]
-    #[Groups(['game:show', 'game:show:admin', 'game:index:admin'])]
+    #[Groups(['game:show', 'game:index', 'game:show:admin', 'game:index:admin'])]
     private ?Uuid $id = null;
 
     #[ORM\Column(enumType: GameType::class)]
     #[Groups(['game:show', 'game:index', 'game:show:admin', 'game:index:admin', 'user:show'])]
-    private GameType $type;
+    private GameType $type = GameType::MULTIVERS;
 
     #[ORM\Column(length: 255)]
     #[Groups(['game:show', 'game:show:admin', 'game:index:admin', 'user:me'])]
@@ -46,7 +47,7 @@ class Game
 
     #[ORM\Column(enumType: GameDifficulty::class)]
     #[Groups(['game:show', 'game:index', 'game:show:admin', 'game:index:admin'])]
-    private GameDifficulty $difficulty;
+    private GameDifficulty $difficulty = GameDifficulty::EASY;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
@@ -79,13 +80,12 @@ class Game
     #[Groups(['game:index:admin'])]
     private ?User $supervisor = null;
 
-    #[ORM\Column(nullable: true)]
-    private ?\DateTimeImmutable $approvedAt = null;
+    #[ORM\Column(enumType: GameStatus::class)]
+    #[Groups(['game:index'])]
+    private GameStatus $status = GameStatus::DRAFT;
 
     public function __construct()
     {
-        $this->type = GameType::MULTIVERS;
-        $this->difficulty = GameDifficulty::EASY;
         $this->hintedPlayers = new ArrayCollection();
         $this->createdAt = new DateTimeImmutable();
     }
@@ -266,14 +266,14 @@ class Game
         return $this;
     }
 
-    public function getApprovedAt(): ?\DateTimeImmutable
+    public function getStatus(): GameStatus
     {
-        return $this->approvedAt;
+        return $this->status;
     }
 
-    public function setApprovedAt(?\DateTimeImmutable $approvedAt): static
+    public function setStatus(GameStatus $status): static
     {
-        $this->approvedAt = $approvedAt;
+        $this->status = $status;
 
         return $this;
     }
