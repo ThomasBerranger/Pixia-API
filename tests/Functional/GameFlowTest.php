@@ -61,7 +61,7 @@ class GameFlowTest extends WebTestCase
         self::assertFalse($data);
     }
 
-    public function testCorrectAnswerReturnsGameWithSolution(): void
+    public function testCorrectAnswerReturnsSolutionString(): void
     {
         $client = static::createClient();
         $game = $this->getTestGame();
@@ -73,9 +73,8 @@ class GameFlowTest extends WebTestCase
 
         $data = json_decode($client->getResponse()->getContent(), true);
 
-        self::assertIsArray($data);
-        self::assertArrayHasKey('solution', $data);
-        self::assertEquals($game->getSolution(), $data['solution']);
+        self::assertIsString($data);
+        self::assertEquals($game->getSolution(), $data);
     }
 
     public function testHintEndpointRequiresAuthentication(): void
