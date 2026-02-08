@@ -76,7 +76,7 @@ final class GameController extends AbstractController
         $result = $this->gameAnswerService->handleAnswer($game, $gameAnswerRequest->answer, $this->authenticatedUserService->getUser());
 
         return $this->json(data: $result, context: [
-            'groups' => ['game:solution'],
+            'groups' => ['game:show'],
             GameNormalizer::SHOW_SOLUTION => $result instanceof Game,
         ]);
     }
