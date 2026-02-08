@@ -10,6 +10,7 @@ use App\DTO\Game\GameShowRequest;
 use App\Entity\Game;
 use App\Enum\UserRole;
 use App\Repository\GameRepository;
+use App\Serializer\GameNormalizer;
 use App\Service\AuthenticatedUserService;
 use App\Service\GameSolutionService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -45,11 +46,9 @@ final class GameController extends AbstractController
         );
 
         return $this->json(data: $gameWithUserAchievement, context: [
-            'groups' => [
-                'game:show',
-                $gameWithUserAchievement['achievement'] ? 'game:solution' : null,
-                $gameWithUserAchievement['hintRequested'] ? 'game:hint' : null,
-            ],
+            'groups' => ['game:show'],
+            GameNormalizer::SHOW_SOLUTION => (bool) $gameWithUserAchievement['achievement'],
+            GameNormalizer::SHOW_HINT => (bool) $gameWithUserAchievement['hintRequested'],
         ]);
     }
 
@@ -76,6 +75,9 @@ final class GameController extends AbstractController
     {
         $result = $this->gameAnswerService->handleAnswer($game, $gameAnswerRequest->answer, $this->authenticatedUserService->getUser());
 
-        return $this->json(data: $result, context: ['groups' => ['game:solution']]);
+        return $this->json(data: $result, context: [
+            'groups' => ['game:solution'],
+            GameNormalizer::SHOW_SOLUTION => $result instanceof Game,
+        ]);
     }
 }
