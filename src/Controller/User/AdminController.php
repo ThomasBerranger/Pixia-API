@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace App\Controller\User;
 
 use App\DTO\Contribution\ContributionUpdateRequest;
+use App\DTO\Date\DateRequest;
 use App\DTO\Game\GameCreateRequest;
 use App\DTO\Game\GameUpdateRequest;
 use App\Entity\Contribution;
 use App\Entity\Game;
 use App\Enum\ContributionStatus;
 use App\Enum\UserRole;
+use App\Repository\GameRepository;
 use App\Service\ContributionService;
 use App\Service\GameCreationService;
 use App\Service\ImageService;
@@ -20,6 +22,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
+use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -33,10 +36,12 @@ final class AdminController extends AbstractController
         private readonly GameCreationService    $gameCreationService,
         private readonly ImageService           $imageService,
         private readonly ContributionService    $contributionService,
+        private readonly GameRepository         $gameRepository,
     )
     {
     }
 
+    // todo passer ce endpoint chez user
     #[Route(path: '/games', name: 'games_create', methods: ['POST'], format: 'json')]
     public function create(
         #[MapRequestPayload] GameCreateRequest $gameCreateRequest
@@ -52,22 +57,21 @@ final class AdminController extends AbstractController
         ]);
     }
 
+    #[Route(path: '/games', name: 'games_index', methods: ['GET'], format: 'json')]
+    public function index(
+        #[MapQueryString] DateRequest $month): JsonResponse
+    {
+        $games = $this->gameRepository->getGamesByMonth($month->getMonth());
+
+        return $this->json(data: $games, context: ['groups' => ['game:index:admin']]);
+    }
+
     #[Route(path: '/games/solution-exist', name: 'games_solution_exist', methods: ['GET'], format: 'json')]
     public function gameSolutionExist(#[MapQueryParameter] string $solution): JsonResponse
     {
         $solutionFound = $this->gameCreationService->gameSolutionExist($solution);
 
         return $this->json(data: $solutionFound);
-    }
-
-    #[Route(path: '/games', name: 'games_index', methods: ['GET'], format: 'json')]
-    public function gameIndex(#[MapQueryParameter] ?string $fields): JsonResponse
-    {
-        $fields = $fields ? explode(',', $fields) : [];
-
-        $games = $this->entityManager->getRepository(Game::class)->findByFields($fields);
-
-        return $this->json(data: $games, context: ['groups' => 'game:index:admin']);
     }
 
     #[Route(path: '/games/{id}', name: 'games_show', methods: ['GET'], format: 'json')]

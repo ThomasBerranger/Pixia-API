@@ -176,4 +176,17 @@ class GameRepository extends ServiceEntityRepository
                 ->setParameter('difficulties', $difficulties);
         }
     }
+
+    public function getGamesByMonth(DateTimeImmutable $month): array
+    {
+        return $this->createQueryBuilder('g')
+            ->leftJoin('g.author', 'a')->addSelect('a')
+            ->leftJoin('g.supervisor', 's')->addSelect('s')
+            ->where('g.date BETWEEN :start AND :end')
+            ->setParameter('start', $month->modify('first day of this month')->format('Y-m-d'))
+            ->setParameter('end', $month->modify('last day of this month')->format('Y-m-d'))
+            ->orderBy('g.date', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 }

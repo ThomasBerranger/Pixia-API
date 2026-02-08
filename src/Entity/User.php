@@ -31,7 +31,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?Uuid $id = null;
 
     #[ORM\Column(length: 180)]
-    #[Groups(['user:me', 'user:index:admin', 'game:index:admin'])]
+    #[Groups(['user:me', 'user:index:admin'])]
     private string $email;
 
     /**
@@ -49,7 +49,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private int $score;
 
     #[ORM\Column(length: 255, unique: true)]
-    #[Groups(['user:me', 'user:show', 'user:index', 'user:index:admin', 'game:show:admin'])]
+    #[Groups(['user:me', 'user:show', 'user:index', 'user:index:admin', 'game:index:admin', 'game:show:admin'])]
     private string $username;
 
     #[ORM\Column]
@@ -79,7 +79,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private Collection $contributions;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
-    #[Groups(['user:me', 'user:show', 'user:index'])]
+    #[Groups(['user:me', 'user:show', 'user:index', 'game:index:admin'])]
     private ?string $avatarUrl = null;
 
     #[ORM\Column(length: 255, unique: true)]
