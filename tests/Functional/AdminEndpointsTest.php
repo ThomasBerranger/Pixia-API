@@ -44,6 +44,19 @@ class AdminEndpointsTest extends WebTestCase
         self::assertNotContains($statusCode, [401, 403]);
     }
 
+    #[DataProvider('adminEndpointsProvider')]
+    public function testAllowsAccessWithRoleSuperAdmin(string $method, string $url): void
+    {
+        $client = static::createClient();
+
+        $client->loginUser($this->getSuperAdminUser());
+        $client->request($method, $url);
+
+        $statusCode = $client->getResponse()->getStatusCode();
+
+        self::assertNotContains($statusCode, [401, 403]);
+    }
+
     public static function adminEndpointsProvider(): iterable
     {
         yield 'games index' => ['GET', '/admin/games'];
@@ -68,5 +81,13 @@ class AdminEndpointsTest extends WebTestCase
             ->get('doctrine')
             ->getRepository(User::class)
             ->findOneBy(['email' => 'admin@test.com']);
+    }
+
+    private function getSuperAdminUser(): User
+    {
+        return self::getContainer()
+            ->get('doctrine')
+            ->getRepository(User::class)
+            ->findOneBy(['email' => 'superadmin@test.com']);
     }
 }

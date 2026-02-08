@@ -101,6 +101,7 @@ class GameVoterTest extends TestCase
     public function testGrantsViewWhenAdminAndAuthor(): void
     {
         $user = $this->createMock(User::class);
+        $user->method('isSuperAdmin')->willReturn(false);
         $user->method('isAdmin')->willReturn(true);
 
         $game = $this->createMock(Game::class);
@@ -135,6 +136,7 @@ class GameVoterTest extends TestCase
     public function testDeniesViewWhenAuthorButNotAdmin(): void
     {
         $user = $this->createMock(User::class);
+        $user->method('isSuperAdmin')->willReturn(false);
         $user->method('isAdmin')->willReturn(false);
 
         $game = $this->createMock(Game::class);
@@ -151,6 +153,7 @@ class GameVoterTest extends TestCase
     public function testDeniesViewWhenNeitherAdminNorAuthor(): void
     {
         $user = $this->createMock(User::class);
+        $user->method('isSuperAdmin')->willReturn(false);
         $user->method('isAdmin')->willReturn(false);
 
         $author = $this->createMock(User::class);
@@ -171,6 +174,7 @@ class GameVoterTest extends TestCase
     public function testGrantsEditWhenAdminAndAuthor(): void
     {
         $user = $this->createMock(User::class);
+        $user->method('isSuperAdmin')->willReturn(false);
         $user->method('isAdmin')->willReturn(true);
 
         $game = $this->createMock(Game::class);
@@ -205,6 +209,7 @@ class GameVoterTest extends TestCase
     public function testDeniesEditWhenAuthorButNotAdmin(): void
     {
         $user = $this->createMock(User::class);
+        $user->method('isSuperAdmin')->willReturn(false);
         $user->method('isAdmin')->willReturn(false);
 
         $game = $this->createMock(Game::class);
@@ -349,5 +354,26 @@ class GameVoterTest extends TestCase
         $editResult = $this->voter->vote($token, $game, [GameVoter::EDIT]);
 
         $this->assertEquals($viewResult, $editResult);
+    }
+
+    public function testDeniesViewToRegularUser(): void
+    {
+        $user = $this->createMock(User::class);
+        $user->method('isSuperAdmin')->willReturn(false);
+        $user->method('isAdmin')->willReturn(false);
+
+        $author = $this->createMock(User::class);
+
+        $game = $this->createMock(Game::class);
+        $game->method('getAuthor')->willReturn($author);
+
+        $token = $this->createMock(TokenInterface::class);
+        $token->method('getUser')->willReturn($user);
+
+        $result = $this->voter->vote($token, $game, [GameVoter::VIEW]);
+        $this->assertEquals(VoterInterface::ACCESS_DENIED, $result);
+
+        $result = $this->voter->vote($token, $game, [GameVoter::EDIT]);
+        $this->assertEquals(VoterInterface::ACCESS_DENIED, $result);
     }
 }

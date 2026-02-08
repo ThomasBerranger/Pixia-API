@@ -151,6 +151,7 @@ class UserVoterTest extends TestCase
     public function testGrantsViewToAdmin(): void
     {
         $admin = $this->createMock(User::class);
+        $admin->method('isSuperAdmin')->willReturn(false);
         $admin->method('isAdmin')->willReturn(true);
         $admin->method('getUserIdentifier')->willReturn('admin@test.com');
 
@@ -168,6 +169,7 @@ class UserVoterTest extends TestCase
     public function testAdminCanViewAnyUser(): void
     {
         $admin = $this->createMock(User::class);
+        $admin->method('isSuperAdmin')->willReturn(false);
         $admin->method('isAdmin')->willReturn(true);
         $admin->method('getUserIdentifier')->willReturn('admin@test.com');
 
@@ -280,6 +282,7 @@ class UserVoterTest extends TestCase
     public function testAdminViewingSelf(): void
     {
         $admin = $this->createMock(User::class);
+        $admin->method('isSuperAdmin')->willReturn(false);
         $admin->method('isAdmin')->willReturn(true);
         $admin->method('getUserIdentifier')->willReturn('admin@test.com');
 
@@ -288,6 +291,23 @@ class UserVoterTest extends TestCase
 
         $result = $this->voter->vote($token, $admin, [UserVoter::VIEW]);
 
+        $this->assertEquals(VoterInterface::ACCESS_GRANTED, $result);
+    }
+
+    public function testGrantsViewToUserWithBothSuperAdminAndAdmin(): void
+    {
+        $user = $this->createMock(User::class);
+        $user->method('isSuperAdmin')->willReturn(true);
+        $user->method('isAdmin')->willReturn(true);
+        $user->method('getUserIdentifier')->willReturn('both@test.com');
+
+        $targetUser = $this->createMock(User::class);
+        $targetUser->method('getUserIdentifier')->willReturn('other@test.com');
+
+        $token = $this->createMock(TokenInterface::class);
+        $token->method('getUser')->willReturn($user);
+
+        $result = $this->voter->vote($token, $targetUser, [UserVoter::VIEW]);
         $this->assertEquals(VoterInterface::ACCESS_GRANTED, $result);
     }
 }
