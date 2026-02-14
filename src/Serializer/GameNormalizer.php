@@ -56,17 +56,28 @@ class GameNormalizer implements NormalizerInterface
      */
     private function transformImagePath(array &$data): void
     {
-        if (isset($data['image'], $data['type'], $data['date'])
-            && is_string($data['image'])
-            && '' !== $data['image']
-            && is_string($data['type'])
-            && is_string($data['date'])
-        ) {
-            $data['image'] = $this->imageService->getDirectoryPath(
-                GameType::from($data['type']),
-                new DateTimeImmutable($data['date'])
-            ) . '/' . $data['image'];
+        // Pas d'image → skip (cas légitime)
+        if (!isset($data['image']) || !is_string($data['image']) || '' === $data['image']) {
+            return;
         }
+
+        // Image présente mais pas de type/date → bug de config!
+        if (!isset($data['type'], $data['date'])) {
+            throw new \LogicException(sprintf(
+                'Cannot transform image path: missing %s in serialization groups. ' .
+                'Ensure "type" and "date" are included in the same groups as "image".',
+                !isset($data['type']) ? '"type"' : '"date"'
+            ));
+        }
+
+        if (!is_string($data['type']) || !is_string($data['date'])) {
+            throw new \LogicException('Type and date must be serialized as strings for image path transformation.');
+        }
+
+        $data['image'] = $this->imageService->getDirectoryPath(
+            GameType::from($data['type']),
+            new DateTimeImmutable($data['date'])
+        ) . '/' . $data['image'];
     }
 
     /**

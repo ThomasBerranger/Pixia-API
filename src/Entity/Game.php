@@ -25,23 +25,23 @@ class Game
     #[ORM\Column(type: UuidType::NAME, unique: true)]
     #[ORM\GeneratedValue(strategy: 'CUSTOM')]
     #[ORM\CustomIdGenerator(class: UuidGenerator::class)]
-    #[Groups(['game:show', 'game:index', 'game:show:admin', 'game:index:admin'])]
+    #[Groups(['game:show', 'game:index', 'game:show:admin', 'game:index:admin', 'game:user:show'])]
     private ?Uuid $id = null;
 
     #[ORM\Column(enumType: GameType::class)]
-    #[Groups(['game:show', 'game:index', 'game:show:admin', 'game:index:admin', 'user:show'])]
+    #[Groups(['game:show', 'game:index', 'game:show:admin', 'game:index:admin', 'user:show', 'game:user:show'])]
     private GameType $type = GameType::MULTIVERS;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['game:show', 'game:show:admin', 'game:index:admin', 'user:me'])]
+    #[Groups(['game:show', 'game:show:admin', 'game:index:admin', 'user:me', 'game:user:show'])]
     private string $solution;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['game:show', 'game:show:admin', 'game:index:admin'])]
+    #[Groups(['game:show', 'game:show:admin', 'game:index:admin', 'game:user:show'])]
     private string $hint;
 
     #[ORM\Column(type: Types::DATE_IMMUTABLE)]
-    #[Groups(['game:show', 'game:index', 'game:show:admin', 'game:index:admin', 'user:show'])]
+    #[Groups(['game:show', 'game:index', 'game:show:admin', 'game:index:admin', 'user:show', 'game:user:show'])]
     private DateTimeImmutable $date;
 
     #[ORM\Column(enumType: GameDifficulty::class)]
@@ -54,7 +54,7 @@ class Game
     private User $author;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['game:show', 'game:index', 'game:show:admin', 'game:index:admin', 'user:show'])]
+    #[Groups(['game:show', 'game:index', 'game:show:admin', 'game:index:admin', 'user:show', 'game:user:show'])]
     private ?string $image;
 
     private ?string $imageUrl = null;
@@ -171,7 +171,7 @@ class Game
         return $this->image;
     }
 
-    public function setImage(string $image): static
+    public function setImage(?string $image): static
     {
         $this->image = $image;
 
@@ -275,5 +275,10 @@ class Game
         $this->status = $status;
 
         return $this;
+    }
+
+    public function isApproved(): bool
+    {
+        return $this->status === GameStatus::APPROVED;
     }
 }

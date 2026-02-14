@@ -43,13 +43,13 @@ final class GameVoter extends Voter
     private function canView(User $currentUser, Game $targetGame): bool
     {
         return $currentUser->isSuperAdmin()
-            || $currentUser === $targetGame->getAuthor()
-            || $currentUser === $targetGame->getSupervisor();
+            || $currentUser->getId()->equals($targetGame->getAuthor()->getId())
+            || ($targetGame->getSupervisor() !== null && $currentUser->getId()->equals($targetGame->getSupervisor()->getId()));
     }
 
     private function canEdit(User $currentUser, Game $targetGame): bool
     {
-        if ($targetGame->getApprovedAt()) {
+        if ($targetGame->isApproved()) {
             return $currentUser->isSuperAdmin();
         }
 

@@ -116,8 +116,11 @@ class GameVoterTest extends TestCase
 
     public function testGrantsViewToAuthor(): void
     {
+        $authorId = \Symfony\Component\Uid\Uuid::v7();
+
         $author = $this->createMock(User::class);
         $author->method('isSuperAdmin')->willReturn(false);
+        $author->method('getId')->willReturn($authorId);
 
         $game = $this->createMock(Game::class);
         $game->method('getAuthor')->willReturn($author);
@@ -133,10 +136,16 @@ class GameVoterTest extends TestCase
 
     public function testGrantsViewToSupervisor(): void
     {
+        $supervisorId = \Symfony\Component\Uid\Uuid::v7();
+        $authorId = \Symfony\Component\Uid\Uuid::v7();
+
         $supervisor = $this->createMock(User::class);
         $supervisor->method('isSuperAdmin')->willReturn(false);
+        $supervisor->method('getId')->willReturn($supervisorId);
 
         $author = $this->createMock(User::class);
+        $author->method('getId')->willReturn($authorId);
+
         $game = $this->createMock(Game::class);
         $game->method('getAuthor')->willReturn($author);
         $game->method('getSupervisor')->willReturn($supervisor);
@@ -151,10 +160,16 @@ class GameVoterTest extends TestCase
 
     public function testDeniesViewToAdminNotAuthorNorSupervisor(): void
     {
+        $adminId = \Symfony\Component\Uid\Uuid::v7();
+        $authorId = \Symfony\Component\Uid\Uuid::v7();
+
         $admin = $this->createMock(User::class);
         $admin->method('isSuperAdmin')->willReturn(false);
+        $admin->method('getId')->willReturn($adminId);
 
         $author = $this->createMock(User::class);
+        $author->method('getId')->willReturn($authorId);
+
         $game = $this->createMock(Game::class);
         $game->method('getAuthor')->willReturn($author);
         $game->method('getSupervisor')->willReturn(null);
@@ -169,10 +184,16 @@ class GameVoterTest extends TestCase
 
     public function testDeniesViewToRegularUser(): void
     {
+        $userId = \Symfony\Component\Uid\Uuid::v7();
+        $authorId = \Symfony\Component\Uid\Uuid::v7();
+
         $user = $this->createMock(User::class);
         $user->method('isSuperAdmin')->willReturn(false);
+        $user->method('getId')->willReturn($userId);
 
         $author = $this->createMock(User::class);
+        $author->method('getId')->willReturn($authorId);
+
         $game = $this->createMock(Game::class);
         $game->method('getAuthor')->willReturn($author);
         $game->method('getSupervisor')->willReturn(null);
@@ -189,13 +210,16 @@ class GameVoterTest extends TestCase
 
     public function testGrantsEditToAuthorWhenNotApproved(): void
     {
+        $authorId = \Symfony\Component\Uid\Uuid::v7();
+
         $author = $this->createMock(User::class);
         $author->method('isSuperAdmin')->willReturn(false);
+        $author->method('getId')->willReturn($authorId);
 
         $game = $this->createMock(Game::class);
         $game->method('getAuthor')->willReturn($author);
         $game->method('getSupervisor')->willReturn(null);
-        $game->method('getApprovedAt')->willReturn(null);
+        $game->method('isApproved')->willReturn(false);
 
         $token = $this->createMock(TokenInterface::class);
         $token->method('getUser')->willReturn($author);
@@ -207,14 +231,20 @@ class GameVoterTest extends TestCase
 
     public function testGrantsEditToSupervisorWhenNotApproved(): void
     {
+        $supervisorId = \Symfony\Component\Uid\Uuid::v7();
+        $authorId = \Symfony\Component\Uid\Uuid::v7();
+
         $supervisor = $this->createMock(User::class);
         $supervisor->method('isSuperAdmin')->willReturn(false);
+        $supervisor->method('getId')->willReturn($supervisorId);
 
         $author = $this->createMock(User::class);
+        $author->method('getId')->willReturn($authorId);
+
         $game = $this->createMock(Game::class);
         $game->method('getAuthor')->willReturn($author);
         $game->method('getSupervisor')->willReturn($supervisor);
-        $game->method('getApprovedAt')->willReturn(null);
+        $game->method('isApproved')->willReturn(false);
 
         $token = $this->createMock(TokenInterface::class);
         $token->method('getUser')->willReturn($supervisor);
@@ -226,14 +256,18 @@ class GameVoterTest extends TestCase
 
     public function testGrantsEditToSuperAdminWhenNotApproved(): void
     {
+        $authorId = \Symfony\Component\Uid\Uuid::v7();
+
         $superAdmin = $this->createMock(User::class);
         $superAdmin->method('isSuperAdmin')->willReturn(true);
 
         $author = $this->createMock(User::class);
+        $author->method('getId')->willReturn($authorId);
+
         $game = $this->createMock(Game::class);
         $game->method('getAuthor')->willReturn($author);
         $game->method('getSupervisor')->willReturn(null);
-        $game->method('getApprovedAt')->willReturn(null);
+        $game->method('isApproved')->willReturn(false);
 
         $token = $this->createMock(TokenInterface::class);
         $token->method('getUser')->willReturn($superAdmin);
@@ -247,14 +281,18 @@ class GameVoterTest extends TestCase
 
     public function testGrantsEditToSuperAdminWhenApproved(): void
     {
+        $authorId = \Symfony\Component\Uid\Uuid::v7();
+
         $superAdmin = $this->createMock(User::class);
         $superAdmin->method('isSuperAdmin')->willReturn(true);
 
         $author = $this->createMock(User::class);
+        $author->method('getId')->willReturn($authorId);
+
         $game = $this->createMock(Game::class);
         $game->method('getAuthor')->willReturn($author);
         $game->method('getSupervisor')->willReturn(null);
-        $game->method('getApprovedAt')->willReturn(new \DateTimeImmutable());
+        $game->method('isApproved')->willReturn(true);
 
         $token = $this->createMock(TokenInterface::class);
         $token->method('getUser')->willReturn($superAdmin);
@@ -266,13 +304,16 @@ class GameVoterTest extends TestCase
 
     public function testDeniesEditToAuthorWhenApproved(): void
     {
+        $authorId = \Symfony\Component\Uid\Uuid::v7();
+
         $author = $this->createMock(User::class);
         $author->method('isSuperAdmin')->willReturn(false);
+        $author->method('getId')->willReturn($authorId);
 
         $game = $this->createMock(Game::class);
         $game->method('getAuthor')->willReturn($author);
         $game->method('getSupervisor')->willReturn(null);
-        $game->method('getApprovedAt')->willReturn(new \DateTimeImmutable());
+        $game->method('isApproved')->willReturn(true);
 
         $token = $this->createMock(TokenInterface::class);
         $token->method('getUser')->willReturn($author);
@@ -284,14 +325,20 @@ class GameVoterTest extends TestCase
 
     public function testDeniesEditToSupervisorWhenApproved(): void
     {
+        $supervisorId = \Symfony\Component\Uid\Uuid::v7();
+        $authorId = \Symfony\Component\Uid\Uuid::v7();
+
         $supervisor = $this->createMock(User::class);
         $supervisor->method('isSuperAdmin')->willReturn(false);
+        $supervisor->method('getId')->willReturn($supervisorId);
 
         $author = $this->createMock(User::class);
+        $author->method('getId')->willReturn($authorId);
+
         $game = $this->createMock(Game::class);
         $game->method('getAuthor')->willReturn($author);
         $game->method('getSupervisor')->willReturn($supervisor);
-        $game->method('getApprovedAt')->willReturn(new \DateTimeImmutable());
+        $game->method('isApproved')->willReturn(true);
 
         $token = $this->createMock(TokenInterface::class);
         $token->method('getUser')->willReturn($supervisor);
@@ -303,14 +350,20 @@ class GameVoterTest extends TestCase
 
     public function testDeniesEditToRegularUserWhenApproved(): void
     {
+        $userId = \Symfony\Component\Uid\Uuid::v7();
+        $authorId = \Symfony\Component\Uid\Uuid::v7();
+
         $user = $this->createMock(User::class);
         $user->method('isSuperAdmin')->willReturn(false);
+        $user->method('getId')->willReturn($userId);
 
         $author = $this->createMock(User::class);
+        $author->method('getId')->willReturn($authorId);
+
         $game = $this->createMock(Game::class);
         $game->method('getAuthor')->willReturn($author);
         $game->method('getSupervisor')->willReturn(null);
-        $game->method('getApprovedAt')->willReturn(new \DateTimeImmutable());
+        $game->method('isApproved')->willReturn(true);
 
         $token = $this->createMock(TokenInterface::class);
         $token->method('getUser')->willReturn($user);

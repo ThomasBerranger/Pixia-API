@@ -10,4 +10,9 @@ enum GameStatus: string
     case PENDING = 'PENDING';
     case APPROVED = 'APPROVED';
     case REJECTED = 'REJECTED';
+
+    public static function fromMixed(mixed $value): self
+    {
+        return $value instanceof self ? $value : self::from($value);
+    }
 }

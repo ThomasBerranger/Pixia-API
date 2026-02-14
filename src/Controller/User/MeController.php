@@ -6,6 +6,7 @@ namespace App\Controller\User;
 
 use App\DTO\Date\PreviousDateRequest;
 use App\DTO\Game\DifficultiesRequest;
+use App\DTO\Game\GameUserUpdateRequest;
 use App\DTO\Game\MoviePopularityCheckRequest;
 use App\Entity\Achievement;
 use App\Entity\Game;
@@ -19,12 +20,15 @@ use App\Serializer\GameNormalizer;
 use App\Service\AuthenticatedUserService;
 use App\Service\GameCreationService;
 use App\Service\GameService;
+use App\Service\ImageService;
 use Doctrine\DBAL\Exception;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
+use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -39,6 +43,7 @@ class MeController extends AbstractController
         private readonly GameRepository           $gameRepository,
         private readonly GameService              $gameService,
         private readonly GameCreationService      $gameCreationService,
+        private readonly ImageService             $imageService,
     )
     {
     }
@@ -108,7 +113,7 @@ class MeController extends AbstractController
     }
 
     #[Route(path: '/games', name: 'games_create', methods: ['POST'], format: 'json')]
-    public function create(
+    public function gameCreate(
         #[MapRequestPayload] MoviePopularityCheckRequest $moviePopularityCheckRequest
     ): JsonResponse
     {
@@ -141,6 +146,72 @@ class MeController extends AbstractController
             'popularityScore' => $popularityScore,
             'prompt' => 'A dramatic sci-fi fantasy poster blending The Matrix and Lord of the Rings aesthetics'
         ], 201, context: ['groups' => ['game:show']]);
+    }
+
+    #[Route(path: '/games/{id}', name: 'games_show', methods: ['GET'], format: 'json')]
+    #[IsGranted('view', 'game')]
+    public function gameShow(Game $game): JsonResponse
+    {
+        return $this->json($game, context: ['groups' => ['game:user:show']]);
+    }
+
+    #[Route(path: '/games/{id}', name: 'games_update', methods: ['PATCH'], format: 'json')]
+    #[IsGranted('edit', 'game')]
+    public function gameUpdate(
+        Game $game,
+        #[MapRequestPayload] GameUserUpdateRequest $gameUserUpdateRequest
+    ): JsonResponse
+    {
+        $gameUserUpdateRequest->updateGame($game);
+
+        $this->entityManager->flush();
+
+        return $this->json($game, context: ['groups' => ['game:user:show']]);
+    }
+
+    #[Route(path: '/games/{id}/image', name: 'games_upload_image', methods: ['POST'])]
+    #[IsGranted('edit', 'game')]
+    public function gameUploadImage(Game $game, Request $request): JsonResponse
+    {
+        $uploadedFile = $request->files->get('image');
+
+        if ($uploadedFile === null) {
+            throw new UnprocessableEntityHttpException('Aucun fichier image fourni.');
+        }
+
+        $filename = $this->imageService->store(
+            $game->getType(),
+            $game->getDate(),
+            $game->getImage(),
+            $uploadedFile
+        );
+
+        $game->setImage($filename);
+        $this->entityManager->flush();
+
+        return $this->json(['message' => 'Image ajoutée avec succès']);
+    }
+
+    #[Route(path: '/games/{id}/image', name: 'games_delete_image', methods: ['DELETE'])]
+    #[IsGranted('edit', 'game')]
+    public function gameDeleteImage(Game $game): JsonResponse
+    {
+        $imageName = $game->getImage();
+
+        if ($imageName === null) {
+            return $this->json(['message' => 'Aucune image à supprimer'], 404);
+        }
+
+        $this->imageService->delete(
+            $game->getType(),
+            $game->getDate(),
+            $imageName
+        );
+
+        $game->setImage(null);
+        $this->entityManager->flush();
+
+        return $this->json(['message' => 'Image supprimée avec succès']);
     }
 
     #[Route(path: '/games-generated', name: 'games_generated', methods: ['GET'], format: 'json')]
