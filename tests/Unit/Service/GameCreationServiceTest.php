@@ -5,10 +5,15 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Service;
 
 use App\Entity\Game;
+use App\Enum\GameStatus;
+use App\Enum\GameType;
 use App\Repository\GameRepository;
 use App\Service\GameCreationService;
 use App\Service\GameSolutionService;
+use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Query;
+use Doctrine\ORM\QueryBuilder;
 use PHPUnit\Framework\TestCase;
 
 class GameCreationServiceTest extends TestCase
@@ -26,7 +31,8 @@ class GameCreationServiceTest extends TestCase
 
         $this->service = new GameCreationService(
             $this->entityManager,
-            $this->gameSolutionService
+            $this->gameSolutionService,
+            $this->gameRepository
         );
     }
 
@@ -363,5 +369,153 @@ class GameCreationServiceTest extends TestCase
         // Devrait s'arrêter après le 2ème, pas vérifier le 3ème
         $this->assertEquals(2, $callCount);
         $this->assertSame('Solution 2', $result);
+    }
+
+    // ========== Tests getNextAvailableDate() ==========
+
+    public function testGetNextAvailableDateReturnsOneWeekWhenNoGamesExist(): void
+    {
+        // Arrange
+        $type = GameType::MULTIVERS;
+        $expectedDate = (new DateTimeImmutable('+1 week'))->setTime(0, 0);
+
+        $this->mockQueryBuilder([]);
+
+        // Act
+        $result = $this->service->getNextAvailableDate($type);
+
+        // Assert
+        $this->assertEquals($expectedDate->format('Y-m-d'), $result->format('Y-m-d'));
+    }
+
+    public function testGetNextAvailableDateSkipsApprovedGameAtOneWeek(): void
+    {
+        // Arrange
+        $type = GameType::MULTIVERS;
+        $oneWeek = (new DateTimeImmutable('+1 week'))->setTime(0, 0);
+        $expectedDate = $oneWeek->modify('+1 day');
+
+        // Game APPROVED à +1 semaine (collision)
+        $this->mockQueryBuilder([$oneWeek]);
+
+        // Act
+        $result = $this->service->getNextAvailableDate($type);
+
+        // Assert
+        $this->assertEquals($expectedDate->format('Y-m-d'), $result->format('Y-m-d'));
+    }
+
+    public function testGetNextAvailableDateSkipsMultipleConsecutiveDays(): void
+    {
+        // Arrange
+        $type = GameType::MULTIVERS;
+        $oneWeek = (new DateTimeImmutable('+1 week'))->setTime(0, 0);
+
+        // Games APPROVED à +7, +8, +9 jours (collisions consécutives)
+        $takenDates = [
+            $oneWeek,
+            $oneWeek->modify('+1 day'),
+            $oneWeek->modify('+2 days'),
+        ];
+
+        $expectedDate = $oneWeek->modify('+3 days'); // +10 jours total
+
+        $this->mockQueryBuilder($takenDates);
+
+        // Act
+        $result = $this->service->getNextAvailableDate($type);
+
+        // Assert
+        $this->assertEquals($expectedDate->format('Y-m-d'), $result->format('Y-m-d'));
+    }
+
+    public function testGetNextAvailableDateFindsGapBetweenApprovedGames(): void
+    {
+        // Arrange
+        $type = GameType::MULTIVERS;
+        $oneWeek = (new DateTimeImmutable('+1 week'))->setTime(0, 0);
+
+        // Games APPROVED à +7 et +9 jours (gap à +8)
+        $takenDates = [
+            $oneWeek,
+            $oneWeek->modify('+2 days'),
+        ];
+
+        $expectedDate = $oneWeek->modify('+1 day'); // Le gap
+
+        $this->mockQueryBuilder($takenDates);
+
+        // Act
+        $result = $this->service->getNextAvailableDate($type);
+
+        // Assert
+        $this->assertEquals($expectedDate->format('Y-m-d'), $result->format('Y-m-d'));
+    }
+
+    public function testGetNextAvailableDateIgnoresDifferentGameType(): void
+    {
+        // Arrange
+        $type = GameType::MULTIVERS;
+        $oneWeek = (new DateTimeImmutable('+1 week'))->setTime(0, 0);
+
+        // Aucun game APPROVED du type MULTIVERS (query retourne vide car filtrée par type)
+        $this->mockQueryBuilder([]);
+
+        // Act
+        $result = $this->service->getNextAvailableDate($type);
+
+        // Assert
+        // Doit retourner +1 semaine car pas de collision pour ce type
+        $this->assertEquals($oneWeek->format('Y-m-d'), $result->format('Y-m-d'));
+    }
+
+    /**
+     * Mock le QueryBuilder pour retourner des dates prises
+     * @param DateTimeImmutable[] $takenDates
+     */
+    private function mockQueryBuilder(array $takenDates): void
+    {
+        $queryBuilder = $this->createMock(QueryBuilder::class);
+        $query = $this->createMock(Query::class);
+
+        $this->gameRepository->expects($this->once())
+            ->method('createQueryBuilder')
+            ->with('g')
+            ->willReturn($queryBuilder);
+
+        $queryBuilder->expects($this->once())
+            ->method('select')
+            ->with('g.date')
+            ->willReturnSelf();
+
+        $queryBuilder->expects($this->once())
+            ->method('where')
+            ->willReturnSelf();
+
+        $queryBuilder->expects($this->exactly(2))
+            ->method('andWhere')
+            ->willReturnSelf();
+
+        $queryBuilder->expects($this->exactly(3))
+            ->method('setParameter')
+            ->willReturnSelf();
+
+        $queryBuilder->expects($this->once())
+            ->method('orderBy')
+            ->with('g.date', 'ASC')
+            ->willReturnSelf();
+
+        $queryBuilder->expects($this->once())
+            ->method('setMaxResults')
+            ->with(90)
+            ->willReturnSelf();
+
+        $queryBuilder->expects($this->once())
+            ->method('getQuery')
+            ->willReturn($query);
+
+        $query->expects($this->once())
+            ->method('getSingleColumnResult')
+            ->willReturn($takenDates);
     }
 }

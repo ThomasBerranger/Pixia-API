@@ -66,6 +66,7 @@ final class AdminController extends AbstractController
         return $this->json(data: $games, context: ['groups' => ['game:index:admin']]);
     }
 
+    // todo passer ce endpoint chez user
     #[Route(path: '/games/solution-exist', name: 'games_solution_exist', methods: ['GET'], format: 'json')]
     public function gameSolutionExist(#[MapQueryParameter] string $solution): JsonResponse
     {

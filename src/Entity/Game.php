@@ -19,7 +19,6 @@ use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: GameRepository::class)]
-#[ORM\UniqueConstraint(name: 'unique_type_date', columns: ['type', 'date'])]
 class Game
 {
     #[ORM\Id]
@@ -58,7 +57,7 @@ class Game
     #[Groups(['game:show', 'game:index', 'game:show:admin', 'game:index:admin', 'user:show'])]
     private ?string $image;
 
-    private string $imageUrl;
+    private ?string $imageUrl = null;
 
     /**
      * @var Collection<int, User>
@@ -81,7 +80,7 @@ class Game
     private ?User $supervisor = null;
 
     #[ORM\Column(enumType: GameStatus::class)]
-    #[Groups(['game:index'])]
+    #[Groups(['game:index', 'game:index:admin'])]
     private GameStatus $status = GameStatus::DRAFT;
 
     public function __construct()

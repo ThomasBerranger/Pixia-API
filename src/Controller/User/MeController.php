@@ -6,19 +6,25 @@ namespace App\Controller\User;
 
 use App\DTO\Date\PreviousDateRequest;
 use App\DTO\Game\DifficultiesRequest;
+use App\DTO\Game\MoviePopularityCheckRequest;
 use App\Entity\Achievement;
 use App\Entity\Game;
+use App\Enum\GameDifficulty;
+use App\Enum\GameStatus;
+use App\Enum\GameType;
 use App\Enum\UserRole;
 use App\Repository\GameRepository;
 use App\Repository\UserRepository;
 use App\Serializer\GameNormalizer;
 use App\Service\AuthenticatedUserService;
+use App\Service\GameCreationService;
 use App\Service\GameService;
 use Doctrine\DBAL\Exception;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Attribute\MapQueryString;
+use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -32,6 +38,7 @@ class MeController extends AbstractController
         private readonly UserRepository           $userRepository,
         private readonly GameRepository           $gameRepository,
         private readonly GameService              $gameService,
+        private readonly GameCreationService      $gameCreationService,
     )
     {
     }
@@ -98,6 +105,42 @@ class MeController extends AbstractController
             ),
             context: ['groups' => ['game:index']]
         );
+    }
+
+    #[Route(path: '/games', name: 'games_create', methods: ['POST'], format: 'json')]
+    public function create(
+        #[MapRequestPayload] MoviePopularityCheckRequest $moviePopularityCheckRequest
+    ): JsonResponse
+    {
+        $player = $this->authenticatedUserService->getUserOrThrow();
+
+        // TODO: Appeler l'IA pour vérifier la popularité
+        $popularityScore = 75;
+
+        // TODO: Adopter un score minimal en fonction d'essais
+        if ($popularityScore < 50) {
+            return $this->json([
+                'popularityScore' => $popularityScore
+            ], 422);
+        }
+
+        $estimatedDate = $this->gameCreationService->getNextAvailableDate(GameType::MULTIVERS);
+
+        $game = new Game()
+            ->setSolution('Matrix des Anneaux')
+            ->setEnglishSolution('The Matrix of the Rings')
+            ->setHint('Neo doit détruire un anneau numérique')
+            ->setDate($estimatedDate)
+            ->setAuthor($player);
+
+        $this->entityManager->persist($game);
+        $this->entityManager->flush();
+
+        return $this->json([
+            'game' => $game,
+            'popularityScore' => $popularityScore,
+            'prompt' => 'A dramatic sci-fi fantasy poster blending The Matrix and Lord of the Rings aesthetics'
+        ], 201, context: ['groups' => ['game:show']]);
     }
 
     #[Route(path: '/games-generated', name: 'games_generated', methods: ['GET'], format: 'json')]
