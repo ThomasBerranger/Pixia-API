@@ -81,6 +81,10 @@ class GameNormalizer implements NormalizerInterface
     }
 
     /**
+     * Deux modes
+     * Gameplay : SHOW_SOLUTION/SHOW_HINT contrôlent l'affichage (révélation progressive)
+     * Admin : permission VIEW requise, sinon tout est masqué (évite le spoil)
+     *
      * @param array<string, mixed> $data
      * @param array<string, mixed> $context
      */
@@ -88,14 +92,17 @@ class GameNormalizer implements NormalizerInterface
     {
         $isGameplayContext = array_key_exists(self::SHOW_SOLUTION, $context) || array_key_exists(self::SHOW_HINT, $context);
 
+        // Permission VIEW → accès complet sans filtrage
         if (!$isGameplayContext && $this->security->isGranted(GameVoter::VIEW, $object)) {
             return;
         }
 
+        // Masque solution sauf si explicitement autorisée
         if (!($context[self::SHOW_SOLUTION] ?? false)) {
             unset($data['solution'], $data['englishSolution']);
         }
 
+        // Masque hint sauf si explicitement autorisé
         if (!($context[self::SHOW_HINT] ?? false)) {
             unset($data['hint']);
         }

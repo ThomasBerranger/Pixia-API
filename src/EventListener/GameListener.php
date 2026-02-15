@@ -11,6 +11,7 @@ use App\Enum\BadgeName;
 use App\Enum\GameStatus;
 use App\Service\GameStatusService;
 use App\Service\ImageService;
+use DateTimeImmutable;
 use Doctrine\Bundle\DoctrineBundle\Attribute\AsEntityListener;
 use Doctrine\ORM\Event\PostPersistEventArgs;
 use Doctrine\ORM\Event\PostUpdateEventArgs;
@@ -39,7 +40,13 @@ readonly class GameListener
 
         if ($user instanceof User) {
             $game->setAuthor($user);
+
+            if ($user->isAdmin() || $user->isSuperAdmin()) {
+                $game->setSupervisor($user);
+            }
         }
+
+        $game->setDate(new DateTimeImmutable('+2 weeks')->setTime(0, 0));
     }
 
     public function preUpdate(Game $game, PreUpdateEventArgs $event): void

@@ -203,4 +203,37 @@ class GameRepository extends ServiceEntityRepository
         /** @var array<Game> */
         return $qb->getQuery()->getResult();
     }
+
+    /**
+     * @return list<string>
+     */
+    public function getTakenDates(): array
+    {
+        /** @var list<string> */
+        return $this->createQueryBuilder('g')
+            ->select('g.date')
+            ->orderBy('g.date', 'ASC')
+            ->getQuery()
+            ->getSingleColumnResult();
+    }
+
+    /**
+     * @return list<DateTimeImmutable>
+     */
+    public function getApprovedDatesByType(GameType $type, DateTimeImmutable $startDate, int $limit = 90): array
+    {
+        /** @var list<DateTimeImmutable> */
+        return $this->createQueryBuilder('g')
+            ->select('g.date')
+            ->where('g.type = :type')
+            ->andWhere('g.date >= :start')
+            ->andWhere('g.status = :status')
+            ->setParameter('type', $type)
+            ->setParameter('start', $startDate)
+            ->setParameter('status', GameStatus::APPROVED)
+            ->orderBy('g.date', 'ASC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getSingleColumnResult();
+    }
 }

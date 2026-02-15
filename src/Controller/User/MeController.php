@@ -18,7 +18,7 @@ use App\Repository\GameRepository;
 use App\Repository\UserRepository;
 use App\Serializer\GameNormalizer;
 use App\Service\AuthenticatedUserService;
-use App\Service\GameCreationService;
+use App\Service\GameDateService;
 use App\Service\GameService;
 use App\Service\ImageService;
 use Doctrine\DBAL\Exception;
@@ -42,7 +42,7 @@ class MeController extends AbstractController
         private readonly UserRepository           $userRepository,
         private readonly GameRepository           $gameRepository,
         private readonly GameService              $gameService,
-        private readonly GameCreationService      $gameCreationService,
+        private readonly GameDateService          $gameDateService,
         private readonly ImageService             $imageService,
     )
     {
@@ -129,13 +129,11 @@ class MeController extends AbstractController
             ], 422);
         }
 
-        $estimatedDate = $this->gameCreationService->getNextAvailableDate(GameType::MULTIVERS);
-
+        // TODO: Appeler l'IA pour la génération du Pixia
         $game = new Game()
             ->setSolution('Matrix des Anneaux')
             ->setEnglishSolution('The Matrix of the Rings')
             ->setHint('Neo doit détruire un anneau numérique')
-            ->setDate($estimatedDate)
             ->setAuthor($player);
 
         $this->entityManager->persist($game);

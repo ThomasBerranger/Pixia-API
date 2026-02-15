@@ -16,15 +16,13 @@ class DateRequest
     {
     }
 
-    public function getMonth(): DateTimeImmutable
+    public function getMonth(): ?DateTimeImmutable
     {
-        return $this->month && ($date = DateTimeImmutable::createFromFormat('!Y-m-d', $this->month))
-            ? $date
-            : new DateTimeImmutable('today');
-    }
+        if ($this->month === null) {
+            return null;
+        }
 
-    public static function toDateOrNull(?string $month): ?DateTimeImmutable
-    {
-        return $month !== null ? (new self($month))->getMonth() : null;
+        $date = DateTimeImmutable::createFromFormat('!Y-m-d', $this->month);
+        return $date !== false ? $date : null;
     }
 }
