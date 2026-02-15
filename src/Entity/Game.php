@@ -281,4 +281,14 @@ class Game
     {
         return $this->status === GameStatus::APPROVED;
     }
+
+    public function isAuthoredBy(User $user): bool
+    {
+        return $this->author->getId()->equals($user->getId());
+    }
+
+    public function isSupervisedBy(User $user): bool
+    {
+        return $this->getSupervisor()?->getId()->equals($user->getId()) ?? false;
+    }
 }

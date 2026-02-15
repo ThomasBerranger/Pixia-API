@@ -41,21 +41,16 @@ readonly class GameStatusService
 
     private function canSubmitForReview(Game $game, User $user): bool
     {
-        return $game->getAuthor()->getId()->equals($user->getId());
+        return $game->isAuthoredBy($user);
     }
 
     private function canApprove(Game $game, User $user): bool
     {
-        return $this->canModerate($game, $user);
+        return $game->isSupervisedBy($user);
     }
 
     private function canReject(Game $game, User $user): bool
     {
-        return $this->canModerate($game, $user);
-    }
-
-    private function canModerate(Game $game, User $user): bool
-    {
-        return $game->getSupervisor()?->getId()->equals($user->getId()) ?? false;
+        return $game->isSupervisedBy($user);
     }
 }
