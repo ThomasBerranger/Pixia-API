@@ -4,18 +4,14 @@ declare(strict_types=1);
 
 namespace App\Controller\User;
 
-use App\DTO\Contribution\ContributionUpdateRequest;
 use App\DTO\Date\DateRequest;
 use App\DTO\Game\GameCreateRequest;
 use App\DTO\Game\GameAdminUpdateRequest;
-use App\Entity\Contribution;
 use App\Entity\Game;
-use App\Enum\ContributionStatus;
 use App\Enum\GameStatus;
 use App\Enum\UserRole;
 use App\Repository\GameRepository;
 use App\Service\AuthenticatedUserService;
-use App\Service\ContributionService;
 use App\Service\GameCreationService;
 use App\Service\GameSupervisorService;
 use App\Service\ImageService;
@@ -38,7 +34,6 @@ final class AdminController extends AbstractController
         private readonly EntityManagerInterface   $entityManager,
         private readonly GameCreationService      $gameCreationService,
         private readonly ImageService             $imageService,
-        private readonly ContributionService      $contributionService,
         private readonly GameRepository           $gameRepository,
         private readonly AuthenticatedUserService $authenticatedUserService,
         private readonly GameSupervisorService    $gameSupervisorService,
@@ -125,25 +120,5 @@ final class AdminController extends AbstractController
         return $this->json(
             data: $this->imageService->getDirectoryPath($game->getType(), $game->getDate()) . '/' . $game->getImage(),
         );
-    }
-
-    #[Route(path: '/contributions', name: 'contributions_index', methods: ['GET'], format: 'json')]
-    public function contributionIndex(): JsonResponse
-    {
-        return $this->json(data: $this->entityManager->getRepository(Contribution::class)->findAllWithAuthor());
-    }
-
-    #[Route(path: '/contributions/{id}', name: 'contributions_update', methods: ['PATCH'], format: 'json')]
-    public function contributionUpdate(Contribution $contribution, #[MapRequestPayload] ContributionUpdateRequest $contributionUpdateRequest): JsonResponse
-    {
-        $contribution->setStatus($contributionUpdateRequest->status);
-
-        if ($contributionUpdateRequest->status === ContributionStatus::APPROVED) {
-            $this->contributionService->rewardPlayer($contribution->getAuthor(), $contribution->getType());
-        }
-
-        $this->entityManager->flush();
-
-        return $this->json(data: $contribution, context: ['groups' => ['contribution:show']]);
     }
 }
