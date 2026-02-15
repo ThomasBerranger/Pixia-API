@@ -7,14 +7,17 @@ namespace App\Controller\User;
 use App\DTO\Contribution\ContributionUpdateRequest;
 use App\DTO\Date\DateRequest;
 use App\DTO\Game\GameCreateRequest;
-use App\DTO\Game\GameUpdateRequest;
+use App\DTO\Game\GameAdminUpdateRequest;
 use App\Entity\Contribution;
 use App\Entity\Game;
 use App\Enum\ContributionStatus;
+use App\Enum\GameStatus;
 use App\Enum\UserRole;
 use App\Repository\GameRepository;
+use App\Service\AuthenticatedUserService;
 use App\Service\ContributionService;
 use App\Service\GameCreationService;
+use App\Service\GameSupervisorService;
 use App\Service\ImageService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -32,11 +35,13 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final class AdminController extends AbstractController
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
-        private readonly GameCreationService    $gameCreationService,
-        private readonly ImageService           $imageService,
-        private readonly ContributionService    $contributionService,
-        private readonly GameRepository         $gameRepository,
+        private readonly EntityManagerInterface   $entityManager,
+        private readonly GameCreationService      $gameCreationService,
+        private readonly ImageService             $imageService,
+        private readonly ContributionService      $contributionService,
+        private readonly GameRepository           $gameRepository,
+        private readonly AuthenticatedUserService $authenticatedUserService,
+        private readonly GameSupervisorService    $gameSupervisorService,
     )
     {
     }
@@ -58,10 +63,12 @@ final class AdminController extends AbstractController
     }
 
     #[Route(path: '/games', name: 'games_index', methods: ['GET'], format: 'json')]
-    public function index(
-        #[MapQueryString] DateRequest $month): JsonResponse
+    public function gamesIndex(
+        #[MapQueryString] ?DateRequest $month = null,
+        #[MapQueryParameter] ?GameStatus $status = null
+    ): JsonResponse
     {
-        $games = $this->gameRepository->getGamesByMonth($month->getMonth());
+        $games = $this->gameRepository->getGamesByMonthAndStatus($month?->getMonth(), $status);
 
         return $this->json(data: $games, context: ['groups' => ['game:index:admin']]);
     }
@@ -84,19 +91,19 @@ final class AdminController extends AbstractController
 
     #[Route('/games/{id}', name: 'game_update', methods: ['PATCH'], format: 'json')]
     #[IsGranted('edit', subject: 'game')]
-    public function update(Game $game, #[MapRequestPayload] GameUpdateRequest $updatedGame): JsonResponse
+    public function update(Game $game, #[MapRequestPayload] GameAdminUpdateRequest $gameUpdateRequest): JsonResponse
     {
         $oldGameDate = $game->getDate();
 
-        $game->setSolution($updatedGame->solution);
-        $game->setEnglishSolution($updatedGame->englishSolution);
-        $game->setHint($updatedGame->hint);
-        $game->setDate($updatedGame->date);
-        $game->setDifficulty($updatedGame->difficulty);
+        if ($gameUpdateRequest->assignToMe === true) {
+            $this->gameSupervisorService->assignSupervisor($game, $this->authenticatedUserService->getUserOrThrow());
+        }
+
+        $gameUpdateRequest->updateGame($game);
 
         $this->entityManager->flush();
 
-        if ($game->getImage()) {
+        if ($game->getImage() && $gameUpdateRequest->date !== null) {
             $this->imageService->move($oldGameDate, $game->getType(), $game->getDate(), $game->getImage());
         }
 

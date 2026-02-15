@@ -72,10 +72,11 @@ final class GameVoter extends Voter
             return $targetGame->isAuthoredBy($currentUser);
         }
 
-        if ($status === GameStatus::PENDING || $status === GameStatus::REJECTED) {
-            return $targetGame->isSupervisedBy($currentUser);
+        if ($status === GameStatus::PENDING) {
+            return $currentUser->isAdmin();
         }
 
+        // APPROVED/REJECTED : verrouillés (sauf super admin déjà géré)
         return false;
     }
 }

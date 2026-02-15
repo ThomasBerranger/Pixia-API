@@ -11,7 +11,7 @@ class DateRequest
 {
     public function __construct(
         #[Assert\DateTime(format: 'Y-m-d', message: 'La date doit être au format YYYY-MM-DD')]
-        public ?string $month,
+        public ?string $month = null,
     )
     {
     }
@@ -21,5 +21,10 @@ class DateRequest
         return $this->month && ($date = DateTimeImmutable::createFromFormat('!Y-m-d', $this->month))
             ? $date
             : new DateTimeImmutable('today');
+    }
+
+    public static function toDateOrNull(?string $month): ?DateTimeImmutable
+    {
+        return $month !== null ? (new self($month))->getMonth() : null;
     }
 }

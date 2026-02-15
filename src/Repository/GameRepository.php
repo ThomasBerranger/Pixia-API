@@ -8,6 +8,7 @@ use App\Entity\Achievement;
 use App\Entity\Game;
 use App\Entity\User;
 use App\Enum\GameDifficulty;
+use App\Enum\GameStatus;
 use App\Enum\GameType;
 use DateTimeImmutable;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
@@ -181,17 +182,30 @@ class GameRepository extends ServiceEntityRepository
      * @return array<Game>
      * @throws \DateMalformedStringException
      */
-    public function getGamesByMonth(DateTimeImmutable $month): array
+    public function getGamesByMonthAndStatus(?DateTimeImmutable $month = null, ?GameStatus $status = null): array
     {
-        /** @var array<Game> */
-        return $this->createQueryBuilder('g')
+        $qb = $this->createQueryBuilder('g')
             ->leftJoin('g.author', 'a')->addSelect('a')
-            ->leftJoin('g.supervisor', 's')->addSelect('s')
-            ->where('g.date BETWEEN :start AND :end')
-            ->setParameter('start', $month->modify('first day of this month')->format('Y-m-d'))
-            ->setParameter('end', $month->modify('last day of this month')->format('Y-m-d'))
-            ->orderBy('g.date', 'DESC')
-            ->getQuery()
-            ->getResult();
+            ->leftJoin('g.supervisor', 's')->addSelect('s');
+
+        if ($month !== null) {
+            $qb->andWhere('g.date BETWEEN :start AND :end')
+                ->setParameter('start', $month->modify('first day of this month')->format('Y-m-d'))
+                ->setParameter('end', $month->modify('last day of this month')->format('Y-m-d'))
+                ->orderBy('g.date', 'DESC');
+        }
+
+        if ($status !== null) {
+            $qb->andWhere('g.status = :status')
+                ->setParameter('status', $status);
+
+            if ($status === GameStatus::PENDING) {
+                $qb->andWhere('g.supervisor IS NULL')
+                    ->orderBy('g.createdAt', 'ASC');
+            }
+        }
+
+        /** @var array<Game> */
+        return $qb->getQuery()->getResult();
     }
 }
