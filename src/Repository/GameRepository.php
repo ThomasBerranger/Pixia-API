@@ -198,11 +198,6 @@ class GameRepository extends ServiceEntityRepository
         if ($status !== null) {
             $qb->andWhere('g.status = :status')
                 ->setParameter('status', $status);
-
-            if ($status === GameStatus::PENDING) {
-                $qb->andWhere('g.supervisor IS NULL')
-                    ->orderBy('g.createdAt', 'ASC');
-            }
         }
 
         /** @var array<Game> */
