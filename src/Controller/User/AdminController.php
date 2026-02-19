@@ -13,7 +13,6 @@ use App\Enum\UserRole;
 use App\Repository\GameRepository;
 use App\Service\AuthenticatedUserService;
 use App\Service\GameCreationService;
-use App\Service\GameDateService;
 use App\Service\GameSupervisorService;
 use App\Service\ImageService;
 use DateTimeImmutable;
@@ -35,7 +34,6 @@ final class AdminController extends AbstractController
     public function __construct(
         private readonly EntityManagerInterface   $entityManager,
         private readonly GameCreationService      $gameCreationService,
-        private readonly GameDateService          $gameDateService,
         private readonly ImageService             $imageService,
         private readonly GameRepository           $gameRepository,
         private readonly AuthenticatedUserService $authenticatedUserService,
@@ -107,10 +105,6 @@ final class AdminController extends AbstractController
 
         if ($gameUpdateRequest->assignToMe === true) {
             $this->gameSupervisorService->assignSupervisor($game, $currentUser);
-        }
-
-        if ($gameUpdateRequest->date !== null) {
-            $this->gameDateService->validateDateChange($gameUpdateRequest->date, $game, $currentUser);
         }
 
         $gameUpdateRequest->updateGame($game);

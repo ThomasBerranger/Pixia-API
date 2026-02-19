@@ -27,8 +27,12 @@ readonly class GameDateService
         ]) === null;
     }
 
-    public function validateDateChange(DateTimeImmutable $newDate, Game $game, User $user): void
+    public function validateDateChange(DateTimeImmutable $newDate, Game $game, ?User $user): void
     {
+        if (!$user instanceof User) {
+            throw new \LogicException('Utilisateur non authentifié');
+        }
+
         if ($user->isSuperAdmin()) {
             if (!$this->isDateAvailable($newDate, $game->getType())) {
                 throw new \LogicException('Cette date est déjà prise pour ce type de Pixia');

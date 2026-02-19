@@ -13,7 +13,7 @@ readonly class GameStatusService
     /**
      * @throws \LogicException
      */
-    public function validateTransition(Game $game, GameStatus $from, GameStatus $to, ?User $user): void
+    public function validateStatusTransition(Game $game, GameStatus $from, GameStatus $to, ?User $user): void
     {
         if (!$user instanceof User) {
             throw new \LogicException('Utilisateur non authentifié');

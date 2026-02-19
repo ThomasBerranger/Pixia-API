@@ -9,6 +9,7 @@ use App\Entity\Game;
 use App\Entity\User;
 use App\Enum\BadgeName;
 use App\Enum\GameStatus;
+use App\Service\GameDateService;
 use App\Service\GameStatusService;
 use App\Service\ImageService;
 use DateTimeImmutable;
@@ -30,6 +31,7 @@ readonly class GameListener
         private Security          $security,
         private ImageService      $imageService,
         private GameStatusService $gameStatusService,
+        private GameDateService   $gameDateService,
     )
     {
     }
@@ -51,13 +53,27 @@ readonly class GameListener
 
     public function preUpdate(Game $game, PreUpdateEventArgs $event): void
     {
+        $user = $this->security->getUser();
+
+        if(!$user instanceof User) {
+            return;
+        }
+
         if ($event->hasChangedField('status')) {
-            $this->gameStatusService->validateTransition(
+            $this->gameStatusService->validateStatusTransition(
                 $game,
                 GameStatus::fromMixed($event->getOldValue('status')),
                 GameStatus::fromMixed($event->getNewValue('status')),
-                $this->security->getUser()
+                $user
             );
+        }
+
+        if ($event->hasChangedField('date')) {
+            $newDate = $event->getNewValue('date');
+
+            if ($newDate instanceof DateTimeImmutable) {
+                $this->gameDateService->validateDateChange($newDate, $game, $user);
+            }
         }
     }
 

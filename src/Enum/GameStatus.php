@@ -15,9 +15,4 @@ enum GameStatus: string
     {
         return $value instanceof self ? $value : self::from($value);
     }
-
-    public static function fromStringOrNull(?string $value): ?self
-    {
-        return $value !== null ? self::from($value) : null;
-    }
 }
