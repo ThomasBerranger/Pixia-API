@@ -108,7 +108,6 @@ class GameNormalizer implements NormalizerInterface
         }
     }
 
-
     public function supportsNormalization(mixed $data, ?string $format = null, array $context = []): bool
     {
         return $data instanceof Game && !isset($context[self::ALREADY_CALLED]);

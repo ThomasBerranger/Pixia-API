@@ -53,11 +53,7 @@ final class GameVoter extends Voter
             return $targetGame->isAuthoredBy($currentUser);
         }
 
-        if ($status === GameStatus::APPROVED) {
-            return true;
-        }
-
-        return $targetGame->isSupervisedBy($currentUser);
+        return $targetGame->isAuthoredBy($currentUser) || $targetGame->isSupervisedBy($currentUser);
     }
 
     private function canEdit(User $currentUser, Game $targetGame): bool
@@ -76,7 +72,6 @@ final class GameVoter extends Voter
             return $currentUser->isAdmin();
         }
 
-        // APPROVED/REJECTED : verrouillés (sauf super admin déjà géré)
         return false;
     }
 }

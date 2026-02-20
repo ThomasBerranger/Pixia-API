@@ -25,13 +25,10 @@ class GameCreateRequest
 
     public function toGame(): Game
     {
-        $game = new Game();
-
-        $game->setSolution($this->solution);
-        $game->setEnglishSolution($this->englishSolution);
-        $game->setHint($this->hint);
-        $game->setImageUrl($this->imageUrl);
-
-        return $game;
+        return new Game()
+            ->setSolution($this->solution)
+            ->setEnglishSolution($this->englishSolution)
+            ->setHint($this->hint)
+            ->setImageUrl($this->imageUrl);
     }
 }

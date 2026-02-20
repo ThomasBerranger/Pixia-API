@@ -42,9 +42,10 @@ class GameRepository extends ServiceEntityRepository
                 ->addSelect('COUNT(DISTINCT hp.id) as playerHasHint')
                 ->leftJoin(Achievement::class, 'a', 'WITH', 'g.id = a.game AND a.player = :userId')
                 ->addSelect('a')
-                ->addSelect('(SELECT MAX(g2.date) FROM ' . Game::class . ' g2 WHERE g2.type = :type AND g2.date < g.date) as previous_game_date')
-                ->addSelect('(SELECT MIN(g3.date) FROM ' . Game::class . ' g3 WHERE g3.type = :type AND g3.date > g.date) as next_game_date')
+                ->addSelect('(SELECT MAX(g2.date) FROM ' . Game::class . ' g2 WHERE g2.type = :type AND g2.status = :status AND g2.date < g.date) as previous_game_date')
+                ->addSelect('(SELECT MIN(g3.date) FROM ' . Game::class . ' g3 WHERE g3.type = :type AND g3.status = :status AND g3.date > g.date) as next_game_date')
                 ->andWhere('g.type = :type')
+                ->andWhere('g.status = :status')
                 ->andWhere('g.date <= :date')
                 ->groupBy('g.id')
                 ->addSelect('CASE WHEN g.date = :date THEN 0 ELSE 1 END as HIDDEN priority')
@@ -52,6 +53,7 @@ class GameRepository extends ServiceEntityRepository
                 ->addOrderBy('g.date', 'DESC')
                 ->setParameter('date', $formattedDate)
                 ->setParameter('type', $type)
+                ->setParameter('status', GameStatus::APPROVED)
                 ->setParameter('userId', $user?->getId(), UuidType::NAME)
                 ->setMaxResults(1)
                 ->getQuery()
@@ -105,7 +107,9 @@ class GameRepository extends ServiceEntityRepository
         return (int)$this->createQueryBuilder('g')
             ->select('COUNT(g.id)')
             ->where('g.date <= :today')
+            ->andWhere('g.status = :status')
             ->setParameter('today', new DateTimeImmutable('today'))
+            ->setParameter('status', GameStatus::APPROVED)
             ->getQuery()
             ->getSingleScalarResult();
     }
@@ -127,7 +131,9 @@ class GameRepository extends ServiceEntityRepository
             ->addSelect('COUNT(a.id) AS won')
             ->leftJoin(Achievement::class, 'a', 'WITH', 'a.game = g AND a.player = :playerId')
             ->where('g.date <= :today')
+            ->andWhere('g.status = :status')
             ->setParameter('today', new DateTimeImmutable('today'))
+            ->setParameter('status', GameStatus::APPROVED)
             ->setParameter('playerId', $player->getId(), UuidType::NAME)
             ->groupBy('month, g.difficulty')
             ->orderBy('month', 'DESC');
@@ -155,9 +161,11 @@ class GameRepository extends ServiceEntityRepository
             ->leftJoin(Achievement::class, 'a', 'WITH', 'a.game = g AND a.player = :playerId')
             ->where('g.date BETWEEN :start AND :end')
             ->andWhere('g.date <= :today')
+            ->andWhere('g.status = :status')
             ->setParameter('start', $month->modify('first day of this month')->format('Y-m-d'))
             ->setParameter('end', $month->modify('last day of this month')->format('Y-m-d'))
             ->setParameter('today', (new DateTimeImmutable('today'))->format('Y-m-d'))
+            ->setParameter('status', GameStatus::APPROVED)
             ->setParameter('playerId', $player->getId(), UuidType::NAME)
             ->orderBy('g.date', 'DESC');
 

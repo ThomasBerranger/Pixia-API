@@ -10,15 +10,11 @@ use App\DTO\Game\GameUserUpdateRequest;
 use App\DTO\Game\MoviePopularityCheckRequest;
 use App\Entity\Achievement;
 use App\Entity\Game;
-use App\Enum\GameDifficulty;
-use App\Enum\GameStatus;
-use App\Enum\GameType;
 use App\Enum\UserRole;
 use App\Repository\GameRepository;
 use App\Repository\UserRepository;
 use App\Serializer\GameNormalizer;
 use App\Service\AuthenticatedUserService;
-use App\Service\GameDateService;
 use App\Service\GameService;
 use App\Service\ImageService;
 use Doctrine\DBAL\Exception;
@@ -42,7 +38,6 @@ class MeController extends AbstractController
         private readonly UserRepository           $userRepository,
         private readonly GameRepository           $gameRepository,
         private readonly GameService              $gameService,
-        private readonly GameDateService          $gameDateService,
         private readonly ImageService             $imageService,
     )
     {
@@ -67,7 +62,8 @@ class MeController extends AbstractController
         $data = [
             ...$data,
             'streak' => [...$this->userRepository->getStreaks($player)],
-            'playerCount' => $this->userRepository->count()
+            'playerCount' => $this->userRepository->count(),
+            'authoredGameCount' =>$this->gameRepository->count(['author' => $player]),
         ];
 
         return $this->json($data, context: [
