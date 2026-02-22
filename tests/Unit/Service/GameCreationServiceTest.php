@@ -6,17 +6,18 @@ namespace App\Tests\Unit\Service;
 
 use App\Entity\Game;
 use App\Repository\GameRepository;
-use App\Service\GameCreationService;
-use App\Service\GameSolutionService;
+use App\Service\Game\GameCreationService;
+use App\Service\Game\GameSolutionService;
 use Doctrine\ORM\EntityManagerInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 class GameCreationServiceTest extends TestCase
 {
     private GameCreationService $service;
-    private EntityManagerInterface $entityManager;
-    private GameSolutionService $gameSolutionService;
-    private GameRepository $gameRepository;
+    private EntityManagerInterface&MockObject $entityManager;
+    private GameSolutionService&MockObject $gameSolutionService;
+    private GameRepository&MockObject $gameRepository;
 
     protected function setUp(): void
     {
@@ -26,7 +27,7 @@ class GameCreationServiceTest extends TestCase
 
         $this->service = new GameCreationService(
             $this->entityManager,
-            $this->gameSolutionService
+            $this->gameSolutionService,
         );
     }
 
@@ -364,4 +365,5 @@ class GameCreationServiceTest extends TestCase
         $this->assertEquals(2, $callCount);
         $this->assertSame('Solution 2', $result);
     }
+
 }

@@ -2,12 +2,14 @@
 
 declare(strict_types=1);
 
-namespace App\Service;
+namespace App\Service\Game;
 
 use App\Entity\Achievement;
 use App\Entity\Game;
 use App\Entity\User;
 use App\Repository\AchievementRepository;
+use App\Service\AchievementService;
+use App\Service\UserService;
 use Doctrine\ORM\EntityManagerInterface;
 
 readonly class GameSolutionService
@@ -56,6 +58,7 @@ readonly class GameSolutionService
     {
         $this->achievementService->saveResult($player, $game);
         $this->userService->addGamePoints($player, $game);
+        $this->userService->addGameTokens($player, $game);
     }
 
     public function wordsMatch(string $expected, string $tested): bool

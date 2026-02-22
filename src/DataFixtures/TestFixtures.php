@@ -7,6 +7,7 @@ namespace App\DataFixtures;
 use App\Entity\Game;
 use App\Entity\User;
 use App\Enum\GameDifficulty;
+use App\Enum\GameStatus;
 use App\Enum\GameType;
 use App\Enum\UserRole;
 use Doctrine\Bundle\FixturesBundle\Fixture;
@@ -19,7 +20,8 @@ class TestFixtures extends Fixture
         $user = new User();
         $user->setEmail('test@test.com')
             ->setUsername('test-user')
-            ->setPassword('hashed');
+            ->setPassword('hashed')
+            ->addTokens(5000);
 
         $manager->persist($user);
 
@@ -55,6 +57,7 @@ class TestFixtures extends Fixture
             ->setType(GameType::MULTIVERS)
             ->setDifficulty(GameDifficulty::EASY)
             ->setAuthor($user)
+            ->setStatus(GameStatus::APPROVED)
             ->setCreatedAt(new \DateTimeImmutable())
             ->setImageUrl('')
             ->setImage('test.jpg');

@@ -56,20 +56,35 @@ class GameNormalizer implements NormalizerInterface
      */
     private function transformImagePath(array &$data): void
     {
-        if (isset($data['image'], $data['type'], $data['date'])
-            && is_string($data['image'])
-            && '' !== $data['image']
-            && is_string($data['type'])
-            && is_string($data['date'])
-        ) {
-            $data['image'] = $this->imageService->getDirectoryPath(
-                GameType::from($data['type']),
-                new DateTimeImmutable($data['date'])
-            ) . '/' . $data['image'];
+        // Pas d'image → skip (cas légitime)
+        if (!isset($data['image']) || !is_string($data['image']) || '' === $data['image']) {
+            return;
         }
+
+        // Image présente mais pas de type/date → bug de config!
+        if (!isset($data['type'], $data['date'])) {
+            throw new \LogicException(sprintf(
+                'Cannot transform image path: missing %s in serialization groups. ' .
+                'Ensure "type" and "date" are included in the same groups as "image".',
+                !isset($data['type']) ? '"type"' : '"date"'
+            ));
+        }
+
+        if (!is_string($data['type']) || !is_string($data['date'])) {
+            throw new \LogicException('Type and date must be serialized as strings for image path transformation.');
+        }
+
+        $data['image'] = $this->imageService->getDirectoryPath(
+            GameType::from($data['type']),
+            new DateTimeImmutable($data['date'])
+        ) . '/' . $data['image'];
     }
 
     /**
+     * Deux modes
+     * Gameplay : SHOW_SOLUTION/SHOW_HINT contrôlent l'affichage (révélation progressive)
+     * Admin : permission VIEW requise, sinon tout est masqué (évite le spoil)
+     *
      * @param array<string, mixed> $data
      * @param array<string, mixed> $context
      */
@@ -77,19 +92,21 @@ class GameNormalizer implements NormalizerInterface
     {
         $isGameplayContext = array_key_exists(self::SHOW_SOLUTION, $context) || array_key_exists(self::SHOW_HINT, $context);
 
+        // Permission VIEW → accès complet sans filtrage
         if (!$isGameplayContext && $this->security->isGranted(GameVoter::VIEW, $object)) {
             return;
         }
 
+        // Masque solution sauf si explicitement autorisée
         if (!($context[self::SHOW_SOLUTION] ?? false)) {
             unset($data['solution'], $data['englishSolution']);
         }
 
+        // Masque hint sauf si explicitement autorisé
         if (!($context[self::SHOW_HINT] ?? false)) {
             unset($data['hint']);
         }
     }
-
 
     public function supportsNormalization(mixed $data, ?string $format = null, array $context = []): bool
     {

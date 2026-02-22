@@ -4,17 +4,16 @@ declare(strict_types=1);
 
 namespace App\Controller\User;
 
-use App\DTO\Contribution\ContributionUpdateRequest;
 use App\DTO\Date\DateRequest;
+use App\DTO\Game\GameAdminUpdateRequest;
 use App\DTO\Game\GameCreateRequest;
-use App\DTO\Game\GameUpdateRequest;
-use App\Entity\Contribution;
 use App\Entity\Game;
-use App\Enum\ContributionStatus;
+use App\Enum\GameStatus;
 use App\Enum\UserRole;
 use App\Repository\GameRepository;
-use App\Service\ContributionService;
-use App\Service\GameCreationService;
+use App\Service\AuthenticatedUserService;
+use App\Service\Game\GameCreationService;
+use App\Service\Game\GameSupervisorService;
 use App\Service\ImageService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -32,11 +31,12 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final class AdminController extends AbstractController
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
-        private readonly GameCreationService    $gameCreationService,
-        private readonly ImageService           $imageService,
-        private readonly ContributionService    $contributionService,
-        private readonly GameRepository         $gameRepository,
+        private readonly EntityManagerInterface   $entityManager,
+        private readonly GameCreationService      $gameCreationService,
+        private readonly ImageService             $imageService,
+        private readonly GameRepository           $gameRepository,
+        private readonly AuthenticatedUserService $authenticatedUserService,
+        private readonly GameSupervisorService    $gameSupervisorService,
     )
     {
     }
@@ -57,15 +57,29 @@ final class AdminController extends AbstractController
         ]);
     }
 
+    /**
+     * @throws \DateMalformedStringException
+     */
     #[Route(path: '/games', name: 'games_index', methods: ['GET'], format: 'json')]
-    public function index(
-        #[MapQueryString] DateRequest $month): JsonResponse
+    public function gamesIndex(
+        #[MapQueryString] ?DateRequest $month = null,
+        #[MapQueryParameter] ?GameStatus $status = null
+    ): JsonResponse
     {
-        $games = $this->gameRepository->getGamesByMonth($month->getMonth());
+        $games = $this->gameRepository->getNoDraftGamesByMonthAndStatus($month?->getMonth(), $status);
 
         return $this->json(data: $games, context: ['groups' => ['game:index:admin']]);
     }
 
+    #[Route(path: '/games/taken-dates', name: 'games_taken_dates', methods: ['GET'], format: 'json')]
+    public function gamesTakenDates(): JsonResponse
+    {
+        $dates = $this->gameRepository->getTakenDates();
+
+        return $this->json(data: $dates);
+    }
+
+    // todo passer ce endpoint chez user
     #[Route(path: '/games/solution-exist', name: 'games_solution_exist', methods: ['GET'], format: 'json')]
     public function gameSolutionExist(#[MapQueryParameter] string $solution): JsonResponse
     {
@@ -83,19 +97,20 @@ final class AdminController extends AbstractController
 
     #[Route('/games/{id}', name: 'game_update', methods: ['PATCH'], format: 'json')]
     #[IsGranted('edit', subject: 'game')]
-    public function update(Game $game, #[MapRequestPayload] GameUpdateRequest $updatedGame): JsonResponse
+    public function update(Game $game, #[MapRequestPayload] GameAdminUpdateRequest $gameUpdateRequest): JsonResponse
     {
         $oldGameDate = $game->getDate();
+        $currentUser = $this->authenticatedUserService->getUserOrThrow();
 
-        $game->setSolution($updatedGame->solution);
-        $game->setEnglishSolution($updatedGame->englishSolution);
-        $game->setHint($updatedGame->hint);
-        $game->setDate($updatedGame->date);
-        $game->setDifficulty($updatedGame->difficulty);
+        if ($gameUpdateRequest->assignToMe === true) {
+            $this->gameSupervisorService->assignSupervisor($game, $currentUser);
+        }
+
+        $gameUpdateRequest->updateGame($game);
 
         $this->entityManager->flush();
 
-        if ($game->getImage()) {
+        if ($game->getImage() && $gameUpdateRequest->date !== null) {
             $this->imageService->move($oldGameDate, $game->getType(), $game->getDate(), $game->getImage());
         }
 
@@ -117,25 +132,5 @@ final class AdminController extends AbstractController
         return $this->json(
             data: $this->imageService->getDirectoryPath($game->getType(), $game->getDate()) . '/' . $game->getImage(),
         );
-    }
-
-    #[Route(path: '/contributions', name: 'contributions_index', methods: ['GET'], format: 'json')]
-    public function contributionIndex(): JsonResponse
-    {
-        return $this->json(data: $this->entityManager->getRepository(Contribution::class)->findAllWithAuthor());
-    }
-
-    #[Route(path: '/contributions/{id}', name: 'contributions_update', methods: ['PATCH'], format: 'json')]
-    public function contributionUpdate(Contribution $contribution, #[MapRequestPayload] ContributionUpdateRequest $contributionUpdateRequest): JsonResponse
-    {
-        $contribution->setStatus($contributionUpdateRequest->status);
-
-        if ($contributionUpdateRequest->status === ContributionStatus::APPROVED) {
-            $this->contributionService->rewardPlayer($contribution->getAuthor(), $contribution->getType());
-        }
-
-        $this->entityManager->flush();
-
-        return $this->json(data: $contribution, context: ['groups' => ['contribution:show']]);
     }
 }

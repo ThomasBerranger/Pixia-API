@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use App\Enum\GameDifficulty;
+use App\Enum\GameStatus;
 use App\Enum\GameType;
 use App\Repository\GameRepository;
 use DateTimeImmutable;
@@ -18,35 +19,34 @@ use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: GameRepository::class)]
-#[ORM\UniqueConstraint(name: 'unique_type_date', columns: ['type', 'date'])]
 class Game
 {
     #[ORM\Id]
     #[ORM\Column(type: UuidType::NAME, unique: true)]
     #[ORM\GeneratedValue(strategy: 'CUSTOM')]
     #[ORM\CustomIdGenerator(class: UuidGenerator::class)]
-    #[Groups(['game:show', 'game:show:admin', 'game:index:admin'])]
+    #[Groups(['game:show', 'game:index', 'game:show:admin', 'game:index:admin', 'game:user:show'])]
     private ?Uuid $id = null;
 
     #[ORM\Column(enumType: GameType::class)]
-    #[Groups(['game:show', 'game:index', 'game:show:admin', 'game:index:admin', 'user:show'])]
-    private GameType $type;
+    #[Groups(['game:show', 'game:index', 'game:show:admin', 'game:index:admin', 'user:show', 'game:user:show'])]
+    private GameType $type = GameType::MULTIVERS;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['game:show', 'game:show:admin', 'game:index:admin', 'user:me'])]
+    #[Groups(['game:show', 'game:show:admin', 'game:index:admin', 'user:me', 'game:user:show'])]
     private string $solution;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['game:show', 'game:show:admin', 'game:index:admin'])]
+    #[Groups(['game:show', 'game:show:admin', 'game:index:admin', 'game:user:show'])]
     private string $hint;
 
     #[ORM\Column(type: Types::DATE_IMMUTABLE)]
-    #[Groups(['game:show', 'game:index', 'game:show:admin', 'game:index:admin', 'user:show'])]
+    #[Groups(['game:show', 'game:index', 'game:show:admin', 'game:index:admin', 'user:show', 'game:user:show'])]
     private DateTimeImmutable $date;
 
     #[ORM\Column(enumType: GameDifficulty::class)]
     #[Groups(['game:show', 'game:index', 'game:show:admin', 'game:index:admin'])]
-    private GameDifficulty $difficulty;
+    private GameDifficulty $difficulty = GameDifficulty::EASY;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
@@ -54,10 +54,10 @@ class Game
     private User $author;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(['game:show', 'game:index', 'game:show:admin', 'game:index:admin', 'user:show'])]
+    #[Groups(['game:show', 'game:index', 'game:show:admin', 'game:index:admin', 'user:show', 'game:user:show'])]
     private ?string $image;
 
-    private string $imageUrl;
+    private ?string $imageUrl = null;
 
     /**
      * @var Collection<int, User>
@@ -79,13 +79,12 @@ class Game
     #[Groups(['game:index:admin'])]
     private ?User $supervisor = null;
 
-    #[ORM\Column(nullable: true)]
-    private ?\DateTimeImmutable $approvedAt = null;
+    #[ORM\Column(enumType: GameStatus::class)]
+    #[Groups(['game:index', 'game:index:admin'])]
+    private GameStatus $status = GameStatus::DRAFT;
 
     public function __construct()
     {
-        $this->type = GameType::MULTIVERS;
-        $this->difficulty = GameDifficulty::EASY;
         $this->hintedPlayers = new ArrayCollection();
         $this->createdAt = new DateTimeImmutable();
     }
@@ -172,7 +171,7 @@ class Game
         return $this->image;
     }
 
-    public function setImage(string $image): static
+    public function setImage(?string $image): static
     {
         $this->image = $image;
 
@@ -266,15 +265,30 @@ class Game
         return $this;
     }
 
-    public function getApprovedAt(): ?\DateTimeImmutable
+    public function getStatus(): GameStatus
     {
-        return $this->approvedAt;
+        return $this->status;
     }
 
-    public function setApprovedAt(?\DateTimeImmutable $approvedAt): static
+    public function setStatus(GameStatus $status): static
     {
-        $this->approvedAt = $approvedAt;
+        $this->status = $status;
 
         return $this;
+    }
+
+    public function isApproved(): bool
+    {
+        return $this->status === GameStatus::APPROVED;
+    }
+
+    public function isAuthoredBy(User $user): bool
+    {
+        return $this->author->getId()->equals($user->getId()); // @phpstan-ignore method.nonObject
+    }
+
+    public function isSupervisedBy(User $user): bool
+    {
+        return $this->getSupervisor()?->getId()->equals($user->getId()) ?? false; // @phpstan-ignore method.nonObject
     }
 }

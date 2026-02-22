@@ -13,6 +13,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\IdGenerator\UuidGenerator;
 use Symfony\Bridge\Doctrine\Types\UuidType;
+use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Serializer\Attribute\Groups;
@@ -79,7 +80,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private Collection $contributions;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
-    #[Groups(['user:me', 'user:show', 'user:index', 'game:index:admin'])]
+    #[Groups(['user:me', 'user:show', 'user:index', 'game:index:admin', 'game:show:admin'])]
     private ?string $avatarUrl = null;
 
     #[ORM\Column(length: 255, unique: true)]
@@ -117,6 +118,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[Groups(['user:me', 'user:index'])]
     private ?int $rank = null;
+
+    #[ORM\Column]
+    #[Groups(['user:me', 'game:show'])]
+    private int $tokens = 0;
 
     public function __construct()
     {
@@ -476,6 +481,29 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setRank(?int $rank): static
     {
         $this->rank = $rank;
+
+        return $this;
+    }
+
+    public function getTokens(): int
+    {
+        return $this->tokens;
+    }
+
+    public function addTokens(int $amount): static
+    {
+        $this->tokens += $amount;
+
+        return $this;
+    }
+
+    public function removeTokens(int $amount): static
+    {
+        if ($amount > $this->tokens) {
+            throw new UnprocessableEntityHttpException('Tokens insuffisants');
+        }
+
+        $this->tokens -= $amount;
 
         return $this;
     }

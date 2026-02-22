@@ -2,15 +2,17 @@
 
 declare(strict_types=1);
 
-namespace App\Service;
+namespace App\Service\Game;
 
 use App\Entity\Game;
 use Doctrine\ORM\EntityManagerInterface;
 
 readonly class GameCreationService
 {
-    public function __construct(private EntityManagerInterface $entityManager, private GameSolutionService $gameAnswerService)
-    {
+    public function __construct(
+        private EntityManagerInterface $entityManager,
+        private GameSolutionService $gameAnswerService,
+    ) {
     }
 
     public function gameSolutionExist(string $solution): string|bool
@@ -25,4 +27,5 @@ readonly class GameCreationService
 
         return false;
     }
+
 }

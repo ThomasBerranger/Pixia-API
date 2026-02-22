@@ -8,6 +8,7 @@ use App\Entity\Achievement;
 use App\Entity\Game;
 use App\Entity\User;
 use App\Enum\GameDifficulty;
+use App\Enum\GameStatus;
 use App\Enum\GameType;
 use DateTimeImmutable;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
@@ -41,9 +42,10 @@ class GameRepository extends ServiceEntityRepository
                 ->addSelect('COUNT(DISTINCT hp.id) as playerHasHint')
                 ->leftJoin(Achievement::class, 'a', 'WITH', 'g.id = a.game AND a.player = :userId')
                 ->addSelect('a')
-                ->addSelect('(SELECT MAX(g2.date) FROM ' . Game::class . ' g2 WHERE g2.type = :type AND g2.date < g.date) as previous_game_date')
-                ->addSelect('(SELECT MIN(g3.date) FROM ' . Game::class . ' g3 WHERE g3.type = :type AND g3.date > g.date) as next_game_date')
+                ->addSelect('(SELECT MAX(g2.date) FROM ' . Game::class . ' g2 WHERE g2.type = :type AND g2.status = :status AND g2.date < g.date) as previous_game_date')
+                ->addSelect('(SELECT MIN(g3.date) FROM ' . Game::class . ' g3 WHERE g3.type = :type AND g3.status = :status AND g3.date > g.date) as next_game_date')
                 ->andWhere('g.type = :type')
+                ->andWhere('g.status = :status')
                 ->andWhere('g.date <= :date')
                 ->groupBy('g.id')
                 ->addSelect('CASE WHEN g.date = :date THEN 0 ELSE 1 END as HIDDEN priority')
@@ -51,6 +53,7 @@ class GameRepository extends ServiceEntityRepository
                 ->addOrderBy('g.date', 'DESC')
                 ->setParameter('date', $formattedDate)
                 ->setParameter('type', $type)
+                ->setParameter('status', GameStatus::APPROVED)
                 ->setParameter('userId', $user?->getId(), UuidType::NAME)
                 ->setMaxResults(1)
                 ->getQuery()
@@ -89,7 +92,9 @@ class GameRepository extends ServiceEntityRepository
         }
 
         $qb->leftJoin('g.author', 'a')
-            ->addSelect('partial a.{id, email}');
+            ->addSelect('partial a.{id, email}')
+            ->andWhere('g.status = :status')
+            ->setParameter('status', GameStatus::APPROVED);
 
         /** @var array<int, Game> $result */
         $result = $qb->orderBy('g.date', 'DESC')
@@ -104,7 +109,9 @@ class GameRepository extends ServiceEntityRepository
         return (int)$this->createQueryBuilder('g')
             ->select('COUNT(g.id)')
             ->where('g.date <= :today')
+            ->andWhere('g.status = :status')
             ->setParameter('today', new DateTimeImmutable('today'))
+            ->setParameter('status', GameStatus::APPROVED)
             ->getQuery()
             ->getSingleScalarResult();
     }
@@ -126,7 +133,9 @@ class GameRepository extends ServiceEntityRepository
             ->addSelect('COUNT(a.id) AS won')
             ->leftJoin(Achievement::class, 'a', 'WITH', 'a.game = g AND a.player = :playerId')
             ->where('g.date <= :today')
+            ->andWhere('g.status = :status')
             ->setParameter('today', new DateTimeImmutable('today'))
+            ->setParameter('status', GameStatus::APPROVED)
             ->setParameter('playerId', $player->getId(), UuidType::NAME)
             ->groupBy('month, g.difficulty')
             ->orderBy('month', 'DESC');
@@ -154,9 +163,11 @@ class GameRepository extends ServiceEntityRepository
             ->leftJoin(Achievement::class, 'a', 'WITH', 'a.game = g AND a.player = :playerId')
             ->where('g.date BETWEEN :start AND :end')
             ->andWhere('g.date <= :today')
+            ->andWhere('g.status = :status')
             ->setParameter('start', $month->modify('first day of this month')->format('Y-m-d'))
             ->setParameter('end', $month->modify('last day of this month')->format('Y-m-d'))
             ->setParameter('today', (new DateTimeImmutable('today'))->format('Y-m-d'))
+            ->setParameter('status', GameStatus::APPROVED)
             ->setParameter('playerId', $player->getId(), UuidType::NAME)
             ->orderBy('g.date', 'DESC');
 
@@ -181,17 +192,61 @@ class GameRepository extends ServiceEntityRepository
      * @return array<Game>
      * @throws \DateMalformedStringException
      */
-    public function getGamesByMonth(DateTimeImmutable $month): array
+    public function getNoDraftGamesByMonthAndStatus(?DateTimeImmutable $month = null, ?GameStatus $status = null): array
     {
-        /** @var array<Game> */
-        return $this->createQueryBuilder('g')
+        $qb = $this->createQueryBuilder('g')
             ->leftJoin('g.author', 'a')->addSelect('a')
-            ->leftJoin('g.supervisor', 's')->addSelect('s')
-            ->where('g.date BETWEEN :start AND :end')
-            ->setParameter('start', $month->modify('first day of this month')->format('Y-m-d'))
-            ->setParameter('end', $month->modify('last day of this month')->format('Y-m-d'))
-            ->orderBy('g.date', 'DESC')
+            ->leftJoin('g.supervisor', 's')->addSelect('s');
+
+        if ($month !== null) {
+            $qb->andWhere('g.date BETWEEN :start AND :end')
+                ->setParameter('start', $month->modify('first day of this month')->format('Y-m-d'))
+                ->setParameter('end', $month->modify('last day of this month')->format('Y-m-d'))
+                ->orderBy('g.date', 'DESC');
+        }
+
+        $qb->andWhere('g.status != :excludedStatus')
+            ->setParameter('excludedStatus', GameStatus::DRAFT);
+
+        if ($status !== null) {
+            $qb->andWhere('g.status = :status')
+                ->setParameter('status', $status);
+        }
+
+        /** @var array<Game> */
+        return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function getTakenDates(): array
+    {
+        /** @var list<string> */
+        return $this->createQueryBuilder('g')
+            ->select('g.date')
+            ->orderBy('g.date', 'ASC')
             ->getQuery()
-            ->getResult();
+            ->getSingleColumnResult();
+    }
+
+    /**
+     * @return list<DateTimeImmutable>
+     */
+    public function getApprovedDatesByType(GameType $type, DateTimeImmutable $startDate, int $limit = 90): array
+    {
+        /** @var list<DateTimeImmutable> */
+        return $this->createQueryBuilder('g')
+            ->select('g.date')
+            ->where('g.type = :type')
+            ->andWhere('g.date >= :start')
+            ->andWhere('g.status = :status')
+            ->setParameter('type', $type)
+            ->setParameter('start', $startDate)
+            ->setParameter('status', GameStatus::APPROVED)
+            ->orderBy('g.date', 'ASC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getSingleColumnResult();
     }
 }

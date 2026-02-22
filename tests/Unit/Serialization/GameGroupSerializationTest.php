@@ -108,7 +108,7 @@ class GameGroupSerializationTest extends KernelTestCase
         // Admin-specific fields are present
         self::assertArrayHasKey('id', $data);
         self::assertArrayHasKey('author', $data);
-        self::assertEquals(['username'], array_keys($data['author']));
+        self::assertEquals(['username', 'avatarUrl'], array_keys($data['author']));
 
         // Common fields
         self::assertArrayHasKey('type', $data);

@@ -145,4 +145,18 @@ readonly class ImageService
 
         return true;
     }
+
+    public function delete(GameType $gameType, DateTimeImmutable $date, string $imageName): bool
+    {
+        $directoryPath = $this->getDirectoryPath($gameType, $date, isWriteOperation: true);
+        $filePath = $directoryPath . '/' . $imageName;
+
+        if (file_exists($filePath)) {
+            unlink($filePath);
+            $this->cleanupEmptyDirectory($directoryPath);
+            return true;
+        }
+
+        return false;
+    }
 }

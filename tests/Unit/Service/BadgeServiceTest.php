@@ -14,15 +14,17 @@ use App\Service\UserService;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 class BadgeServiceTest extends TestCase
 {
     private BadgeService $service;
-    private EntityManagerInterface $entityManager;
-    private UserRepository $userRepository;
-    private UserService $userService;
-    private EntityRepository $achievementRepository;
+    private EntityManagerInterface&MockObject $entityManager;
+    private UserRepository&MockObject $userRepository;
+    private UserService&MockObject $userService;
+    /** @var EntityRepository<Achievement>&MockObject */
+    private EntityRepository&MockObject $achievementRepository;
 
     protected function setUp(): void
     {

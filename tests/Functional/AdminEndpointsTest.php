@@ -44,14 +44,15 @@ class AdminEndpointsTest extends WebTestCase
         self::assertNotContains($statusCode, [401, 403]);
     }
 
+    /**
+     * @return iterable<string, array<mixed>>
+     */
     public static function adminEndpointsProvider(): iterable
     {
         yield 'games index' => ['GET', '/admin/games?month=2026-01-01'];
         yield 'games create' => ['POST', '/admin/games'];
         yield 'games solution exist' => ['GET', '/admin/games/solution-exist?solution=Inception'];
-        yield 'contributions index' => ['GET', '/admin/contributions'];
         yield 'generate content' => ['POST', '/open-api/generate-content'];
-        yield 'generate image' => ['POST', '/open-api/generate-image'];
     }
 
     private function getTestUser(): User

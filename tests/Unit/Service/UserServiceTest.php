@@ -15,16 +15,18 @@ use App\Service\UserService;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
 class UserServiceTest extends TestCase
 {
     private UserService $service;
-    private EntityManagerInterface $entityManager;
-    private MonthlyLeaderboardService $monthlyLeaderboardService;
-    private UserRepository $userRepository;
-    private EntityRepository $genericUserRepository;
+    private EntityManagerInterface&MockObject $entityManager;
+    private MonthlyLeaderboardService&MockObject $monthlyLeaderboardService;
+    private UserRepository&MockObject $userRepository;
+    /** @var EntityRepository<User>&MockObject */
+    private EntityRepository&MockObject $genericUserRepository;
 
     protected function setUp(): void
     {
@@ -367,7 +369,7 @@ class UserServiceTest extends TestCase
         $this->service->getLeaderboard(2);
         $this->service->getLeaderboard(5);
 
-        $this->assertTrue(true);
+        $this->addToAssertionCount(1);
     }
 
     // ========== Tests getCurrentMonthLeaderboard() ==========
@@ -424,7 +426,7 @@ class UserServiceTest extends TestCase
         $this->service->getCurrentMonthLeaderboard(new \DateTimeImmutable('2025-02-01'));
         $this->service->getCurrentMonthLeaderboard(new \DateTimeImmutable('2025-03-01'));
 
-        $this->assertTrue(true);
+        $this->addToAssertionCount(1);
     }
 
     // ========== Tests d'intégration ==========

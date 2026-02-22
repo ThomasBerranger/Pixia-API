@@ -6,6 +6,7 @@ namespace App\Security\Voter;
 
 use App\Entity\Game;
 use App\Entity\User;
+use App\Enum\GameStatus;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 
@@ -42,17 +43,35 @@ final class GameVoter extends Voter
 
     private function canView(User $currentUser, Game $targetGame): bool
     {
-        return $currentUser->isSuperAdmin()
-            || $currentUser === $targetGame->getAuthor()
-            || $currentUser === $targetGame->getSupervisor();
+        if ($currentUser->isSuperAdmin()) {
+            return true;
+        }
+
+        $status = $targetGame->getStatus();
+
+        if ($status === GameStatus::DRAFT) {
+            return $targetGame->isAuthoredBy($currentUser);
+        }
+
+        return $targetGame->isAuthoredBy($currentUser) || $targetGame->isSupervisedBy($currentUser);
     }
 
     private function canEdit(User $currentUser, Game $targetGame): bool
     {
-        if ($targetGame->getApprovedAt()) {
-            return $currentUser->isSuperAdmin();
+        if ($currentUser->isSuperAdmin()) {
+            return true;
         }
 
-        return $this->canView($currentUser, $targetGame);
+        $status = $targetGame->getStatus();
+
+        if ($status === GameStatus::DRAFT) {
+            return $targetGame->isAuthoredBy($currentUser);
+        }
+
+        if ($status === GameStatus::PENDING) {
+            return $currentUser->isAdmin();
+        }
+
+        return false;
     }
 }

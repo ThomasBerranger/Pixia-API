@@ -11,12 +11,13 @@ use App\Enum\BadgeName;
 use App\Enum\NotificationType;
 use App\Service\NotificationService;
 use Doctrine\ORM\EntityManagerInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 class NotificationServiceTest extends TestCase
 {
     private NotificationService $service;
-    private EntityManagerInterface $entityManager;
+    private EntityManagerInterface&MockObject $entityManager;
 
     protected function setUp(): void
     {

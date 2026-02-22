@@ -4,6 +4,8 @@ services:
     _defaults:
         autowire: true
         autoconfigure: true
+        bind:
+            $claudeConsoleKey: '%env(CLAUDE_CONSOLE_KEY)%'
 
     App\:
         resource: '../src/'

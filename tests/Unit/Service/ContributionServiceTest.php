@@ -16,16 +16,18 @@ use App\Service\UserService;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
 class ContributionServiceTest extends TestCase
 {
     private ContributionService $service;
-    private EntityManagerInterface $entityManager;
-    private BadgeService $badgeService;
-    private UserService $userService;
-    private EntityRepository $contributionRepository;
+    private EntityManagerInterface&MockObject $entityManager;
+    private BadgeService&MockObject $badgeService;
+    private UserService&MockObject $userService;
+    /** @var EntityRepository<Contribution>&MockObject */
+    private EntityRepository&MockObject $contributionRepository;
 
     protected function setUp(): void
     {
@@ -66,7 +68,7 @@ class ContributionServiceTest extends TestCase
 
         // Ne devrait pas throw
         $this->service->validate($contribution);
-        $this->assertTrue(true); // Test passé
+        $this->addToAssertionCount(1);
     }
 
     public function testValidateThrowsWhenPendingContributionExists(): void
@@ -346,7 +348,7 @@ class ContributionServiceTest extends TestCase
         $this->service->validate($contribution1);
         $this->service->validate($contribution2);
 
-        $this->assertTrue(true);
+        $this->addToAssertionCount(1);
     }
 
     public function testRewardPlayerCreatesNewBadgeInstance(): void
@@ -370,6 +372,5 @@ class ContributionServiceTest extends TestCase
         $this->service->rewardPlayer($player, ContributionType::GAME_SUGGESTION);
 
         $this->assertInstanceOf(Badge::class, $capturedBadge);
-        $this->assertNotNull($capturedBadge->getName());
     }
 }

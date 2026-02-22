@@ -8,7 +8,7 @@ use App\Enum\GameDifficulty;
 use App\Enum\GameType;
 use App\Repository\GameRepository;
 use App\Repository\UserRepository;
-use App\Service\GameSolutionService;
+use App\Service\Game\GameSolutionService;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;

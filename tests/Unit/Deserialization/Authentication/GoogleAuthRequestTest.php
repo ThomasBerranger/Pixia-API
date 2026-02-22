@@ -44,6 +44,7 @@ class GoogleAuthRequestTest extends KernelTestCase
     public function testGoogleAccessTokenCannotBeEmpty(): void
     {
         $dto = new GoogleAuthRequest();
+        // @phpstan-ignore assign.propertyType
         $dto->googleAccessToken = [];
 
         $errors = $this->validator->validate($dto);
@@ -56,6 +57,7 @@ class GoogleAuthRequestTest extends KernelTestCase
     public function testGoogleAccessTokenMissingAccessTokenKey(): void
     {
         $dto = new GoogleAuthRequest();
+        // @phpstan-ignore assign.propertyType
         $dto->googleAccessToken = ['wrong_key' => 'value'];
 
         $errors = $this->validator->validate($dto);

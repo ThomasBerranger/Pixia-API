@@ -10,12 +10,13 @@ use App\Entity\User;
 use App\Enum\GameDifficulty;
 use App\Service\AchievementService;
 use Doctrine\ORM\EntityManagerInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 class AchievementServiceTest extends TestCase
 {
     private AchievementService $service;
-    private EntityManagerInterface $entityManager;
+    private EntityManagerInterface&MockObject $entityManager;
 
     protected function setUp(): void
     {
