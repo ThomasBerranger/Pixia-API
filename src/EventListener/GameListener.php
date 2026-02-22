@@ -14,6 +14,7 @@ use App\Service\Game\GameStatusService;
 use App\Service\ImageService;
 use DateTimeImmutable;
 use Doctrine\Bundle\DoctrineBundle\Attribute\AsEntityListener;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Event\PostPersistEventArgs;
 use Doctrine\ORM\Event\PostUpdateEventArgs;
 use Doctrine\ORM\Event\PrePersistEventArgs;
@@ -91,7 +92,7 @@ readonly class GameListener
         $this->handleImageDownload($game, $event->getObjectManager());
     }
 
-    private function handleImageDownload(Game $game, $objectManager): void
+    private function handleImageDownload(Game $game, EntityManagerInterface $objectManager): void
     {
         $imageUrl = $game->getImageUrl();
 

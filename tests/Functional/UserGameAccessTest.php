@@ -91,8 +91,11 @@ class UserGameAccessTest extends WebTestCase
 
         self::assertResponseStatusCodeSame(200);
 
-        $responseData = json_decode($client->getResponse()->getContent(), true);
-        $this->assertEquals('Updated Solution', $responseData['solution']);
+        // Vérifier en BDD (le normalizer cache la solution dans la réponse)
+        $doctrine = self::getContainer()->get('doctrine');
+        $doctrine->getManager()->clear();
+        $updatedGame = $doctrine->getRepository(Game::class)->find($game->getId());
+        $this->assertEquals('Updated Solution', $updatedGame->getSolution());
     }
 
     public function testNonAuthorCannotViewGame(): void
@@ -137,7 +140,7 @@ class UserGameAccessTest extends WebTestCase
         self::assertResponseStatusCodeSame(200);
     }
 
-    public function testSupervisorCanEditDraftGame(): void
+    public function testSupervisorCannotEditDraftGame(): void
     {
         $client = static::createClient();
         $author = $this->getTestUser();
@@ -150,7 +153,8 @@ class UserGameAccessTest extends WebTestCase
             'hint' => 'Supervisor hint'
         ]);
 
-        self::assertResponseStatusCodeSame(200);
+        // Le voter ne permet plus au supervisor d'éditer un DRAFT (seul l'auteur peut)
+        self::assertResponseStatusCodeSame(403);
     }
 
     public function testSupervisorCannotEditApprovedGame(): void

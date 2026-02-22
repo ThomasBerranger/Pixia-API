@@ -11,15 +11,16 @@ use App\Service\Game\GameSolutionService;
 use App\Service\UserService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 class GameSolutionServiceTest extends TestCase
 {
     private GameSolutionService $service;
-    private EntityManagerInterface $entityManager;
-    private AchievementService $achievementService;
-    private UserService $userService;
-    private AchievementRepository $achievementRepository;
+    private EntityManagerInterface&MockObject $entityManager;
+    private AchievementService&MockObject $achievementService;
+    private UserService&MockObject $userService;
+    private AchievementRepository&MockObject $achievementRepository;
 
     protected function setUp(): void
     {

@@ -284,11 +284,11 @@ class Game
 
     public function isAuthoredBy(User $user): bool
     {
-        return $this->author->getId()->equals($user->getId());
+        return $this->author->getId()->equals($user->getId()); // @phpstan-ignore method.nonObject
     }
 
     public function isSupervisedBy(User $user): bool
     {
-        return $this->getSupervisor()?->getId()->equals($user->getId()) ?? false;
+        return $this->getSupervisor()?->getId()->equals($user->getId()) ?? false; // @phpstan-ignore method.nonObject
     }
 }

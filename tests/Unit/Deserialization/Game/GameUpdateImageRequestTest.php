@@ -38,33 +38,6 @@ class GameUpdateImageRequestTest extends KernelTestCase
         }
     }
 
-    // ========== Helpers pour créer des fichiers de test ==========
-
-    private function createTestImage(string $mimeType, int $sizeInKb = 100): UploadedFile
-    {
-        $extension = match ($mimeType) {
-            'image/jpeg' => 'jpg',
-            'image/png' => 'png',
-            'image/webp' => 'webp',
-            default => 'jpg',
-        };
-
-        $filename = 'test_image.' . $extension;
-        $filepath = $this->tempDir . '/' . $filename;
-
-        // Créer un fichier de la taille spécifiée
-        $content = str_repeat('x', $sizeInKb * 1024);
-        file_put_contents($filepath, $content);
-
-        return new UploadedFile(
-            $filepath,
-            $filename,
-            $mimeType,
-            UPLOAD_ERR_OK,
-            true // test mode
-        );
-    }
-
     // ========== Tests de validation complète ==========
 
     public function testImageRequired(): void

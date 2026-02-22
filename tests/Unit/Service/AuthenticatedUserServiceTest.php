@@ -6,6 +6,7 @@ namespace App\Tests\Unit\Service;
 
 use App\Entity\User;
 use App\Service\AuthenticatedUserService;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -13,7 +14,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
 class AuthenticatedUserServiceTest extends TestCase
 {
     private AuthenticatedUserService $service;
-    private Security $security;
+    private Security&MockObject $security;
 
     protected function setUp(): void
     {

@@ -20,6 +20,9 @@ class PublicEndpointsTest extends WebTestCase
         self::assertNotEquals(401, $client->getResponse()->getStatusCode());
     }
 
+    /**
+     * @return iterable<string, array<mixed>>
+     */
     public static function publicEndpointsProvider(): iterable
     {
         // Auth

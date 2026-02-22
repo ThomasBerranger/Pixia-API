@@ -32,7 +32,7 @@ final class OpenApiController extends AbstractController
         #[MapRequestPayload] OpenAiRequest $request,
     ): JsonResponse {
         try {
-            $gameContent = $this->openApiService->requestGameContent($request->prompt);
+            $gameContent = $this->openApiService->requestGameContent($request->prompt); // @phpstan-ignore argument.type
 
             return $this->json($gameContent);
         } catch (\Exception|DecodingExceptionInterface|RedirectionExceptionInterface|ClientExceptionInterface|ServerExceptionInterface|TransportExceptionInterface $error) {

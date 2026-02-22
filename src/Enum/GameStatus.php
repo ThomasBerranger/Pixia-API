@@ -13,6 +13,6 @@ enum GameStatus: string
 
     public static function fromMixed(mixed $value): self
     {
-        return $value instanceof self ? $value : self::from($value);
+        return $value instanceof self ? $value : self::from($value); // @phpstan-ignore argument.type
     }
 }

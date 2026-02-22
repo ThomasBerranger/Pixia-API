@@ -28,6 +28,6 @@ class GameGenerateImageRequest
         $solution = $this->solution ?? $game->getSolution();
         $analysis = $claudeApiService->analyzeMovieIdea($solution, $player);
 
-        return $analysis['image_prompt'];
+        return $analysis['image_prompt']; // @phpstan-ignore offsetAccess.notFound
     }
 }

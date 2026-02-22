@@ -37,6 +37,9 @@ readonly class ClaudeApiLogger
         ]);
     }
 
+    /**
+     * @param array<string, mixed> $result
+     */
     public function logParsedResult(array $result): void
     {
         $this->logger->notice('Claude API parsed result', [

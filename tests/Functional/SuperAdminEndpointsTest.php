@@ -55,6 +55,9 @@ class SuperAdminEndpointsTest extends WebTestCase
         self::assertNotContains($statusCode, [401, 403]);
     }
 
+    /**
+     * @return iterable<string, array<mixed>>
+     */
     public static function superAdminEndpointsProvider(): iterable
     {
         yield 'users index' => ['GET', '/super-admin/users'];

@@ -34,7 +34,7 @@ class GameUserUpdateRequest
     )]
     public ?string $image = null;
 
-    #[Assert\Url(message: 'L\'URL de l\'image n\'est pas valide')]
+    #[Assert\Url(message: 'L\'URL de l\'image n\'est pas valide', requireTld: true)]
     public ?string $imageUrl = null;
 
     #[Assert\Choice(

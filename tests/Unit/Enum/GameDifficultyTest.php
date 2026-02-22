@@ -18,6 +18,9 @@ class GameDifficultyTest extends TestCase
         $this->assertSame($expectedPoints, $difficulty->getPoints(hinted: false));
     }
 
+    /**
+     * @return iterable<string, array<mixed>>
+     */
     public static function pointsWithoutHintProvider(): iterable
     {
         yield 'EASY' => [GameDifficulty::EASY, 10];
@@ -35,6 +38,9 @@ class GameDifficultyTest extends TestCase
         $this->assertSame($expectedPoints, $difficulty->getPoints(hinted: true));
     }
 
+    /**
+     * @return iterable<string, array<mixed>>
+     */
     public static function pointsWithHintProvider(): iterable
     {
         yield 'EASY' => [GameDifficulty::EASY, 5];
@@ -52,6 +58,9 @@ class GameDifficultyTest extends TestCase
         $this->assertSame($expectedOrder, $difficulty->getOrder());
     }
 
+    /**
+     * @return iterable<string, array<mixed>>
+     */
     public static function orderProvider(): iterable
     {
         yield 'EASY' => [GameDifficulty::EASY, 1];
@@ -69,6 +78,9 @@ class GameDifficultyTest extends TestCase
         $this->assertSame($expectedValue, $difficulty->value);
     }
 
+    /**
+     * @return iterable<string, array<mixed>>
+     */
     public static function enumValuesProvider(): iterable
     {
         yield 'EASY' => [GameDifficulty::EASY, 'SIMPLE'];

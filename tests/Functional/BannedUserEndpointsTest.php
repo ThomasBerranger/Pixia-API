@@ -34,12 +34,18 @@ class BannedUserEndpointsTest extends WebTestCase
         self::assertNotEquals(403, $statusCode);
     }
 
+    /**
+     * @return iterable<string, array<mixed>>
+     */
     public static function userProtectedEndpointsProvider(): iterable
     {
         yield 'dashboard' => ['GET', '/me'];
         yield 'games stats' => ['GET', '/me/games-stats'];
     }
 
+    /**
+     * @return iterable<string, array<mixed>>
+     */
     public static function publicEndpointsProvider(): iterable
     {
         yield 'daily game' => ['GET', '/games/daily?date=2026-01-01&type=multivers'];

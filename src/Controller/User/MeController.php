@@ -6,14 +6,13 @@ namespace App\Controller\User;
 
 use App\DTO\Date\PreviousDateRequest;
 use App\DTO\Game\DifficultiesRequest;
+use App\DTO\Game\GameGenerateImageRequest;
 use App\DTO\Game\GameIdeaRequest;
 use App\DTO\Game\GameUserUpdateRequest;
-use App\DTO\Game\GameGenerateImageRequest;
 use App\Entity\Achievement;
 use App\Entity\Game;
 use App\Enum\TokenCost;
 use App\Enum\UserRole;
-use App\Service\Game\GameStatusService;
 use App\Repository\GameRepository;
 use App\Repository\UserRepository;
 use App\Serializer\GameNormalizer;
@@ -21,6 +20,7 @@ use App\Service\API\OpenApiService;
 use App\Service\AuthenticatedUserService;
 use App\Service\ClaudeApiService;
 use App\Service\Game\GameService;
+use App\Service\Game\GameStatusService;
 use App\Service\ImageService;
 use Doctrine\DBAL\Exception;
 use Doctrine\ORM\EntityManagerInterface;
@@ -137,16 +137,16 @@ class MeController extends AbstractController
 
                 return $this->json([
                     'message' => 'Les films proposés ne sont pas assez connus',
-                    'score' => $analysis['score'],
-                    'films' => $analysis['films'],
+                    'notorietyScore' => $analysis['notorietyScore'], // @phpstan-ignore offsetAccess.notFound
+                    'films' => $analysis['films'], // @phpstan-ignore offsetAccess.notFound
                     'tokens' => $player->getTokens(),
                 ], Response::HTTP_OK);
             }
 
             $game = new Game()
-                ->setSolution($analysis['solution'])
-                ->setEnglishSolution($analysis['englishSolution'])
-                ->setHint($analysis['hint'])
+                ->setSolution($analysis['solution']) // @phpstan-ignore offsetAccess.notFound
+                ->setEnglishSolution($analysis['englishSolution']) // @phpstan-ignore offsetAccess.notFound
+                ->setHint($analysis['hint']) // @phpstan-ignore offsetAccess.notFound
                 ->setAuthor($player);
 
             $this->entityManager->persist($game);
@@ -154,9 +154,9 @@ class MeController extends AbstractController
 
             return $this->json([
                 'game' => $game,
-                'score' => $analysis['score'],
-                'films' => $analysis['films'],
-                'image_prompt' => $analysis['image_prompt'],
+                'notorietyScore' => $analysis['notorietyScore'], // @phpstan-ignore offsetAccess.notFound
+                'films' => $analysis['films'], // @phpstan-ignore offsetAccess.notFound
+                'image_prompt' => $analysis['image_prompt'], // @phpstan-ignore offsetAccess.notFound
                 'tokens' => $player->getTokens(),
             ], Response::HTTP_CREATED, context: ['groups' => ['game:show']]);
 

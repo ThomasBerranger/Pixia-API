@@ -34,6 +34,9 @@ class AuthenticatedEndpointsTest extends WebTestCase
         self::assertNotEquals(401, $client->getResponse()->getStatusCode());
     }
 
+    /**
+     * @return iterable<string, array<mixed>>
+     */
     public static function authenticatedEndpointsProvider(): iterable
     {
         yield 'me' => ['GET', '/me'];
