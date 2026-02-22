@@ -12,7 +12,7 @@ use App\Enum\UserRole;
 use App\Repository\GameRepository;
 use App\Serializer\GameNormalizer;
 use App\Service\AuthenticatedUserService;
-use App\Service\GameSolutionService;
+use App\Service\Game\GameSolutionService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;

@@ -7,7 +7,7 @@ namespace App\Tests\Unit\Service;
 use App\Entity\Game;
 use App\Repository\AchievementRepository;
 use App\Service\AchievementService;
-use App\Service\GameSolutionService;
+use App\Service\Game\GameSolutionService;
 use App\Service\UserService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\DataProvider;

@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use App\Enum\TokenCost;
 use App\Enum\UserRole;
 use App\Repository\UserRepository;
 use DateTimeImmutable;
+use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
@@ -117,6 +119,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[Groups(['user:me', 'user:index'])]
     private ?int $rank = null;
+
+    #[ORM\Column]
+    #[Groups(['user:me', 'game:show'])]
+    private int $tokens = 0;
 
     public function __construct()
     {
@@ -476,6 +482,29 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setRank(?int $rank): static
     {
         $this->rank = $rank;
+
+        return $this;
+    }
+
+    public function getTokens(): int
+    {
+        return $this->tokens;
+    }
+
+    public function addTokens(int $amount): static
+    {
+        $this->tokens += $amount;
+
+        return $this;
+    }
+
+    public function removeTokens(int $amount): static
+    {
+        if ($amount > $this->tokens) {
+            throw new UnprocessableEntityHttpException('Tokens insuffisants');
+        }
+
+        $this->tokens -= $amount;
 
         return $this;
     }

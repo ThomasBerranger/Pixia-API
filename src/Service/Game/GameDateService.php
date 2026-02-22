@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Service;
+namespace App\Service\Game;
 
 use App\Entity\Game;
 use App\Entity\User;
@@ -34,9 +34,6 @@ readonly class GameDateService
         }
 
         if ($user->isSuperAdmin()) {
-            if (!$this->isDateAvailable($newDate, $game->getType())) {
-                throw new \LogicException('Cette date est déjà prise pour ce type de Pixia');
-            }
             return;
         }
 

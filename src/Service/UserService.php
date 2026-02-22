@@ -25,7 +25,7 @@ readonly class UserService
 
     public function addGamePoints(User $player, Game $game): void
     {
-        $points = $game->getDifficulty()->getPoints($player->getHintedGames()->contains($game));
+        $points = $this->getPointsBasedOnHintRequest($player, $game);
 
         $this->addPoints($player, $points);
         $this->monthlyLeaderboardService->addMonthlyPoints($player, $points, $game->getDate());
@@ -77,5 +77,15 @@ readonly class UserService
         $this->userRepository->setStreaksFor($players);
 
         return $players;
+    }
+
+    public function addGameTokens(User $player, Game $game): void
+    {
+        $player->addTokens($this->getPointsBasedOnHintRequest($player, $game));
+    }
+
+    private function getPointsBasedOnHintRequest(User $player, Game $game): int
+    {
+        return $game->getDifficulty()->getPoints($player->getHintedGames()->contains($game));
     }
 }

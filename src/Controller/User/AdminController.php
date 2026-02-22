@@ -5,17 +5,16 @@ declare(strict_types=1);
 namespace App\Controller\User;
 
 use App\DTO\Date\DateRequest;
-use App\DTO\Game\GameCreateRequest;
 use App\DTO\Game\GameAdminUpdateRequest;
+use App\DTO\Game\GameCreateRequest;
 use App\Entity\Game;
 use App\Enum\GameStatus;
 use App\Enum\UserRole;
 use App\Repository\GameRepository;
 use App\Service\AuthenticatedUserService;
-use App\Service\GameCreationService;
-use App\Service\GameSupervisorService;
+use App\Service\Game\GameCreationService;
+use App\Service\Game\GameSupervisorService;
 use App\Service\ImageService;
-use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -67,7 +66,7 @@ final class AdminController extends AbstractController
         #[MapQueryParameter] ?GameStatus $status = null
     ): JsonResponse
     {
-        $games = $this->gameRepository->getGamesByMonthAndStatus($month?->getMonth(), $status);
+        $games = $this->gameRepository->getNoDraftGamesByMonthAndStatus($month?->getMonth(), $status);
 
         return $this->json(data: $games, context: ['groups' => ['game:index:admin']]);
     }

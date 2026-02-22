@@ -6,7 +6,7 @@ namespace App\DTO\Game;
 
 use Symfony\Component\Validator\Constraints as Assert;
 
-class MoviePopularityCheckRequest
+class GameIdeaRequest
 {
     #[Assert\NotBlank(message: 'L\'idée ne peut pas être vide')]
     #[Assert\Length(

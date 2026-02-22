@@ -6,10 +6,10 @@ namespace App\Controller\User;
 
 use App\DTO\Contribution\ContributionUpdateRequest;
 use App\Entity\Contribution;
-use App\Entity\Game;
 use App\Entity\User;
 use App\Enum\ContributionStatus;
 use App\Enum\UserRole;
+use App\Repository\GameRepository;
 use App\Service\ContributionService;
 use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
@@ -25,10 +25,13 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 final class SuperAdminController extends AbstractController
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        private readonly EntityManagerInterface   $entityManager,
         private readonly JWTTokenManagerInterface $jwtManager,
-        private readonly ContributionService $contributionService,
-    ) {}
+        private readonly ContributionService      $contributionService,
+        private readonly GameRepository           $gameRepository,
+    )
+    {
+    }
 
     #[Route('/impersonate/{email}', name: 'impersonate', methods: ['POST'])]
     public function impersonate(string $email): JsonResponse
@@ -76,7 +79,7 @@ final class SuperAdminController extends AbstractController
     {
         $fields = $fields ? explode(',', $fields) : [];
 
-        $games = $this->entityManager->getRepository(Game::class)->findByFields($fields);
+        $games = $this->gameRepository->findByFields($fields);
 
         return $this->json(data: $games, context: ['groups' => 'game:index:admin']);
     }

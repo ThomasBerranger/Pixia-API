@@ -2,11 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Service;
+namespace App\Service\Game;
 
 use App\Entity\Game;
 use App\Entity\User;
 use App\Enum\GameStatus;
+use App\Enum\TokenCost;
 
 readonly class GameStatusService
 {
@@ -52,5 +53,21 @@ readonly class GameStatusService
     private function canReject(Game $game, User $user): bool
     {
         return $game->isSupervisedBy($user);
+    }
+
+    /**
+     * @throws \LogicException
+     */
+    public function handleGameSubmission(Game $game, ?GameStatus $newStatus, User $player): void
+    {
+        if ($newStatus === null) {
+            return;
+        }
+
+        if ($game->getStatus() !== GameStatus::DRAFT || $newStatus !== GameStatus::PENDING) {
+            throw new \LogicException('Le jeu doit passer de brouillon à en attente pour être soumis');
+        }
+
+        $player->removeTokens(TokenCost::SUBMISSION->value);
     }
 }

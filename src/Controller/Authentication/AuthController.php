@@ -8,7 +8,7 @@ use App\Attribute\RateLimit;
 use App\DTO\Authentication\GoogleAuthRequest;
 use App\DTO\Authentication\RegisterRequest;
 use App\Entity\User;
-use App\Service\GoogleApiService;
+use App\Service\API\GoogleApiService;
 use App\Service\UserService;
 use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;

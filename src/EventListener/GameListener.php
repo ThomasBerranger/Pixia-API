@@ -9,8 +9,8 @@ use App\Entity\Game;
 use App\Entity\User;
 use App\Enum\BadgeName;
 use App\Enum\GameStatus;
-use App\Service\GameDateService;
-use App\Service\GameStatusService;
+use App\Service\Game\GameDateService;
+use App\Service\Game\GameStatusService;
 use App\Service\ImageService;
 use DateTimeImmutable;
 use Doctrine\Bundle\DoctrineBundle\Attribute\AsEntityListener;
@@ -55,7 +55,7 @@ readonly class GameListener
     {
         $user = $this->security->getUser();
 
-        if(!$user instanceof User) {
+        if (!$user instanceof User) {
             return;
         }
 

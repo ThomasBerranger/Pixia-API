@@ -5,11 +5,10 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Service;
 
 use App\Entity\Game;
-use App\Enum\GameStatus;
 use App\Enum\GameType;
 use App\Repository\GameRepository;
-use App\Service\GameCreationService;
-use App\Service\GameSolutionService;
+use App\Service\Game\GameCreationService;
+use App\Service\Game\GameSolutionService;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query;

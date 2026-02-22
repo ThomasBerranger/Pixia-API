@@ -92,7 +92,9 @@ class GameRepository extends ServiceEntityRepository
         }
 
         $qb->leftJoin('g.author', 'a')
-            ->addSelect('partial a.{id, email}');
+            ->addSelect('partial a.{id, email}')
+            ->andWhere('g.status = :status')
+            ->setParameter('status', GameStatus::APPROVED);
 
         /** @var array<int, Game> $result */
         $result = $qb->orderBy('g.date', 'DESC')
@@ -190,7 +192,7 @@ class GameRepository extends ServiceEntityRepository
      * @return array<Game>
      * @throws \DateMalformedStringException
      */
-    public function getGamesByMonthAndStatus(?DateTimeImmutable $month = null, ?GameStatus $status = null): array
+    public function getNoDraftGamesByMonthAndStatus(?DateTimeImmutable $month = null, ?GameStatus $status = null): array
     {
         $qb = $this->createQueryBuilder('g')
             ->leftJoin('g.author', 'a')->addSelect('a')
@@ -202,6 +204,9 @@ class GameRepository extends ServiceEntityRepository
                 ->setParameter('end', $month->modify('last day of this month')->format('Y-m-d'))
                 ->orderBy('g.date', 'DESC');
         }
+
+        $qb->andWhere('g.status != :excludedStatus')
+            ->setParameter('excludedStatus', GameStatus::DRAFT);
 
         if ($status !== null) {
             $qb->andWhere('g.status = :status')
