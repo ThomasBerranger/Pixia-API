@@ -29,6 +29,27 @@ enum GameDifficulty: string
         };
     }
 
+    /**
+     * @return list<self>
+     */
+    public static function fromString(?string $value): array
+    {
+        if ($value === null || $value === '') {
+            return [];
+        }
+
+        $difficulties = [];
+
+        foreach (explode(',', $value) as $item) {
+            $difficulty = self::tryFrom($item);
+            if ($difficulty !== null) {
+                $difficulties[] = $difficulty;
+            }
+        }
+
+        return $difficulties;
+    }
+
     public function getOrder(): int
     {
         return match($this) {

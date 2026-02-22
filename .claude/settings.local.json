@@ -3,7 +3,13 @@
     "allow": [
       "Bash(grep:*)",
       "Bash(grep Failed\\\\|asserting\\\\|null\\\\|Expected:*)",
-      "Bash(tail:*)"
+      "Bash(tail:*)",
+      "Bash(head:*)",
+      "WebSearch",
+      "Bash(cd /c/Users/tberr/PhpstormProjects/Pixia-API && composer update 2>&1)",
+      "Bash(cd /c/Users/tberr/PhpstormProjects/Pixia-API && php vendor/bin/phpunit 2>&1)",
+      "Bash(cd /c/Users/tberr/PhpstormProjects/Pixia-API && php vendor/bin/phpstan analyse src/ --level=max 2>&1)",
+      "WebFetch(domain:github.com)"
     ]
   }
 }

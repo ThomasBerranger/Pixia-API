@@ -8,6 +8,7 @@ use App\Entity\Game;
 use App\Entity\User;
 use App\Enum\GameStatus;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+use Symfony\Component\Security\Core\Authorization\Voter\Vote;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 
 /**
@@ -15,15 +16,15 @@ use Symfony\Component\Security\Core\Authorization\Voter\Voter;
  */
 final class GameVoter extends Voter
 {
-    public const VIEW = 'view';
-    public const EDIT = 'edit';
+    public const string VIEW = 'view';
+    public const string EDIT = 'edit';
 
     protected function supports(string $attribute, mixed $subject): bool
     {
         return in_array($attribute, [self::VIEW, self::EDIT], true) && $subject instanceof Game;
     }
 
-    protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token): bool
+    protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token, ?Vote $vote = null): bool
     {
         $currentUser = $token->getUser();
 

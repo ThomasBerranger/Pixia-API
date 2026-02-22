@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace App\Controller\User;
 
 use App\DTO\Date\PreviousDateRequest;
-use App\DTO\Game\DifficultiesRequest;
 use App\DTO\Game\GameGenerateImageRequest;
 use App\DTO\Game\GameIdeaRequest;
 use App\DTO\Game\GameUserUpdateRequest;
 use App\Entity\Achievement;
 use App\Entity\Game;
+use App\Enum\GameDifficulty;
 use App\Enum\TokenCost;
 use App\Enum\UserRole;
 use App\Repository\GameRepository;
@@ -28,6 +28,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
@@ -84,14 +85,14 @@ class MeController extends AbstractController
 
     #[Route(path: '/games-stats', name: 'games_stats', methods: ['GET'])]
     public function gamesStats(
-        #[MapQueryString] ?DifficultiesRequest $difficultiesRequest = null,
+        #[MapQueryParameter] ?string $difficulties = null,
     ): JsonResponse
     {
         $player = $this->authenticatedUserService->getUserOrThrow();
 
         $stats = $this->gameRepository->getPlayerStatsByMonthAndDifficulty(
             $player,
-            $difficultiesRequest?->getDifficulties() ?? []
+            GameDifficulty::fromString($difficulties)
         );
 
         return $this->json($this->gameService->formatUserGamesData($stats));
@@ -103,7 +104,7 @@ class MeController extends AbstractController
     #[Route(path: '/games', name: 'games', methods: ['GET'])]
     public function gamesIndex(
         #[MapQueryString] PreviousDateRequest  $month,
-        #[MapQueryString] ?DifficultiesRequest $difficultiesRequest = null,
+        #[MapQueryParameter] ?string $difficulties = null,
     ): JsonResponse
     {
         $player = $this->authenticatedUserService->getUserOrThrow();
@@ -112,7 +113,7 @@ class MeController extends AbstractController
             $this->gameRepository->getPlayerGamesByMonth(
                 $player,
                 $month->getMonth(),
-                $difficultiesRequest?->getDifficulties() ?? []
+                GameDifficulty::fromString($difficulties)
             ),
             context: ['groups' => ['game:index']]
         );
