@@ -26,6 +26,10 @@ class GameAdminUpdateRequest
 
     public ?GameDifficulty $difficulty = null;
 
+    #[Assert\Choice(
+        choices: [GameStatus::APPROVED, GameStatus::REJECTED],
+        message: 'Seuls les statuts APPROVED et REJECTED sont autorisés'
+    )]
     public ?GameStatus $status = null;
 
     public ?bool $assignToMe = null;

@@ -15,13 +15,14 @@ use App\Enum\TokenCost;
 use App\Enum\UserRole;
 use App\Repository\GameRepository;
 use App\Repository\UserRepository;
+use App\Security\Voter\GameVoter;
 use App\Serializer\GameNormalizer;
 use App\Service\API\OpenApiService;
 use App\Service\AuthenticatedUserService;
 use App\Service\ClaudeApiService;
 use App\Service\Game\GameService;
-use App\Service\Game\GameStatusService;
 use App\Service\ImageService;
+use App\Service\TokenService;
 use Doctrine\DBAL\Exception;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -48,7 +49,7 @@ class MeController extends AbstractController
         private readonly GameService              $gameService,
         private readonly ImageService             $imageService,
         private readonly ClaudeApiService         $claudeApiService,
-        private readonly GameStatusService        $gameStatusService,
+        private readonly TokenService             $tokenService,
         private readonly OpenApiService           $openApiService,
     )
     {
@@ -103,8 +104,8 @@ class MeController extends AbstractController
      */
     #[Route(path: '/games', name: 'games', methods: ['GET'])]
     public function gamesIndex(
-        #[MapQueryString] PreviousDateRequest  $month,
-        #[MapQueryParameter] ?string $difficulties = null,
+        #[MapQueryString] PreviousDateRequest $month,
+        #[MapQueryParameter] ?string          $difficulties = null,
     ): JsonResponse
     {
         $player = $this->authenticatedUserService->getUserOrThrow();
@@ -126,7 +127,7 @@ class MeController extends AbstractController
     {
         $player = $this->authenticatedUserService->getUserOrThrow();
 
-        $player->removeTokens(TokenCost::IDEA_ANALYSIS->value);
+        $this->tokenService->removeTokens($player, TokenCost::IDEA_ANALYSIS);
 
         try {
             $analysis = $this->claudeApiService->analyzeMovieIdea($gameIdeaRequest->idea, $player);
@@ -182,11 +183,9 @@ class MeController extends AbstractController
     {
         $player = $this->authenticatedUserService->getUserOrThrow();
 
-        try {
-            $this->gameStatusService->handleGameSubmission($game, $gameUserUpdateRequest->status, $player);
-            // TODO : handlegame approve et reject
-        } catch (\LogicException $e) {
-            return $this->json(['message' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
+        if ($gameUserUpdateRequest->status !== null) {
+            $this->denyAccessUnlessGranted(GameVoter::SUBMIT, $game);
+            $this->tokenService->removeTokens($player, TokenCost::SUBMISSION);
         }
 
         $gameUserUpdateRequest->updateGame($game);
@@ -205,7 +204,7 @@ class MeController extends AbstractController
     {
         $player = $this->authenticatedUserService->getUserOrThrow();
 
-        $player->removeTokens(TokenCost::IMAGE_UPLOAD->value);
+        $this->tokenService->removeTokens($player, TokenCost::IMAGE_UPLOAD);
 
         $uploadedFile = $request->files->get('image');
 
@@ -238,7 +237,7 @@ class MeController extends AbstractController
 
         $player = $this->authenticatedUserService->getUserOrThrow();
 
-        $player->removeTokens(TokenCost::IMAGE_GENERATION->value);
+        $this->tokenService->removeTokens($player, TokenCost::IMAGE_GENERATION);
 
         try {
             $prompt = $gameGenerateImageRequest->resolvePrompt($game, $player, $this->claudeApiService);

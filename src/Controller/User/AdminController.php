@@ -6,20 +6,17 @@ namespace App\Controller\User;
 
 use App\DTO\Date\DateRequest;
 use App\DTO\Game\GameAdminUpdateRequest;
-use App\DTO\Game\GameCreateRequest;
 use App\Entity\Game;
 use App\Enum\GameStatus;
 use App\Enum\UserRole;
 use App\Repository\GameRepository;
+use App\Security\Voter\GameVoter;
 use App\Service\AuthenticatedUserService;
-use App\Service\Game\GameCreationService;
-use App\Service\Game\GameSupervisorService;
 use App\Service\ImageService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
@@ -32,29 +29,11 @@ final class AdminController extends AbstractController
 {
     public function __construct(
         private readonly EntityManagerInterface   $entityManager,
-        private readonly GameCreationService      $gameCreationService,
         private readonly ImageService             $imageService,
         private readonly GameRepository           $gameRepository,
         private readonly AuthenticatedUserService $authenticatedUserService,
-        private readonly GameSupervisorService    $gameSupervisorService,
     )
     {
-    }
-
-    // todo passer ce endpoint chez user
-    #[Route(path: '/games', name: 'games_create', methods: ['POST'], format: 'json')]
-    public function create(
-        #[MapRequestPayload] GameCreateRequest $gameCreateRequest
-    ): JsonResponse
-    {
-        $game = $gameCreateRequest->toGame();
-
-        $this->entityManager->persist($game);
-        $this->entityManager->flush();
-
-        return $this->json(data: $game, status: Response::HTTP_CREATED, context: [
-            'groups' => ['game:show:admin'],
-        ]);
     }
 
     /**
@@ -79,15 +58,6 @@ final class AdminController extends AbstractController
         return $this->json(data: $dates);
     }
 
-    // todo passer ce endpoint chez user
-    #[Route(path: '/games/solution-exist', name: 'games_solution_exist', methods: ['GET'], format: 'json')]
-    public function gameSolutionExist(#[MapQueryParameter] string $solution): JsonResponse
-    {
-        $solutionFound = $this->gameCreationService->gameSolutionExist($solution);
-
-        return $this->json(data: $solutionFound);
-    }
-
     #[Route(path: '/games/{id}', name: 'games_show', methods: ['GET'], format: 'json')]
     #[IsGranted('view', subject: 'game')]
     public function gameShow(Game $game): JsonResponse
@@ -103,16 +73,21 @@ final class AdminController extends AbstractController
         $currentUser = $this->authenticatedUserService->getUserOrThrow();
 
         if ($gameUpdateRequest->assignToMe === true) {
-            $this->gameSupervisorService->assignSupervisor($game, $currentUser);
+            $this->denyAccessUnlessGranted(GameVoter::SUPERVISE, $game);
+            $game->setSupervisor($currentUser);
+        }
+
+        if ($gameUpdateRequest->status !== null) {
+            $this->denyAccessUnlessGranted(GameVoter::APPROVE_OR_REJECT, $game);
         }
 
         $gameUpdateRequest->updateGame($game);
 
-        $this->entityManager->flush();
-
         if ($game->getImage() && $gameUpdateRequest->date !== null) {
             $this->imageService->move($oldGameDate, $game->getType(), $game->getDate(), $game->getImage());
         }
+
+        $this->entityManager->flush();
 
         return $this->json(data: $game, context: ['groups' => ['game:show:admin']]);
     }

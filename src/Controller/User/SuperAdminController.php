@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller\User;
 
 use App\DTO\Contribution\ContributionUpdateRequest;
+use App\DTO\Game\GameCreateRequest;
 use App\Entity\Contribution;
 use App\Entity\User;
 use App\Enum\ContributionStatus;
@@ -15,6 +16,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
@@ -82,6 +84,21 @@ final class SuperAdminController extends AbstractController
         $games = $this->gameRepository->findByFields($fields);
 
         return $this->json(data: $games, context: ['groups' => 'game:index:admin']);
+    }
+
+    #[Route(path: '/games', name: 'games_create', methods: ['POST'], format: 'json')]
+    public function gameCreate(
+        #[MapRequestPayload] GameCreateRequest $gameCreateRequest
+    ): JsonResponse
+    {
+        $game = $gameCreateRequest->toGame();
+
+        $this->entityManager->persist($game);
+        $this->entityManager->flush();
+
+        return $this->json(data: $game, status: Response::HTTP_CREATED, context: [
+            'groups' => ['game:show:admin'],
+        ]);
     }
 
     #[Route(path: '/contributions', name: 'contributions_index', methods: ['GET'], format: 'json')]

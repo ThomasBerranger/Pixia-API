@@ -13,7 +13,6 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\IdGenerator\UuidGenerator;
 use Symfony\Bridge\Doctrine\Types\UuidType;
-use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Serializer\Attribute\Groups;
@@ -501,7 +500,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function removeTokens(int $amount): static
     {
         if ($amount > $this->tokens) {
-            throw new UnprocessableEntityHttpException('Tokens insuffisants');
+            throw new \LogicException('Tokens insuffisants');
         }
 
         $this->tokens -= $amount;

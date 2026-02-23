@@ -131,7 +131,6 @@ Calculés via `GameDifficulty::getPoints(bool $hinted)` :
 - `GET /admin/games/{id}` : Détails d'un Game
 - `PATCH /admin/games/{id}` : Modifier (status, date, assignToMe, etc.)
 - `POST /admin/games/{id}/image` : Upload/modifier l'image
-- `GET /admin/games/solution-exist` : Vérifier si solution existe déjà
 
 ### Services métier clés
 

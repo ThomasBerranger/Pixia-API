@@ -8,9 +8,7 @@ use App\Entity\Badge;
 use App\Entity\Game;
 use App\Entity\User;
 use App\Enum\BadgeName;
-use App\Enum\GameStatus;
 use App\Service\Game\GameDateService;
-use App\Service\Game\GameStatusService;
 use App\Service\ImageService;
 use DateTimeImmutable;
 use Doctrine\Bundle\DoctrineBundle\Attribute\AsEntityListener;
@@ -30,9 +28,8 @@ readonly class GameListener
 {
     public function __construct(
         private Security          $security,
-        private ImageService      $imageService,
-        private GameStatusService $gameStatusService,
-        private GameDateService   $gameDateService,
+        private ImageService    $imageService,
+        private GameDateService $gameDateService,
     )
     {
     }
@@ -58,15 +55,6 @@ readonly class GameListener
 
         if (!$user instanceof User) {
             return;
-        }
-
-        if ($event->hasChangedField('status')) {
-            $this->gameStatusService->validateStatusTransition(
-                $game,
-                GameStatus::fromMixed($event->getOldValue('status')),
-                GameStatus::fromMixed($event->getNewValue('status')),
-                $user
-            );
         }
 
         if ($event->hasChangedField('date')) {
