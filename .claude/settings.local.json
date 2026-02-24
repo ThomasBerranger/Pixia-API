@@ -10,7 +10,8 @@
       "Bash(cd /c/Users/tberr/PhpstormProjects/Pixia-API && php vendor/bin/phpunit 2>&1)",
       "Bash(cd /c/Users/tberr/PhpstormProjects/Pixia-API && php vendor/bin/phpstan analyse src/ --level=max 2>&1)",
       "WebFetch(domain:github.com)",
-      "Bash(cd /c/Users/tberr/PhpstormProjects/Pixia-API && php bin/phpunit 2>&1)"
+      "Bash(cd /c/Users/tberr/PhpstormProjects/Pixia-API && php bin/phpunit 2>&1)",
+      "WebFetch(domain:docs.anthropic.com)"
     ]
   }
 }

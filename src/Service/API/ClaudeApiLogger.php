@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Service;
+namespace App\Service\API;
 
 use App\Entity\User;
 use Psr\Log\LoggerInterface;
@@ -47,9 +47,9 @@ readonly class ClaudeApiLogger
         ]);
     }
 
-    public function logError(\Exception $e, string $content): void
+    public function logError(\Throwable $e, string $content): void
     {
-        $this->logger->error('Claude API parsing failed', [
+        $this->logger->error('Claude API error', [
             'error' => $e->getMessage(),
             'content' => $content,
         ]);

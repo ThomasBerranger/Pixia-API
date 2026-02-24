@@ -6,7 +6,7 @@ namespace App\DTO\Game;
 
 use App\Entity\Game;
 use App\Entity\User;
-use App\Service\ClaudeApiService;
+use App\Service\API\ClaudeApiService;
 use Symfony\Component\Validator\Constraints as Assert;
 
 class GameGenerateImageRequest
@@ -28,6 +28,7 @@ class GameGenerateImageRequest
         $solution = $this->solution ?? $game->getSolution();
         $analysis = $claudeApiService->analyzeMovieIdea($solution, $player);
 
-        return $analysis['image_prompt']; // @phpstan-ignore offsetAccess.notFound
+        return $analysis['image_prompt']
+            ?? throw new \RuntimeException('Impossible de générer un prompt image pour cette combinaison de films.');
     }
 }

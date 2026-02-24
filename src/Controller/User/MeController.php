@@ -19,7 +19,7 @@ use App\Security\Voter\GameVoter;
 use App\Serializer\GameNormalizer;
 use App\Service\API\OpenApiService;
 use App\Service\AuthenticatedUserService;
-use App\Service\ClaudeApiService;
+use App\Service\API\ClaudeApiService;
 use App\Service\Game\GameService;
 use App\Service\ImageService;
 use App\Service\TokenService;
@@ -35,7 +35,6 @@ use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 
 #[Route('/me', name: 'me_')]
 #[IsGranted(UserRole::USER->value)]
@@ -166,7 +165,10 @@ class MeController extends AbstractController
                 'tokens' => $player->getTokens(),
             ], Response::HTTP_CREATED, context: ['groups' => ['game:show']]);
 
-        } catch (TransportExceptionInterface|\Exception $e) {
+        } catch (\Throwable $e) {
+            $player->addTokens(TokenCost::REFUND->value);
+            $this->entityManager->flush();
+
             return $this->json(['error' => 'Erreur lors de l\'analyse de l\'idée', 'message' => $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
