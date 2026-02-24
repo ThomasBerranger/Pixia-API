@@ -8,11 +8,11 @@ use App\DTO\Date\PreviousDateRequest;
 use App\DTO\Game\GameGenerateImageRequest;
 use App\DTO\Game\GameIdeaRequest;
 use App\DTO\Game\GameUserUpdateRequest;
-use App\Entity\Achievement;
 use App\Entity\Game;
 use App\Enum\GameDifficulty;
 use App\Enum\TokenCost;
 use App\Enum\UserRole;
+use App\Repository\AchievementRepository;
 use App\Repository\GameRepository;
 use App\Repository\UserRepository;
 use App\Security\Voter\GameVoter;
@@ -42,6 +42,7 @@ use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 class MeController extends AbstractController
 {
     public function __construct(
+        private readonly AchievementRepository    $achievementRepository,
         private readonly EntityManagerInterface   $entityManager,
         private readonly AuthenticatedUserService $authenticatedUserService,
         private readonly UserRepository           $userRepository,
@@ -61,13 +62,16 @@ class MeController extends AbstractController
     #[Route(name: 'dashboard', methods: ['GET'])]
     public function show(): JsonResponse
     {
-        $player = $this->authenticatedUserService->getUserOrThrow();
+        $player = $this->userRepository->findForDashboard(
+            $this->authenticatedUserService->getUserOrThrow()
+        );
+
         $player->setRank($this->userRepository->getRank($player));
 
         $data['user'] = $player;
-        $data['games'] = $this->entityManager->getRepository(Game::class)->countAvailableGames();
+        $data['games'] = $this->gameRepository->countAvailableGames();
 
-        $achievementData = $this->entityManager->getRepository(Achievement::class)->findLastWithCountFor($player, 3);
+        $achievementData = $this->achievementRepository->findLastWithCountFor($player, 3);
         $data['success'] = $achievementData['count'];
         $data['history'] = $achievementData['history'];
 

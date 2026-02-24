@@ -48,7 +48,7 @@ readonly class UserService
 
         $sponsor->addBadge(new Badge(BadgeName::SPONSOR));
 
-        if ($sponsor->getReferees()->count() >= 5) {
+        if ($this->userRepository->countReferees($sponsor) >= 5) {
             $sponsor->addBadge(new Badge(BadgeName::SPONSOR_5));
         }
 

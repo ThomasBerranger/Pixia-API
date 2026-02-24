@@ -211,7 +211,9 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         /** @var list<User> $users */
         $users = $this->createQueryBuilder('u')
             ->leftJoin('u.badges', 'b')
+            ->leftJoin('u.monthlyLeaderboards', 'ml')
             ->addSelect('b')
+            ->addSelect('ml')
             ->where('u.id IN (:ids)')
             ->setParameter('ids', $userIds)
             ->getQuery()
@@ -315,6 +317,29 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
                 self::BEST_STREAK_KEY => 0
             ]);
         }
+    }
+
+    public function findForDashboard(User $user): User
+    {
+        /** @var User */
+        return $this->createQueryBuilder('u')
+            ->leftJoin('u.badges', 'b')->addSelect('b')
+            ->leftJoin('u.contributions', 'c')->addSelect('c')
+            ->leftJoin('u.monthlyLeaderboards', 'ml')->addSelect('ml')
+            ->where('u.id = :userId')
+            ->setParameter('userId', $user->getId(), UuidType::NAME)
+            ->getQuery()
+            ->getSingleResult();
+    }
+
+    public function countReferees(User $sponsor): int
+    {
+        return (int) $this->createQueryBuilder('u')
+            ->select('COUNT(u.id)')
+            ->where('u.sponsor = :sponsor')
+            ->setParameter('sponsor', $sponsor)
+            ->getQuery()
+            ->getSingleScalarResult();
     }
 
     /** @return User[] */

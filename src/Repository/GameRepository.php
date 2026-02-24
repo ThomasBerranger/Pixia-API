@@ -93,6 +93,8 @@ class GameRepository extends ServiceEntityRepository
 
         $qb->leftJoin('g.author', 'a')
             ->addSelect('partial a.{id, email}')
+            ->leftJoin('g.supervisor', 's')
+            ->addSelect('s')
             ->andWhere('g.status = :status')
             ->setParameter('status', GameStatus::APPROVED);
 

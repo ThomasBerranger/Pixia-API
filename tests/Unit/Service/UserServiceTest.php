@@ -165,7 +165,6 @@ class UserServiceTest extends TestCase
         $sponsor = $this->createMock(User::class);
         $sponsor->method('getScore')->willReturn(100);
         $sponsor->method('setScore');
-        $sponsor->method('getReferees')->willReturn(new ArrayCollection([]));
         $sponsor->method('addBadge');
 
         $this->entityManager
@@ -177,6 +176,10 @@ class UserServiceTest extends TestCase
             ->method('findOneBy')
             ->with(['slug' => 'test-sponsor'])
             ->willReturn($sponsor);
+
+        $this->userRepository
+            ->method('countReferees')
+            ->willReturn(0);
 
         $result = $this->service->findAndRewardSponsor('test-sponsor');
 
@@ -205,7 +208,6 @@ class UserServiceTest extends TestCase
     {
         $sponsor = $this->createMock(User::class);
         $sponsor->method('getScore')->willReturn(50);
-        $sponsor->method('getReferees')->willReturn(new ArrayCollection([]));
         $sponsor->method('addBadge');
 
         $sponsor->expects($this->once())
@@ -221,6 +223,10 @@ class UserServiceTest extends TestCase
             ->method('findOneBy')
             ->willReturn($sponsor);
 
+        $this->userRepository
+            ->method('countReferees')
+            ->willReturn(0);
+
         $this->monthlyLeaderboardService
             ->expects($this->never())
             ->method('addMonthlyPoints');
@@ -233,7 +239,6 @@ class UserServiceTest extends TestCase
         $sponsor = $this->createMock(User::class);
         $sponsor->method('getScore')->willReturn(100);
         $sponsor->method('setScore');
-        $sponsor->method('getReferees')->willReturn(new ArrayCollection([]));
 
         $sponsor->expects($this->once())
             ->method('addBadge')
@@ -250,23 +255,19 @@ class UserServiceTest extends TestCase
             ->method('findOneBy')
             ->willReturn($sponsor);
 
+        $this->userRepository
+            ->method('countReferees')
+            ->with($sponsor)
+            ->willReturn(0);
+
         $this->service->findAndRewardSponsor('sponsor-slug');
     }
 
     public function testFindAndRewardSponsorAddsSponsor5BadgeWhen5Referees(): void
     {
-        $referees = new ArrayCollection([
-            $this->createMock(User::class),
-            $this->createMock(User::class),
-            $this->createMock(User::class),
-            $this->createMock(User::class),
-            $this->createMock(User::class),
-        ]);
-
         $sponsor = $this->createMock(User::class);
         $sponsor->method('getScore')->willReturn(100);
         $sponsor->method('setScore');
-        $sponsor->method('getReferees')->willReturn($referees);
 
         $badgesAdded = [];
         $sponsor->expects($this->exactly(2))
@@ -284,6 +285,11 @@ class UserServiceTest extends TestCase
             ->method('findOneBy')
             ->willReturn($sponsor);
 
+        $this->userRepository
+            ->method('countReferees')
+            ->with($sponsor)
+            ->willReturn(5);
+
         $this->service->findAndRewardSponsor('sponsor-slug');
 
         $this->assertContains(BadgeName::SPONSOR, $badgesAdded);
@@ -292,15 +298,9 @@ class UserServiceTest extends TestCase
 
     public function testFindAndRewardSponsorDoesNotAddSponsor5BadgeWhenLessThan5Referees(): void
     {
-        $referees = new ArrayCollection([
-            $this->createMock(User::class),
-            $this->createMock(User::class),
-        ]);
-
         $sponsor = $this->createMock(User::class);
         $sponsor->method('getScore')->willReturn(100);
         $sponsor->method('setScore');
-        $sponsor->method('getReferees')->willReturn($referees);
 
         $sponsor->expects($this->once())
             ->method('addBadge')
@@ -313,6 +313,11 @@ class UserServiceTest extends TestCase
         $this->genericUserRepository
             ->method('findOneBy')
             ->willReturn($sponsor);
+
+        $this->userRepository
+            ->method('countReferees')
+            ->with($sponsor)
+            ->willReturn(2);
 
         $this->service->findAndRewardSponsor('sponsor-slug');
     }
@@ -436,7 +441,6 @@ class UserServiceTest extends TestCase
         $sponsor = $this->createMock(User::class);
         $sponsor->method('getScore')->willReturn(100);
         $sponsor->method('setScore')->with(105);
-        $sponsor->method('getReferees')->willReturn(new ArrayCollection([]));
         $sponsor->method('addBadge');
 
         $this->entityManager
@@ -446,6 +450,10 @@ class UserServiceTest extends TestCase
         $this->genericUserRepository
             ->method('findOneBy')
             ->willReturn($sponsor);
+
+        $this->userRepository
+            ->method('countReferees')
+            ->willReturn(0);
 
         $this->monthlyLeaderboardService
             ->expects($this->never())
@@ -469,7 +477,6 @@ class UserServiceTest extends TestCase
         $sponsor = $this->createMock(User::class);
         $sponsor->method('getScore')->willReturn(100);
         $sponsor->method('setScore');
-        $sponsor->method('getReferees')->willReturn(new ArrayCollection([]));
         $sponsor->method('addBadge');
 
         $this->entityManager
@@ -479,6 +486,10 @@ class UserServiceTest extends TestCase
         $this->genericUserRepository
             ->method('findOneBy')
             ->willReturn($sponsor);
+
+        $this->userRepository
+            ->method('countReferees')
+            ->willReturn(0);
 
         $this->service->findAndRewardSponsor('test');
     }
