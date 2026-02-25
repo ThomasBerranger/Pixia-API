@@ -13,6 +13,14 @@ enum GameStatus: string
 
     public static function fromMixed(mixed $value): self
     {
-        return $value instanceof self ? $value : self::from($value);
+        if ($value instanceof self) {
+            return $value;
+        }
+
+        if (!is_string($value) && !is_int($value)) {
+            throw new \ValueError(sprintf('La valeur fournie n\'est pas un backing value valide pour %s.', self::class));
+        }
+
+        return self::from($value);
     }
 }

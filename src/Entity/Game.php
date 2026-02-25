@@ -284,11 +284,17 @@ class Game
 
     public function isAuthoredBy(User $user): bool
     {
-        return $this->author->getId()->equals($user->getId());
+        $authorId = $this->author->getId();
+        $userId = $user->getId();
+
+        return $authorId !== null && $userId !== null && $authorId->equals($userId);
     }
 
     public function isSupervisedBy(User $user): bool
     {
-        return $this->getSupervisor()?->getId()->equals($user->getId()) ?? false;
+        $supervisorId = $this->getSupervisor()?->getId();
+        $userId = $user->getId();
+
+        return $supervisorId !== null && $userId !== null && $supervisorId->equals($userId);
     }
 }

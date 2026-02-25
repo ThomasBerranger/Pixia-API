@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service\API;
 
+use App\DTO\API\MovieAnalysisResult;
 use App\Entity\User;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Contracts\HttpClient\Exception\HttpExceptionInterface;
@@ -26,10 +27,7 @@ readonly class ClaudeApiService
     {
     }
 
-    /**
-     * @return array{status: string, films?: array<int, array{titre: string, notorietyScore: float}>, notorietyScore?: float, image_prompt?: string, hint?: string, solution?: string, englishSolution?: string}
-     */
-    public function analyzeMovieIdea(string $idea, ?User $user = null): array
+    public function analyzeMovieIdea(string $idea, ?User $user = null): MovieAnalysisResult
     {
         $this->claudeApiLogger->logRequest($user, $idea);
 
@@ -93,11 +91,18 @@ readonly class ClaudeApiService
         }
 
         $content = '';
-        foreach ($data['content'] as $block) {
-            if (($block['type'] ?? '') === 'text') {
-                $content .= $block['text'] ?? '';
+        $blocks = $data['content'] ?? [];
+        if (!is_array($blocks)) {
+            $this->claudeApiLogger->logEnd();
+            throw new \RuntimeException('Réponse Anthropic invalide : clé "content" manquante ou non-itérable dans la réponse API.');
+        }
+        foreach ($blocks as $block) {
+            if (is_array($block) && ($block['type'] ?? '') === 'text') {
+                $text = $block['text'] ?? '';
+                $content .= is_string($text) ? $text : '';
             }
         }
+
         $this->claudeApiLogger->logRawResponse($content);
 
         $content = $this->extractJson($content);
@@ -106,10 +111,16 @@ readonly class ClaudeApiService
         try {
             $result = json_decode($content, true, 512, JSON_THROW_ON_ERROR);
 
+            if (!is_array($result)) {
+                $this->claudeApiLogger->logEnd();
+                throw new \RuntimeException('Réponse Anthropic invalide : le JSON décodé n\'est pas un objet. Raw: ' . $content);
+            }
+
+            /** @var array<string, mixed> $result */
             $this->claudeApiLogger->logParsedResult($result);
             $this->claudeApiLogger->logEnd();
 
-            return $result;
+            return MovieAnalysisResult::fromArray($result);
         } catch (\JsonException $e) {
             $this->claudeApiLogger->logError($e, $content);
             $this->claudeApiLogger->logEnd();
@@ -120,8 +131,8 @@ readonly class ClaudeApiService
 
     private function extractJson(string $content): string
     {
-        $content = preg_replace('/^```json\s*/s', '', $content);
-        $content = preg_replace('/\s*```$/s', '', $content);
+        $content = preg_replace('/^```json\s*/s', '', $content) ?? $content;
+        $content = preg_replace('/\s*```$/s', '', $content) ?? $content;
 
         $start = strpos($content, '{');
         $end = strrpos($content, '}');

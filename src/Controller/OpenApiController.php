@@ -32,6 +32,10 @@ final class OpenApiController extends AbstractController
         #[MapRequestPayload] OpenAiRequest $request,
     ): JsonResponse {
         try {
+            if ($request->prompt === null) {
+                return $this->json(['error' => 'Le prompt est requis.'], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+
             $gameContent = $this->openApiService->requestGameContent($request->prompt);
 
             return $this->json($gameContent);

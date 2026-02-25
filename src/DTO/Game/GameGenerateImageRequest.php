@@ -28,7 +28,6 @@ class GameGenerateImageRequest
         $solution = $this->solution ?? $game->getSolution();
         $analysis = $claudeApiService->analyzeMovieIdea($solution, $player);
 
-        return $analysis['image_prompt']
-            ?? throw new \RuntimeException('Impossible de générer un prompt image pour cette combinaison de films.');
+        return $analysis->getImagePrompt();
     }
 }

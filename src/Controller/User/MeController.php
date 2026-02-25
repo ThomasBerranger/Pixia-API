@@ -135,23 +135,23 @@ class MeController extends AbstractController
         try {
             $analysis = $this->claudeApiService->analyzeMovieIdea($gameIdeaRequest->idea, $player);
 
-            if ($analysis['status'] === 'rejected') {
+            if ($analysis->isRejected()) {
                 $player->addTokens(TokenCost::REFUND->value);
 
                 $this->entityManager->flush();
 
                 return $this->json([
                     'message' => 'Les films proposés ne sont pas assez connus',
-                    'notorietyScore' => $analysis['notorietyScore'],
-                    'films' => $analysis['films'],
+                    'notorietyScore' => $analysis->notorietyScore,
+                    'films' => $analysis->films,
                     'tokens' => $player->getTokens(),
                 ], Response::HTTP_OK);
             }
 
             $game = new Game()
-                ->setSolution($analysis['solution'])
-                ->setEnglishSolution($analysis['englishSolution'])
-                ->setHint($analysis['hint'])
+                ->setSolution($analysis->getSolution())
+                ->setEnglishSolution($analysis->getEnglishSolution())
+                ->setHint($analysis->getHint())
                 ->setAuthor($player);
 
             $this->entityManager->persist($game);
@@ -159,9 +159,9 @@ class MeController extends AbstractController
 
             return $this->json([
                 'game' => $game,
-                'notorietyScore' => $analysis['notorietyScore'],
-                'films' => $analysis['films'],
-                'image_prompt' => $analysis['image_prompt'],
+                'notorietyScore' => $analysis->notorietyScore,
+                'films' => $analysis->films,
+                'image_prompt' => $analysis->getImagePrompt(),
                 'tokens' => $player->getTokens(),
             ], Response::HTTP_CREATED, context: ['groups' => ['game:show']]);
 
