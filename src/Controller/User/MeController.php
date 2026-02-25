@@ -17,9 +17,9 @@ use App\Repository\GameRepository;
 use App\Repository\UserRepository;
 use App\Security\Voter\GameVoter;
 use App\Serializer\GameNormalizer;
+use App\Service\API\ClaudeApiService;
 use App\Service\API\OpenApiService;
 use App\Service\AuthenticatedUserService;
-use App\Service\API\ClaudeApiService;
 use App\Service\Game\GameService;
 use App\Service\ImageService;
 use App\Service\TokenService;
@@ -142,16 +142,16 @@ class MeController extends AbstractController
 
                 return $this->json([
                     'message' => 'Les films proposés ne sont pas assez connus',
-                    'notorietyScore' => $analysis['notorietyScore'], // @phpstan-ignore offsetAccess.notFound
-                    'films' => $analysis['films'], // @phpstan-ignore offsetAccess.notFound
+                    'notorietyScore' => $analysis['notorietyScore'],
+                    'films' => $analysis['films'],
                     'tokens' => $player->getTokens(),
                 ], Response::HTTP_OK);
             }
 
             $game = new Game()
-                ->setSolution($analysis['solution']) // @phpstan-ignore offsetAccess.notFound
-                ->setEnglishSolution($analysis['englishSolution']) // @phpstan-ignore offsetAccess.notFound
-                ->setHint($analysis['hint']) // @phpstan-ignore offsetAccess.notFound
+                ->setSolution($analysis['solution'])
+                ->setEnglishSolution($analysis['englishSolution'])
+                ->setHint($analysis['hint'])
                 ->setAuthor($player);
 
             $this->entityManager->persist($game);
@@ -159,9 +159,9 @@ class MeController extends AbstractController
 
             return $this->json([
                 'game' => $game,
-                'notorietyScore' => $analysis['notorietyScore'], // @phpstan-ignore offsetAccess.notFound
-                'films' => $analysis['films'], // @phpstan-ignore offsetAccess.notFound
-                'image_prompt' => $analysis['image_prompt'], // @phpstan-ignore offsetAccess.notFound
+                'notorietyScore' => $analysis['notorietyScore'],
+                'films' => $analysis['films'],
+                'image_prompt' => $analysis['image_prompt'],
                 'tokens' => $player->getTokens(),
             ], Response::HTTP_CREATED, context: ['groups' => ['game:show']]);
 

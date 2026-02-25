@@ -49,7 +49,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private int $score;
 
     #[ORM\Column(length: 255, unique: true)]
-    #[Groups(['user:me', 'user:show', 'user:index', 'user:index:admin', 'game:index:admin', 'game:show:admin'])]
+    #[Groups(['user:me', 'user:show', 'user:index', 'user:index:admin', 'game:show', 'game:index:admin', 'game:show:admin'])]
     private string $username;
 
     #[ORM\Column]
@@ -79,11 +79,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private Collection $contributions;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
-    #[Groups(['user:me', 'user:show', 'user:index', 'game:index:admin', 'game:show:admin'])]
+    #[Groups(['user:me', 'user:show', 'user:index', 'game:show', 'game:index:admin', 'game:show:admin'])]
     private ?string $avatarUrl = null;
 
     #[ORM\Column(length: 255, unique: true)]
-    #[Groups(['user:me', 'user:index'])]
+    #[Groups(['user:me', 'user:index', 'game:show'])]
     private string $slug;
 
     #[ORM\ManyToOne(targetEntity: self::class, inversedBy: 'referees')]
@@ -119,7 +119,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?int $rank = null;
 
     #[ORM\Column]
-    #[Groups(['user:me', 'game:show'])]
+    #[Groups(['user:me'])]
     private int $tokens = 0;
 
     public function __construct()

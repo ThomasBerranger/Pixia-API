@@ -38,6 +38,7 @@ class GameRepository extends ServiceEntityRepository
         /** @var list<array{0: Game, 1?: Achievement|null, playerHasHint?: int, previous_game_date?: DateTimeImmutable|null, next_game_date?: DateTimeImmutable|null}> $gameWithUserAchievement */
         $gameWithUserAchievement =
             $this->createQueryBuilder('g')
+                ->leftJoin('g.author', 'au')->addSelect('au')
                 ->leftJoin('g.hintedPlayers', 'hp', 'WITH', 'hp.id = :userId')
                 ->addSelect('COUNT(DISTINCT hp.id) as playerHasHint')
                 ->leftJoin(Achievement::class, 'a', 'ON', 'g.id = a.game AND a.player = :userId')

@@ -86,14 +86,14 @@ readonly class ClaudeApiService
             );
         }
 
-        $stopReason = $data['stop_reason'] ?? null; // @phpstan-ignore offsetAccess.nonOffsetAccessible
+        $stopReason = $data['stop_reason'] ?? null;
         if ($stopReason === 'max_tokens') {
             $this->claudeApiLogger->logEnd();
             throw new \RuntimeException('La réponse Claude a été tronquée (max_tokens atteint).');
         }
 
         $content = '';
-        foreach ($data['content'] as $block) { // @phpstan-ignore offsetAccess.nonOffsetAccessible
+        foreach ($data['content'] as $block) {
             if (($block['type'] ?? '') === 'text') {
                 $content .= $block['text'] ?? '';
             }
@@ -106,10 +106,10 @@ readonly class ClaudeApiService
         try {
             $result = json_decode($content, true, 512, JSON_THROW_ON_ERROR);
 
-            $this->claudeApiLogger->logParsedResult($result); // @phpstan-ignore argument.type
+            $this->claudeApiLogger->logParsedResult($result);
             $this->claudeApiLogger->logEnd();
 
-            return $result; // @phpstan-ignore return.type
+            return $result;
         } catch (\JsonException $e) {
             $this->claudeApiLogger->logError($e, $content);
             $this->claudeApiLogger->logEnd();
@@ -121,16 +121,16 @@ readonly class ClaudeApiService
     private function extractJson(string $content): string
     {
         $content = preg_replace('/^```json\s*/s', '', $content);
-        $content = preg_replace('/\s*```$/s', '', $content); // @phpstan-ignore argument.type
+        $content = preg_replace('/\s*```$/s', '', $content);
 
-        $start = strpos($content, '{'); // @phpstan-ignore argument.type
-        $end = strrpos($content, '}'); // @phpstan-ignore argument.type
+        $start = strpos($content, '{');
+        $end = strrpos($content, '}');
 
         if ($start === false || $end === false) {
-            return trim($content); // @phpstan-ignore argument.type
+            return trim($content);
         }
 
-        return trim(substr($content, $start, $end - $start + 1)); // @phpstan-ignore argument.type
+        return trim(substr($content, $start, $end - $start + 1));
     }
 
     private function getSystemPrompt(): string
