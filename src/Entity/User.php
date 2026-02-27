@@ -27,33 +27,33 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: UuidType::NAME, unique: true)]
     #[ORM\GeneratedValue(strategy: 'CUSTOM')]
     #[ORM\CustomIdGenerator(class: UuidGenerator::class)]
-    #[Groups(['user:index:admin'])]
+    #[Groups(['user:index:admin', 'user:index:super_admin'])]
     private ?Uuid $id = null;
 
     #[ORM\Column(length: 180)]
-    #[Groups(['user:me', 'user:index:admin'])]
+    #[Groups(['user:me', 'user:index:admin', 'user:index:super_admin'])]
     private string $email;
 
     /**
      * @var list<string> The user roles
      */
     #[ORM\Column]
-    #[Groups(['user:show:admin', 'user:index:admin'])]
+    #[Groups(['user:show:admin', 'user:index:admin', 'user:index:super_admin'])]
     private array $roles;
 
     #[ORM\Column]
     private string $password;
 
     #[ORM\Column]
-    #[Groups(['user:me', 'user:show', 'user:index', 'user:index:admin'])]
+    #[Groups(['user:me', 'user:show', 'user:index', 'user:index:admin', 'user:index:super_admin'])]
     private int $score;
 
     #[ORM\Column(length: 255, unique: true)]
-    #[Groups(['user:me', 'user:show', 'user:index', 'user:index:admin', 'game:show', 'game:index:admin', 'game:show:admin'])]
+    #[Groups(['user:me', 'user:show', 'user:index', 'user:index:admin', 'game:show', 'game:index:admin', 'game:show:admin', 'user:index:super_admin'])]
     private string $username;
 
     #[ORM\Column]
-    #[Groups(['user:index:admin'])]
+    #[Groups(['user:index:admin', 'user:index:super_admin'])]
     private DateTimeImmutable $createdAt;
 
     /**
@@ -119,7 +119,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?int $rank = null;
 
     #[ORM\Column]
-    #[Groups(['user:me'])]
+    #[Groups(['user:me', 'user:index:super_admin'])]
     private int $tokens = 0;
 
     public function __construct()

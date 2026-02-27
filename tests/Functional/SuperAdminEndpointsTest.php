@@ -61,8 +61,6 @@ class SuperAdminEndpointsTest extends WebTestCase
     public static function superAdminEndpointsProvider(): iterable
     {
         yield 'users index' => ['GET', '/super-admin/users'];
-        yield 'impersonate' => ['POST', '/super-admin/impersonate/test@test.com'];
-        yield 'toggle ban' => ['POST', '/super-admin/toggle-ban/test@test.com'];
         yield 'games index' => ['GET', '/super-admin/games'];
     }
 

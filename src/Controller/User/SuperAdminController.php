@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace App\Controller\User;
 
 use App\DTO\Contribution\ContributionUpdateRequest;
-use App\DTO\Game\GameCreateRequest;
+use App\DTO\Game\SuperAdminGameCreateRequest;
+use App\DTO\User\SuperAdminUpdateRequest;
 use App\Entity\Contribution;
 use App\Entity\User;
 use App\Enum\ContributionStatus;
@@ -35,37 +36,12 @@ final class SuperAdminController extends AbstractController
     {
     }
 
-    #[Route('/impersonate/{email}', name: 'impersonate', methods: ['POST'])]
-    public function impersonate(string $email): JsonResponse
+    #[Route('/impersonate/{id}', name: 'impersonate', methods: ['POST'])]
+    public function impersonate(User $player): JsonResponse
     {
-        $player = $this->getPlayerFor($email);
+        $jwtToken = $this->jwtManager->create($player);
 
-        $token = $this->jwtManager->create($player);
-
-        return $this->json(['token' => $token]);
-    }
-
-    #[Route('/toggle-ban/{email}', name: 'toggle_ban', methods: ['POST'])]
-    public function ban(string $email): JsonResponse
-    {
-        $player = $this->getPlayerFor($email);
-
-        $player->setRoles($player->isBanned() ? [] : [UserRole::BANNED->value]);
-
-        $this->entityManager->flush();
-
-        return $this->json($player, context: ['groups' => ['user:show:admin']]);
-    }
-
-    private function getPlayerFor(string $email): User
-    {
-        $player = $this->entityManager->getRepository(User::class)->findOneBy(['email' => $email]);
-
-        if (!$player) {
-            throw $this->createNotFoundException('User not found');
-        }
-
-        return $player;
+        return $this->json(['token' => $jwtToken]);
     }
 
     #[Route(path: '/users', name: 'users_index', methods: ['GET'])]
@@ -73,7 +49,22 @@ final class SuperAdminController extends AbstractController
     {
         $users = $this->entityManager->getRepository(User::class)->findAll();
 
-        return $this->json(data: $users, context: ['groups' => 'user:index:admin']);
+        array_shift($users);
+
+        return $this->json(data: $users, context: ['groups' => 'user:index:super_admin']);
+    }
+
+    #[Route('/users/{id}', name: 'users_update', methods: ['PATCH'], format: 'json')]
+    public function userUpdate(
+        User $player,
+        #[MapRequestPayload] SuperAdminUpdateRequest $superAdminUpdateRequest,
+    ): JsonResponse
+    {
+        $superAdminUpdateRequest->updateUser($player);
+
+        $this->entityManager->flush();
+
+        return $this->json(data: $player, context: ['groups' => 'user:index:super_admin']);
     }
 
     #[Route(path: '/games', name: 'games_index', methods: ['GET'], format: 'json')]
@@ -88,10 +79,10 @@ final class SuperAdminController extends AbstractController
 
     #[Route(path: '/games', name: 'games_create', methods: ['POST'], format: 'json')]
     public function gameCreate(
-        #[MapRequestPayload] GameCreateRequest $gameCreateRequest
+        #[MapRequestPayload] SuperAdminGameCreateRequest $superAdminGameCreateRequest,
     ): JsonResponse
     {
-        $game = $gameCreateRequest->toGame();
+        $game = $superAdminGameCreateRequest->toGame();
 
         $this->entityManager->persist($game);
         $this->entityManager->flush();

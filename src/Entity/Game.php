@@ -87,6 +87,7 @@ class Game
     {
         $this->hintedPlayers = new ArrayCollection();
         $this->createdAt = new DateTimeImmutable();
+        $this->date = (new DateTimeImmutable('+2 weeks'))->setTime(0, 0);
     }
 
     public function getId(): ?Uuid

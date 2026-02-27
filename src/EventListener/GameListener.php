@@ -45,8 +45,6 @@ readonly class GameListener
                 $game->setSupervisor($user);
             }
         }
-
-        $game->setDate(new DateTimeImmutable('+2 weeks')->setTime(0, 0));
     }
 
     public function preUpdate(Game $game, PreUpdateEventArgs $event): void
