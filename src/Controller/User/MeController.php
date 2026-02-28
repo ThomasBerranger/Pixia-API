@@ -18,8 +18,8 @@ use App\Repository\UserRepository;
 use App\Security\Voter\GameVoter;
 use App\Serializer\GameNormalizer;
 use App\Service\API\ClaudeApiService;
-use App\Service\API\OpenApiService;
 use App\Service\AuthenticatedUserService;
+use App\Service\Game\GameImageGenerationService;
 use App\Service\Game\GameService;
 use App\Service\ImageService;
 use App\Service\TokenService;
@@ -41,16 +41,16 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class MeController extends AbstractController
 {
     public function __construct(
-        private readonly AchievementRepository    $achievementRepository,
-        private readonly EntityManagerInterface   $entityManager,
-        private readonly AuthenticatedUserService $authenticatedUserService,
-        private readonly UserRepository           $userRepository,
-        private readonly GameRepository           $gameRepository,
-        private readonly GameService              $gameService,
-        private readonly ImageService             $imageService,
-        private readonly ClaudeApiService         $claudeApiService,
-        private readonly TokenService             $tokenService,
-        private readonly OpenApiService           $openApiService,
+        private readonly AchievementRepository        $achievementRepository,
+        private readonly EntityManagerInterface        $entityManager,
+        private readonly AuthenticatedUserService      $authenticatedUserService,
+        private readonly UserRepository                $userRepository,
+        private readonly GameRepository                $gameRepository,
+        private readonly GameService                   $gameService,
+        private readonly ImageService                  $imageService,
+        private readonly ClaudeApiService              $claudeApiService,
+        private readonly TokenService                  $tokenService,
+        private readonly GameImageGenerationService    $gameImageGenerationService,
     )
     {
     }
@@ -128,6 +128,8 @@ class MeController extends AbstractController
         #[MapRequestPayload] GameIdeaRequest $gameIdeaRequest
     ): JsonResponse
     {
+        set_time_limit(120);
+
         $player = $this->authenticatedUserService->getUserOrThrow();
 
         $this->tokenService->removeTokens($player, TokenCost::IDEA_ANALYSIS);
@@ -148,11 +150,7 @@ class MeController extends AbstractController
                 ], Response::HTTP_OK);
             }
 
-            $game = new Game()
-                ->setSolution($analysis->getSolution())
-                ->setEnglishSolution($analysis->getEnglishSolution())
-                ->setHint($analysis->getHint())
-                ->setAuthor($player);
+            $game = $analysis->toGame();
 
             $this->entityManager->persist($game);
             $this->entityManager->flush();
@@ -239,32 +237,14 @@ class MeController extends AbstractController
         #[MapRequestPayload] GameGenerateImageRequest $gameGenerateImageRequest,
     ): JsonResponse
     {
-        set_time_limit(120);
+        set_time_limit(180);
 
         $player = $this->authenticatedUserService->getUserOrThrow();
 
         $this->tokenService->removeTokens($player, TokenCost::IMAGE_GENERATION);
 
         try {
-            $prompt = $gameGenerateImageRequest->resolvePrompt($game, $player, $this->claudeApiService);
-
-            $imageUrl = $this->openApiService->requestGameImage($prompt);
-
-            $filename = $this->imageService->downloadAndStore(
-                $game->getType(),
-                $game->getDate(),
-                $imageUrl,
-            );
-
-            if ($filename === null) {
-                $player->addTokens(TokenCost::REFUND->value);
-
-                $this->entityManager->flush();
-
-                return $this->json(['message' => 'Erreur lors du téléchargement de l\'image'], Response::HTTP_INTERNAL_SERVER_ERROR);
-            }
-
-            $game->setImage($filename);
+            $this->gameImageGenerationService->generate($player, $game, $gameGenerateImageRequest->prompt, $gameGenerateImageRequest->solution);
 
             $this->entityManager->flush();
 
@@ -313,18 +293,19 @@ class MeController extends AbstractController
     #[Route(path: '/tokens', name: 'tokens', methods: ['GET'], format: 'json')]
     public function tokens(): JsonResponse
     {
-        return $this->json(data: $this->authenticatedUserService->getUserOrThrow()->getTokens());
+        $player = $this->authenticatedUserService->getUserOrThrow();
+
+        return $this->json([
+            'tokens' => $player->getTokens(),
+            'canClaim' => $this->tokenService->canClaimAdminTokens($player),
+        ]);
     }
 
     #[Route(path: '/tokens/claim', name: 'claim_tokens', methods: ['POST'], format: 'json')]
+    #[IsGranted(UserRole::ADMIN->value)]
     public function claimTokens(): JsonResponse
     {
-        $player = $this->authenticatedUserService->getUserOrThrow();
-        $addedTokens = 995;
-
-        $player->addTokens($addedTokens);
-
-        $this->entityManager->flush();
+        $addedTokens = $this->tokenService->claimAdminTokens($this->authenticatedUserService->getUserOrThrow());
 
         return $this->json($addedTokens);
     }

@@ -6,6 +6,7 @@ namespace App\Service\API;
 
 use App\DTO\API\MovieAnalysisResult;
 use App\Entity\User;
+use App\Service\ActivityService;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Contracts\HttpClient\Exception\HttpExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
@@ -23,109 +24,120 @@ readonly class ClaudeApiService
         #[Autowire('%env(CLAUDE_CONSOLE_KEY)%')]
         private string              $claudeConsoleKey,
         private ClaudeApiLogger     $claudeApiLogger,
+        private ActivityService     $activityService,
     )
     {
     }
 
-    public function analyzeMovieIdea(string $idea, ?User $user = null): MovieAnalysisResult
+    public function analyzeMovieIdea(string $idea, User $player): MovieAnalysisResult
     {
-        $this->claudeApiLogger->logRequest($user, $idea);
+        $this->activityService->recordGameGenerationRequest($player, $idea);
 
-        $response = $this->httpClient->request('POST', self::API_URL, [
-            'timeout' => 30,
-            'max_duration' => 120,
-            'headers' => [
-                'x-api-key' => $this->claudeConsoleKey,
-                'anthropic-version' => '2023-06-01',
-            ],
-            'json' => [
-                'model' => self::MODEL,
-                'max_tokens' => self::MAX_TOKENS,
-                'temperature' => self::TEMPERATURE,
-                'system' => [
-                    [
-                        'type' => 'text',
-                        'text' => $this->getSystemPrompt(),
-                        'cache_control' => ['type' => 'ephemeral'],
-                    ]
+        try {
+            $response = $this->httpClient->request('POST', self::API_URL, [
+                'timeout' => 30,
+                'max_duration' => 120,
+                'headers' => [
+                    'x-api-key' => $this->claudeConsoleKey,
+                    'anthropic-version' => '2023-06-01',
                 ],
-                'tools' => [
-                    [
-                        'type' => 'web_search_20250305',
-                        'name' => 'web_search',
-                        'max_uses' => 2,
-                        'user_location' => [
-                            'type' => 'approximate',
-                            'country' => 'FR',
-                            'timezone' => 'Europe/Paris',
-                        ],
-                    ]
-                ],
-                'messages' => [
-                    [
-                        'role' => 'user',
-                        'content' => $idea,
+                'json' => [
+                    'model' => self::MODEL,
+                    'max_tokens' => self::MAX_TOKENS,
+                    'temperature' => self::TEMPERATURE,
+                    'system' => [
+                        [
+                            'type' => 'text',
+                            'text' => $this->getSystemPrompt(),
+                            'cache_control' => ['type' => 'ephemeral'],
+                        ]
+                    ],
+                    'tools' => [
+                        [
+                            'type' => 'web_search_20250305',
+                            'name' => 'web_search',
+                            'max_uses' => 2,
+                            'user_location' => [
+                                'type' => 'approximate',
+                                'country' => 'FR',
+                                'timezone' => 'Europe/Paris',
+                            ],
+                        ]
+                    ],
+                    'messages' => [
+                        [
+                            'role' => 'user',
+                            'content' => $idea,
+                        ]
                     ]
                 ]
-            ]
-        ]);
+            ]);
 
-        try {
-            $data = $response->toArray();
-        } catch (HttpExceptionInterface $e) {
-            $body = $response->getContent(false);
-            $this->claudeApiLogger->logError($e, $body);
-            $this->claudeApiLogger->logEnd();
+            try {
+                $data = $response->toArray();
+            } catch (HttpExceptionInterface $e) {
+                $body = $response->getContent(false);
+                $this->claudeApiLogger->logError($e, $body);
 
-            throw new \RuntimeException(
-                sprintf('Anthropic API HTTP %d: %s', $response->getStatusCode(), $body),
-                $response->getStatusCode(),
-                $e,
-            );
-        }
-
-        $stopReason = $data['stop_reason'] ?? null;
-        if ($stopReason === 'max_tokens') {
-            $this->claudeApiLogger->logEnd();
-            throw new \RuntimeException('La réponse Claude a été tronquée (max_tokens atteint).');
-        }
-
-        $content = '';
-        $blocks = $data['content'] ?? [];
-        if (!is_array($blocks)) {
-            $this->claudeApiLogger->logEnd();
-            throw new \RuntimeException('Réponse Anthropic invalide : clé "content" manquante ou non-itérable dans la réponse API.');
-        }
-        foreach ($blocks as $block) {
-            if (is_array($block) && ($block['type'] ?? '') === 'text') {
-                $text = $block['text'] ?? '';
-                $content .= is_string($text) ? $text : '';
-            }
-        }
-
-        $this->claudeApiLogger->logRawResponse($content);
-
-        $content = $this->extractJson($content);
-        $this->claudeApiLogger->logExtractedJson($content);
-
-        try {
-            $result = json_decode($content, true, 512, JSON_THROW_ON_ERROR);
-
-            if (!is_array($result)) {
-                $this->claudeApiLogger->logEnd();
-                throw new \RuntimeException('Réponse Anthropic invalide : le JSON décodé n\'est pas un objet. Raw: ' . $content);
+                throw new \RuntimeException(
+                    sprintf('Anthropic API HTTP %d: %s', $response->getStatusCode(), $body),
+                    $response->getStatusCode(),
+                    $e,
+                );
             }
 
-            /** @var array<string, mixed> $result */
-            $this->claudeApiLogger->logParsedResult($result);
-            $this->claudeApiLogger->logEnd();
+            $stopReason = $data['stop_reason'] ?? null;
+            if ($stopReason === 'max_tokens') {
+                throw new \RuntimeException('La réponse Claude a été tronquée (max_tokens atteint).');
+            }
 
-            return MovieAnalysisResult::fromArray($result);
-        } catch (\JsonException $e) {
-            $this->claudeApiLogger->logError($e, $content);
-            $this->claudeApiLogger->logEnd();
+            $blocks = $data['content'] ?? [];
+            if (!is_array($blocks)) {
+                throw new \RuntimeException('Réponse Anthropic invalide : clé "content" manquante ou non-itérable dans la réponse API.');
+            }
 
-            throw new \RuntimeException("JSON parsing failed. Raw content: " . $content . " | Error: " . $e->getMessage());
+            $lastToolResultIndex = -1;
+            foreach ($blocks as $index => $block) {
+                if (is_array($block) && in_array($block['type'] ?? '', ['web_search_tool_result', 'server_tool_use'], true)) {
+                    $lastToolResultIndex = $index;
+                }
+            }
+
+            $content = '';
+            foreach ($blocks as $index => $block) {
+                if ($index <= $lastToolResultIndex) {
+                    continue;
+                }
+                if (is_array($block) && ($block['type'] ?? '') === 'text') {
+                    $text = $block['text'] ?? '';
+                    $content .= is_string($text) ? $text : '';
+                }
+            }
+
+            $content = $this->extractJson($content);
+
+            try {
+                $result = json_decode($content, true, 512, JSON_THROW_ON_ERROR);
+
+                if (!is_array($result)) {
+                    throw new \RuntimeException('Réponse Anthropic invalide : le JSON décodé n\'est pas un objet. Raw: ' . $content);
+                }
+
+                /** @var array<string, mixed> $result */
+                $analysis = MovieAnalysisResult::fromArray($result);
+
+                $this->activityService->recordGameGeneration($player, $analysis);
+
+                return $analysis;
+            } catch (\JsonException $e) {
+                $this->claudeApiLogger->logError($e, $content);
+
+                throw new \RuntimeException("JSON parsing failed. Raw content: " . $content . " | Error: " . $e->getMessage());
+            }
+        } catch (\Throwable $e) {
+            $this->activityService->recordGameGenerationError($player, $idea, $e);
+
+            throw $e;
         }
     }
 

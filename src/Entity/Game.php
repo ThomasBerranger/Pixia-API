@@ -83,11 +83,14 @@ class Game
     #[Groups(['game:index', 'game:index:admin'])]
     private GameStatus $status = GameStatus::DRAFT;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $supervisorMessage = null;
+
     public function __construct()
     {
         $this->hintedPlayers = new ArrayCollection();
         $this->createdAt = new DateTimeImmutable();
-        $this->date = (new DateTimeImmutable('+2 weeks'))->setTime(0, 0);
+        $this->date = new DateTimeImmutable('+2 weeks')->setTime(0, 0);
     }
 
     public function getId(): ?Uuid
@@ -297,5 +300,17 @@ class Game
         $userId = $user->getId();
 
         return $supervisorId !== null && $userId !== null && $supervisorId->equals($userId);
+    }
+
+    public function getSupervisorMessage(): ?string
+    {
+        return $this->supervisorMessage;
+    }
+
+    public function setSupervisorMessage(?string $supervisorMessage): static
+    {
+        $this->supervisorMessage = $supervisorMessage;
+
+        return $this;
     }
 }

@@ -143,10 +143,6 @@ readonly class OpenApiService
      */
     public function requestGameImage(string $prompt): string
     {
-        $this->logger->notice('=== OPENAI IMAGE REQUEST ===', [
-            'prompt' => $prompt,
-        ]);
-
         $response = $this->httpClient->request('POST', 'https://api.openai.com/v1/images/generations', [
             'headers' => $this->generateHeader(),
             'json' => $this->generateImageJson($prompt),
@@ -160,9 +156,6 @@ readonly class OpenApiService
             $this->logger->error('OpenAI image URL not found', ['response' => $data]);
             throw new \RuntimeException('URL d\'image non trouvée dans la réponse');
         }
-
-        $this->logger->notice('OpenAI image generated', ['url' => $url]);
-        $this->logger->notice('=== END OPENAI IMAGE ===');
 
         return $url;
     }

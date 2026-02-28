@@ -1,0 +1,46 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Repository;
+
+use App\Entity\Activity;
+use App\Entity\User;
+use App\Enum\ActivityType;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\DBAL\Types\Types;
+use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Bridge\Doctrine\Types\UuidType;
+
+/**
+ * @extends ServiceEntityRepository<Activity>
+ */
+class ActivityRepository extends ServiceEntityRepository
+{
+    public function __construct(ManagerRegistry $registry)
+    {
+        parent::__construct($registry, Activity::class);
+    }
+
+    public function hasClaimedTokensThisMonth(User $player, ActivityType $type): bool
+    {
+        $now = new \DateTimeImmutable();
+        $firstDay = $now->modify('first day of this month midnight');
+        $firstDayNextMonth = $firstDay->modify('+1 month');
+
+        $count = $this->createQueryBuilder('a')
+            ->select('COUNT(a.id)')
+            ->where('a.player = :player')
+            ->andWhere('a.type = :type')
+            ->andWhere('a.createdAt >= :start')
+            ->andWhere('a.createdAt < :end')
+            ->setParameter('player', $player->getId(), UuidType::NAME)
+            ->setParameter('type', $type)
+            ->setParameter('start', $firstDay, Types::DATETIME_IMMUTABLE)
+            ->setParameter('end', $firstDayNextMonth, Types::DATETIME_IMMUTABLE)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return $count > 0;
+    }
+}

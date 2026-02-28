@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\DTO\API;
 
+use App\Entity\Game;
+
 readonly class MovieAnalysisResult
 {
     /**
@@ -22,7 +24,7 @@ readonly class MovieAnalysisResult
 
     public function isRejected(): bool
     {
-        return $this->status === 'rejected';
+        return $this->solution === null || $this->imagePrompt === null;
     }
 
     public function getSolution(): string
@@ -43,6 +45,14 @@ readonly class MovieAnalysisResult
     public function getImagePrompt(): string
     {
         return $this->imagePrompt ?? throw new \LogicException('ImagePrompt absent sur une analyse approved.');
+    }
+
+    public function toGame(): Game
+    {
+        return new Game()
+            ->setSolution($this->getSolution())
+            ->setEnglishSolution($this->getEnglishSolution())
+            ->setHint($this->getHint());
     }
 
     /**
