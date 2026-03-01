@@ -228,6 +228,8 @@ class GameRepository extends ServiceEntityRepository
         /** @var list<string> */
         return $this->createQueryBuilder('g')
             ->select('g.date')
+            ->where('g.status = :status')
+            ->setParameter('status', GameStatus::APPROVED)
             ->orderBy('g.date', 'ASC')
             ->getQuery()
             ->getSingleColumnResult();
