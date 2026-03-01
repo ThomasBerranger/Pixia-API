@@ -26,7 +26,7 @@ readonly class ImageService
     {
     }
 
-    public function downloadAndStore(GameType $gameType, DateTimeImmutable $date, string $imageUrl): ?string
+    public function downloadAndStore(GameType $gameType, DateTimeImmutable $date, string $imageUrl, ?string $oldImage = null): ?string
     {
         if (!filter_var($imageUrl, FILTER_VALIDATE_URL)) {
             return null;
@@ -34,9 +34,18 @@ readonly class ImageService
 
         $directoryPath = $this->createRepository($gameType, $date);
 
+        if ($oldImage && file_exists($directoryPath . '/' . $oldImage)) {
+            unlink($directoryPath . '/' . $oldImage);
+        }
+
         $imageName = $this->generateImageName();
 
-        file_put_contents($directoryPath . '/' . $imageName, $this->getImage($imageUrl));
+        $rawContent = $this->getImage($imageUrl);
+        if ($rawContent === '') {
+            return null;
+        }
+        $webpContent = $this->convertToWebp($rawContent);
+        file_put_contents($directoryPath . '/' . $imageName, $webpContent);
 
         return $imageName;
     }
@@ -55,7 +64,12 @@ readonly class ImageService
 
         $filename = $this->generateImageName();
 
-        $newImage->move($directoryPath, $filename);
+        $rawContent = file_get_contents($newImage->getPathname());
+        if ($rawContent === false) {
+            throw new \RuntimeException('Impossible de lire l\'image uploadée');
+        }
+        $webpContent = $this->convertToWebp($rawContent);
+        file_put_contents($directoryPath . '/' . $filename, $webpContent);
 
         return $filename;
     }
@@ -127,9 +141,40 @@ readonly class ImageService
         }
     }
 
+    private function convertToWebp(string $rawContent): string
+    {
+        if ($this->isWebp($rawContent)) {
+            return $rawContent;
+        }
+
+        $image = imagecreatefromstring($rawContent);
+
+        if ($image === false) {
+            throw new \RuntimeException('Impossible de décoder l\'image');
+        }
+
+        ob_start();
+        imagewebp($image, null, 85);
+        $webpContent = ob_get_clean();
+        imagedestroy($image);
+
+        if ($webpContent === false) {
+            throw new \RuntimeException('Échec de la conversion en WebP');
+        }
+
+        return $webpContent;
+    }
+
+    private function isWebp(string $rawContent): bool
+    {
+        $info = getimagesizefromstring($rawContent);
+
+        return $info !== false && $info[2] === IMAGETYPE_WEBP;
+    }
+
     private function generateImageName(): string
     {
-        return uniqid() . '.jpg';
+        return uniqid() . '.webp';
     }
 
     public function validate(UploadedFile $image): bool

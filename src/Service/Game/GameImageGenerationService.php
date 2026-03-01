@@ -36,6 +36,7 @@ readonly class GameImageGenerationService
                 $game->getType(),
                 $game->getDate(),
                 $imageUrl,
+                $game->getImage(),
             );
 
             if ($filename === null) {
