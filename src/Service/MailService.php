@@ -32,14 +32,15 @@ readonly class MailService
     /**
      * @throws TransportExceptionInterface
      */
-    public function sendContributionMail(string $username, Contribution $contribution): void
+    public function sendContributionMail(User $author, Contribution $contribution): void
     {
         $email = new Email()
             ->from(new Address(self::NO_REPLY_MAIL, self::NAME))
+            ->replyTo(new Address($author->getEmail(), $author->getUsername()))
             ->to(self::PIXIA_MAIL)
             ->subject($contribution->getType() === ContributionType::GAME_SUGGESTION ? 'Proposition de fusion' : 'Bug remonté')
             ->html(
-                '<h2>' . $username . ($contribution->getType() === ContributionType::GAME_SUGGESTION ? ' te propose une fusion' : ' te remonte un bug') . '</h2>
+                '<h2>' . $author->getUsername() . ($contribution->getType() === ContributionType::GAME_SUGGESTION ? ' te propose une fusion' : ' te remonte un bug') . '</h2>
                        <p>' . $contribution->getTitle() . '</p>
                        <p>' . $contribution->getDescription() . '</p>
                        '

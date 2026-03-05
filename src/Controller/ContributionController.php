@@ -47,7 +47,7 @@ final class ContributionController extends AbstractController
         $this->entityManager->persist($contribution);
         $this->entityManager->flush();
 
-        $this->mailService->sendContributionMail($author->getUsername(), $contribution);
+        $this->mailService->sendContributionMail($author, $contribution);
 
         return $this->json($contribution, Response::HTTP_CREATED, context: ['groups' => ['contribution:show']]);
     }
