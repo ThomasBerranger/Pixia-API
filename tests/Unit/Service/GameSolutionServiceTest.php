@@ -71,8 +71,8 @@ class GameSolutionServiceTest extends TestCase
             'typo in long word' => ['Interstellar et Inception', 'Intersteler Incepton', true],
             'typo chihiro' => ['Le Voyage de Chihiro et Totoro', 'Le Voyage de Shihiro Totoro', true],
 
-            // Extra words over limit (invalid with 1.5x multiplier: 2 words → max 3)
-            'extra words over limit' => ['Matrix et Inception', 'Matrix film Inception movie', false],
+            // Extra words over limit (invalid with 3x multiplier: 2 words → max 6)
+            'extra words over limit' => ['Matrix et Inception', 'Matrix film Inception movie blah bla seven', false],
 
             // Real film combinations
             'amelie poulain + intouchables' => ['Amelie Poulain et Intouchables', 'Amelie Poulain Intouchables', true],
@@ -187,9 +187,10 @@ class GameSolutionServiceTest extends TestCase
             'new york new york complete' => ['New York New York', 'New York New York', true],
             'new york new york incomplete' => ['New York New York', 'New York', false],
 
-            // Duplicate words in answer (over limit with 1.5x: 1 word → max 1.5)
-            'extra duplicate over limit' => ['Matrix', 'Matrix Matrix', false],
-            'triple word over limit' => ['Inception', 'Inception Inception Inception', false],
+            // Duplicate words in answer (with 3x: 1 word → max 3)
+            'extra duplicate within limit' => ['Matrix', 'Matrix Matrix', true],
+            'triple word at limit' => ['Inception', 'Inception Inception Inception', true],
+            'quadruple word over limit' => ['Inception', 'Inception Inception Inception Inception', false],
 
             // Both have duplicates
             'matching duplicates' => ['Bang Bang', 'Bang Bang', true],
@@ -308,19 +309,22 @@ class GameSolutionServiceTest extends TestCase
     public static function antiSpamProvider(): array
     {
         return [
-            // Within limit (1.5x expected words)
+            // Within limit (3x expected words)
             '2 words, 3 answer ok' => ['Matrix Inception', 'Matrix et Inception', true],
             '3 words, 4 answer ok' => ['Le Roi Lion', 'Le Roi Lion est', true],
-            '2 words, exactly at limit' => ['Matrix Inception', 'Matrix Inception un', true],
+            '2 words, 5 answer ok' => ['Matrix Inception', 'Matrix Inception un deux trois', true],
+            '2 words, 6 answer at limit' => ['Matrix Inception', 'Matrix Inception un deux trois quatre', true],
 
             // Over limit
-            '2 words, 4 answer' => ['Matrix Inception', 'un deux Matrix Inception', false],
-            '3 words, 5 answer' => ['Le Roi Lion', 'Le Roi Lion est genial', false],
+            '2 words, 7 answer' => ['Matrix Inception', 'Matrix Inception un deux trois quatre cinq', false],
+            '3 words, 10 answer' => ['Le Roi Lion', 'Le Roi Lion est genial un deux trois quatre cinq', false],
             'spam multiple films' => ['Matrix', 'Matrix Inception Avatar Titanic', false],
 
-            // Edge: 1 word, max 1.5 → only 1 answer word allowed
+            // Edge: 1 word, max 3 → up to 3 answer words allowed
             '1 word, 1 answer' => ['Matrix', 'Matrix', true],
-            '1 word, 2 answer' => ['Matrix', 'Matrix film', false],
+            '1 word, 2 answer' => ['Matrix', 'Matrix film', true],
+            '1 word, 3 answer' => ['Matrix', 'Matrix film deux', true],
+            '1 word, 4 answer' => ['Matrix', 'Matrix film deux trois', false],
         ];
     }
 

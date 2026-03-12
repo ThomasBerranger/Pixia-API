@@ -14,7 +14,7 @@ use Doctrine\ORM\EntityManagerInterface;
 
 readonly class GameSolutionService
 {
-    private const float MAX_WORDS_MULTIPLIER = 1.5;
+    private const float MAX_WORDS_MULTIPLIER = 3;
     private const array IGNORED_WORDS = ['et', 'and'];
 
     public function __construct(
