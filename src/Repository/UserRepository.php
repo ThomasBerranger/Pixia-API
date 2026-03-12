@@ -91,6 +91,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
                     ON a.game_id = g.id 
                     AND a.player_id = :playerId
                 WHERE g.date <= CURDATE()
+                    AND g.status = 'APPROVED'
             ),
             streak_groups AS (
                 SELECT 
@@ -267,6 +268,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
                 CROSS JOIN game g
                 LEFT JOIN achievement a ON a.game_id = g.id AND a.player_id = ru.player_id
                 WHERE g.date <= CURDATE()
+                    AND g.status = 'APPROVED'
             ),
             streak_calc AS (
                 SELECT 
