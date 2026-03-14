@@ -8,6 +8,7 @@ use App\Entity\Achievement;
 use App\Entity\Game;
 use App\Entity\User;
 use App\Enum\GameDifficulty;
+use App\Repository\AchievementRepository;
 use App\Service\AchievementService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -17,11 +18,13 @@ class AchievementServiceTest extends TestCase
 {
     private AchievementService $service;
     private EntityManagerInterface&MockObject $entityManager;
+    private AchievementRepository&MockObject $achievementRepository;
 
     protected function setUp(): void
     {
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
-        $this->service = new AchievementService($this->entityManager);
+        $this->achievementRepository = $this->createMock(AchievementRepository::class);
+        $this->service = new AchievementService($this->entityManager, $this->achievementRepository);
     }
 
     // ========== Tests saveResult() ==========
@@ -265,5 +268,147 @@ class AchievementServiceTest extends TestCase
         $this->assertSame($game, $capturedAchievement->getGame());
         $this->assertInstanceOf(\DateTimeImmutable::class, $capturedAchievement->getDate());
         $this->assertSame(GameDifficulty::EASY, $capturedAchievement->getDifficulty());
+    }
+
+    // ========== Tests getRecentPointsHistory() ==========
+
+    public function testGetRecentPointsHistoryReturns14Days(): void
+    {
+        $player = $this->createMock(User::class);
+
+        $this->achievementRepository
+            ->method('getRecentHistory')
+            ->willReturn([]);
+
+        $result = $this->service->getRecentPointsHistory($player);
+
+        $this->assertCount(14, $result);
+    }
+
+    public function testGetRecentPointsHistoryReturnsCustomDays(): void
+    {
+        $player = $this->createMock(User::class);
+
+        $this->achievementRepository
+            ->method('getRecentHistory')
+            ->willReturn([]);
+
+        $result = $this->service->getRecentPointsHistory($player, 7);
+
+        $this->assertCount(7, $result);
+    }
+
+    public function testGetRecentPointsHistoryDatesAreChronological(): void
+    {
+        $player = $this->createMock(User::class);
+
+        $this->achievementRepository
+            ->method('getRecentHistory')
+            ->willReturn([]);
+
+        $result = $this->service->getRecentPointsHistory($player);
+
+        $dates = array_column($result, 'date');
+        $sorted = $dates;
+        sort($sorted);
+
+        $this->assertSame($sorted, $dates);
+    }
+
+    public function testGetRecentPointsHistoryLastDateIsToday(): void
+    {
+        $player = $this->createMock(User::class);
+
+        $this->achievementRepository
+            ->method('getRecentHistory')
+            ->willReturn([]);
+
+        $result = $this->service->getRecentPointsHistory($player);
+
+        $this->assertSame((new \DateTimeImmutable('today'))->format('Y-m-d'), end($result)['date']);
+    }
+
+    public function testGetRecentPointsHistoryZeroPointsWhenNoData(): void
+    {
+        $player = $this->createMock(User::class);
+
+        $this->achievementRepository
+            ->method('getRecentHistory')
+            ->willReturn([]);
+
+        $result = $this->service->getRecentPointsHistory($player);
+
+        foreach ($result as $entry) {
+            $this->assertSame(0, $entry['points']);
+        }
+    }
+
+    public function testGetRecentPointsHistoryCalculatesPointsForWonGame(): void
+    {
+        $player = $this->createMock(User::class);
+        $today = (new \DateTimeImmutable('today'))->format('Y-m-d');
+
+        $this->achievementRepository
+            ->method('getRecentHistory')
+            ->willReturn([
+                ['date' => $today, 'difficulty' => 'SIMPLE', 'won' => '1', 'hinted' => '0'],
+            ]);
+
+        $result = $this->service->getRecentPointsHistory($player);
+
+        $todayEntry = end($result);
+        $this->assertSame(10, $todayEntry['points']);
+    }
+
+    public function testGetRecentPointsHistoryCalculatesHintedPoints(): void
+    {
+        $player = $this->createMock(User::class);
+        $today = (new \DateTimeImmutable('today'))->format('Y-m-d');
+
+        $this->achievementRepository
+            ->method('getRecentHistory')
+            ->willReturn([
+                ['date' => $today, 'difficulty' => 'DIABOLIQUE', 'won' => '1', 'hinted' => '1'],
+            ]);
+
+        $result = $this->service->getRecentPointsHistory($player);
+
+        $todayEntry = end($result);
+        $this->assertSame(25, $todayEntry['points']);
+    }
+
+    public function testGetRecentPointsHistoryZeroPointsForLostGame(): void
+    {
+        $player = $this->createMock(User::class);
+        $today = (new \DateTimeImmutable('today'))->format('Y-m-d');
+
+        $this->achievementRepository
+            ->method('getRecentHistory')
+            ->willReturn([
+                ['date' => $today, 'difficulty' => 'TORDU', 'won' => '0', 'hinted' => '0'],
+            ]);
+
+        $result = $this->service->getRecentPointsHistory($player);
+
+        $todayEntry = end($result);
+        $this->assertSame(0, $todayEntry['points']);
+    }
+
+    public function testGetRecentPointsHistorySumsMultipleGamesSameDay(): void
+    {
+        $player = $this->createMock(User::class);
+        $today = (new \DateTimeImmutable('today'))->format('Y-m-d');
+
+        $this->achievementRepository
+            ->method('getRecentHistory')
+            ->willReturn([
+                ['date' => $today, 'difficulty' => 'SIMPLE', 'won' => '1', 'hinted' => '0'],
+                ['date' => $today, 'difficulty' => 'TORDU', 'won' => '1', 'hinted' => '0'],
+            ]);
+
+        $result = $this->service->getRecentPointsHistory($player);
+
+        $todayEntry = end($result);
+        $this->assertSame(35, $todayEntry['points']); // 10 + 25
     }
 }

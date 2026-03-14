@@ -169,7 +169,7 @@ class GameRepository extends ServiceEntityRepository
             ->andWhere('g.status = :status')
             ->setParameter('start', $month->modify('first day of this month')->format('Y-m-d'))
             ->setParameter('end', $month->modify('last day of this month')->format('Y-m-d'))
-            ->setParameter('today', (new DateTimeImmutable('today'))->format('Y-m-d'))
+            ->setParameter('today', new DateTimeImmutable('today')->format('Y-m-d'))
             ->setParameter('status', GameStatus::APPROVED)
             ->setParameter('playerId', $player->getId(), UuidType::NAME)
             ->orderBy('g.date', 'DESC');

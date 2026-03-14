@@ -16,7 +16,7 @@ use App\Repository\AchievementRepository;
 use App\Repository\GameRepository;
 use App\Repository\UserRepository;
 use App\Security\Voter\GameVoter;
-use App\Serializer\GameNormalizer;
+use App\Service\AchievementService;
 use App\Service\API\ClaudeApiService;
 use App\Service\AuthenticatedUserService;
 use App\Service\Game\GameImageGenerationService;
@@ -42,6 +42,7 @@ class MeController extends AbstractController
 {
     public function __construct(
         private readonly AchievementRepository        $achievementRepository,
+        private readonly AchievementService           $achievementService,
         private readonly EntityManagerInterface        $entityManager,
         private readonly AuthenticatedUserService      $authenticatedUserService,
         private readonly UserRepository                $userRepository,
@@ -70,9 +71,8 @@ class MeController extends AbstractController
         $data['user'] = $player;
         $data['games'] = $this->gameRepository->countAvailableGames();
 
-        $achievementData = $this->achievementRepository->findLastWithCountFor($player, 3);
-        $data['success'] = $achievementData['count'];
-        $data['history'] = $achievementData['history'];
+        $data['successCount'] = $this->achievementRepository->countByPlayer($player);
+        $data['history'] = $this->achievementService->getRecentPointsHistory($player);
 
         $data = [
             ...$data,
@@ -81,10 +81,7 @@ class MeController extends AbstractController
             'authoredGameCount' => $this->gameRepository->count(['author' => $player]),
         ];
 
-        return $this->json($data, context: [
-            'groups' => ['user:me'],
-            GameNormalizer::SHOW_SOLUTION => true,
-        ]);
+        return $this->json($data, context: ['groups' => ['user:me']]);
     }
 
     #[Route(path: '/games-stats', name: 'games_stats', methods: ['GET'])]
