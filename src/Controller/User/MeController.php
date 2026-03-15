@@ -41,17 +41,17 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class MeController extends AbstractController
 {
     public function __construct(
-        private readonly AchievementRepository        $achievementRepository,
-        private readonly AchievementService           $achievementService,
-        private readonly EntityManagerInterface        $entityManager,
-        private readonly AuthenticatedUserService      $authenticatedUserService,
-        private readonly UserRepository                $userRepository,
-        private readonly GameRepository                $gameRepository,
-        private readonly GameService                   $gameService,
-        private readonly ImageService                  $imageService,
-        private readonly ClaudeApiService              $claudeApiService,
-        private readonly TokenService                  $tokenService,
-        private readonly GameImageGenerationService    $gameImageGenerationService,
+        private readonly AchievementRepository      $achievementRepository,
+        private readonly AchievementService         $achievementService,
+        private readonly EntityManagerInterface     $entityManager,
+        private readonly AuthenticatedUserService   $authenticatedUserService,
+        private readonly UserRepository             $userRepository,
+        private readonly GameRepository             $gameRepository,
+        private readonly GameService                $gameService,
+        private readonly ImageService               $imageService,
+        private readonly ClaudeApiService           $claudeApiService,
+        private readonly TokenService               $tokenService,
+        private readonly GameImageGenerationService $gameImageGenerationService,
     )
     {
     }
@@ -68,20 +68,16 @@ class MeController extends AbstractController
 
         $player->setRank($this->userRepository->getRank($player));
 
-        $data['user'] = $player;
-        $data['games'] = $this->gameRepository->countAvailableGames();
-
-        $data['successCount'] = $this->achievementRepository->countByPlayer($player);
-        $data['history'] = $this->achievementService->getRecentPointsHistory($player);
-
-        $data = [
-            ...$data,
+        return $this->json([
+            'user' => $player,
+            'successCount' => $this->achievementRepository->countByPlayer($player),
+            'history' => $this->achievementService->getRecentPointsHistory($player),
+            'canClaimTokens' => $this->tokenService->canClaimTokens($player),
+            'games' => $this->gameRepository->countAvailableGames(),
             'streak' => [...$this->userRepository->getStreaks($player)],
             'playerCount' => $this->userRepository->count(),
             'authoredGameCount' => $this->gameRepository->count(['author' => $player]),
-        ];
-
-        return $this->json($data, context: ['groups' => ['user:me']]);
+        ], context: ['groups' => ['user:me']]);
     }
 
     #[Route(path: '/games-stats', name: 'games_stats', methods: ['GET'])]
@@ -294,16 +290,26 @@ class MeController extends AbstractController
 
         return $this->json([
             'tokens' => $player->getTokens(),
-            'canClaim' => $this->tokenService->canClaimAdminTokens($player),
+            'canClaimTokens' => $this->tokenService->canClaimTokens($player),
+            'canClaimAdminTokens' => $this->tokenService->canClaimAdminTokens($player),
         ]);
     }
 
     #[Route(path: '/tokens/claim', name: 'claim_tokens', methods: ['POST'], format: 'json')]
-    #[IsGranted(UserRole::ADMIN->value)]
-    public function claimTokens(): JsonResponse
+    public function claimTokens(
+        #[MapQueryParameter] bool $isAdminClaim = false,
+    ): JsonResponse
     {
-        $addedTokens = $this->tokenService->claimAdminTokens($this->authenticatedUserService->getUserOrThrow());
+        $player = $this->authenticatedUserService->getUserOrThrow();
 
-        return $this->json($addedTokens);
+        if ($isAdminClaim) {
+            $this->denyAccessUnlessGranted(UserRole::ADMIN->value);
+
+            $addedTokens = $this->tokenService->claimAdminTokens($player);
+        } else {
+            $addedTokens = $this->tokenService->claimTokens($player);
+        }
+
+        return $this->json(['addedTokens' => $addedTokens, 'tokens' => $player->getTokens()]);
     }
 }

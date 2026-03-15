@@ -22,7 +22,21 @@ class ActivityRepository extends ServiceEntityRepository
         parent::__construct($registry, Activity::class);
     }
 
-    public function hasClaimedTokensThisMonth(User $player, ActivityType $type): bool
+    public function findLastByPlayerAndType(User $player, ActivityType $type): ?Activity
+    {
+        /** @var Activity|null */
+        return $this->createQueryBuilder('a')
+            ->where('a.player = :player')
+            ->andWhere('a.type = :type')
+            ->setParameter('player', $player->getId(), UuidType::NAME)
+            ->setParameter('type', $type)
+            ->orderBy('a.createdAt', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    public function hasClaimedThisMonth(User $player, ActivityType $type): bool
     {
         $now = new \DateTimeImmutable();
         $firstDay = $now->modify('first day of this month midnight');

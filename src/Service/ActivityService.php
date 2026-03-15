@@ -76,6 +76,13 @@ readonly class ActivityService
         ]));
     }
 
+    public function recordPlayerTokensClaim(User $player, int $amount): void
+    {
+        $this->entityManager->persist(new Activity($player, ActivityType::PLAYER_TOKENS_CLAIM, [
+            'amount' => $amount,
+        ]));
+    }
+
     public function recordImageGenerationError(User $player, Game $game, \Throwable $error): void
     {
         $this->entityManager->persist(new Activity($player, ActivityType::IMAGE_GENERATION_ERROR, [

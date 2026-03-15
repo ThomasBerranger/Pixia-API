@@ -31,7 +31,7 @@ class Activity
 
     /** @var array<string, mixed>|null */
     #[ORM\Column(type: Types::JSON, nullable: true)]
-    private ?array $data = null;
+    private ?array $data;
 
     #[ORM\Column]
     private DateTimeImmutable $createdAt;
