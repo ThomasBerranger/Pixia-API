@@ -79,7 +79,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private Collection $contributions;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
-    #[Groups(['user:me', 'user:show', 'user:index', 'game:show', 'game:index:admin', 'game:show:admin'])]
+    #[Groups(['user:me', 'user:show', 'user:index', 'game:show', 'game:index:admin', 'game:show:admin', 'user:index:super_admin'])]
     private ?string $avatarUrl = null;
 
     #[ORM\Column(length: 255, unique: true)]

@@ -6,7 +6,6 @@ namespace App\Tests\Unit\Service;
 
 use App\Entity\Activity;
 use App\Entity\User;
-use App\Enum\ActivityType;
 use App\Enum\TokenCost;
 use App\Repository\ActivityRepository;
 use App\Service\ActivityService;
