@@ -16,6 +16,7 @@ use App\Service\Game\GameSolutionService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
@@ -50,6 +51,19 @@ final class GameController extends AbstractController
             GameNormalizer::SHOW_SOLUTION => (bool) $gameWithUserAchievement['achievement'],
             GameNormalizer::SHOW_HINT => (bool) $gameWithUserAchievement['hintRequested'],
         ]);
+    }
+
+    #[Route(name: 'index', methods: ['GET'], format: 'json')]
+    public function index(
+        #[MapQueryParameter] int $last = 5,
+    ): JsonResponse
+    {
+        $player = $this->authenticatedUserService->getUser();
+
+        return $this->json(
+            $this->gameRepository->getPlayerRecentGames($player, $last),
+            context: ['groups' => ['game:index']]
+        );
     }
 
     #[Route('/{id}/hint', name: 'hint', methods: ['GET'], format: 'json')]

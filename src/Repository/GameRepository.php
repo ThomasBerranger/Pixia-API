@@ -181,6 +181,27 @@ class GameRepository extends ServiceEntityRepository
     }
 
     /**
+     * @return list<array{game: Game, won: bool}>
+     */
+    public function getPlayerRecentGames(?User $player, int $limit = 7): array
+    {
+        /** @var list<array{game: Game, won: bool}> */
+        return $this->createQueryBuilder('g')
+            ->select('g AS game')
+            ->addSelect('CASE WHEN a.id IS NOT NULL THEN true ELSE false END AS won')
+            ->leftJoin(Achievement::class, 'a', 'ON', 'a.game = g AND a.player = :playerId')
+            ->where('g.date <= :today')
+            ->andWhere('g.status = :status')
+            ->setParameter('today', new DateTimeImmutable('today')->format('Y-m-d'))
+            ->setParameter('status', GameStatus::APPROVED)
+            ->setParameter('playerId', $player?->getId(), UuidType::NAME)
+            ->orderBy('g.date', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
      * @param list<GameDifficulty> $difficulties
      */
     private function applyDifficultyFilter(QueryBuilder $qb, array $difficulties): void

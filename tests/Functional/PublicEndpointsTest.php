@@ -33,6 +33,7 @@ class PublicEndpointsTest extends WebTestCase
 
         // Games
         yield 'daily game' => ['GET', '/games/daily'];
+        yield 'games index' => ['GET', '/games'];
 
         // Users
         yield 'leaderboard' => ['GET', '/users/leaderboard'];
