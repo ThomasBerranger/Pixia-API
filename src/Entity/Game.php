@@ -19,6 +19,8 @@ use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: GameRepository::class)]
+#[ORM\Index(name: 'IDX_game_status_date', columns: ['status', 'date'])]
+#[ORM\Index(name: 'IDX_game_type_status_date', columns: ['type', 'status', 'date'])]
 class Game
 {
     #[ORM\Id]

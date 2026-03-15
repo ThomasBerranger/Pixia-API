@@ -16,6 +16,7 @@ use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: AchievementRepository::class)]
 #[ORM\UniqueConstraint(name: 'unique_game_player', columns: ['game_id', 'player_id'])]
+#[ORM\Index(name: 'IDX_achievement_player', columns: ['player_id'])]
 class Achievement
 {
     #[ORM\Id]

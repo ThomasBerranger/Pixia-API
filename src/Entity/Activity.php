@@ -14,6 +14,7 @@ use Symfony\Bridge\Doctrine\Types\UuidType;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: ActivityRepository::class)]
+#[ORM\Index(name: 'IDX_activity_player_type_created', columns: ['player_id', 'type', 'created_at'])]
 class Activity
 {
     #[ORM\Id]

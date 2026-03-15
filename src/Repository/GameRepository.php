@@ -192,7 +192,7 @@ class GameRepository extends ServiceEntityRepository
             ->leftJoin(Achievement::class, 'a', 'ON', 'a.game = g AND a.player = :playerId')
             ->where('g.date <= :today')
             ->andWhere('g.status = :status')
-            ->setParameter('today', new DateTimeImmutable('today')->format('Y-m-d'))
+            ->setParameter('today', (new DateTimeImmutable('today'))->format('Y-m-d'))
             ->setParameter('status', GameStatus::APPROVED)
             ->setParameter('playerId', $player?->getId(), UuidType::NAME)
             ->orderBy('g.date', 'DESC')

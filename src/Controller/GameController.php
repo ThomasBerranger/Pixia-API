@@ -55,7 +55,7 @@ final class GameController extends AbstractController
 
     #[Route(name: 'index', methods: ['GET'], format: 'json')]
     public function index(
-        #[MapQueryParameter] int $last = 5,
+        #[MapQueryParameter] int $last = 6,
     ): JsonResponse
     {
         $player = $this->authenticatedUserService->getUser();
