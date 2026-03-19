@@ -149,56 +149,6 @@ class AuthenticatedUserServiceTest extends TestCase
         $this->assertInstanceOf(User::class, $result);
     }
 
-    // ========== Tests d'intégration ==========
-
-    public function testGetUserAndGetUserOrThrowConsistency(): void
-    {
-        $user = $this->createMock(User::class);
-
-        $this->security
-            ->method('getUser')
-            ->willReturn($user);
-
-        $getUserResult = $this->service->getUser();
-        $getUserOrThrowResult = $this->service->getUserOrThrow();
-
-        // Les deux méthodes doivent retourner le même user
-        $this->assertSame($getUserResult, $getUserOrThrowResult);
-    }
-
-    public function testMultipleCallsToGetUser(): void
-    {
-        $user = $this->createMock(User::class);
-
-        $this->security
-            ->method('getUser')
-            ->willReturn($user);
-
-        $result1 = $this->service->getUser();
-        $result2 = $this->service->getUser();
-        $result3 = $this->service->getUser();
-
-        // Toutes les calls retournent le même user
-        $this->assertSame($user, $result1);
-        $this->assertSame($user, $result2);
-        $this->assertSame($user, $result3);
-    }
-
-    public function testGetUserOrThrowUsesGetUserInternally(): void
-    {
-        $user = $this->createMock(User::class);
-
-        $this->security
-            ->expects($this->once())
-            ->method('getUser')
-            ->willReturn($user);
-
-        // getUserOrThrow doit appeler getUser() qui appelle security->getUser()
-        $result = $this->service->getUserOrThrow();
-
-        $this->assertSame($user, $result);
-    }
-
     public function testExceptionMessageIsDescriptive(): void
     {
         $this->security

@@ -72,3 +72,6 @@ jobs:
 
       - name: Run PHPStan
         run: composer stan
+
+      - name: Audit dependencies
+        run: composer audit

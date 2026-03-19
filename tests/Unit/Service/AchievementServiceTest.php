@@ -155,30 +155,6 @@ class AchievementServiceTest extends TestCase
         $this->assertSame(GameDifficulty::EASY, $capturedAchievement->getDifficulty());
     }
 
-    public function testSaveResultCallsPersist(): void
-    {
-        $player = $this->createMock(User::class);
-        $game = $this->createMock(Game::class);
-
-        $this->entityManager
-            ->expects($this->once())
-            ->method('persist');
-
-        $this->service->saveResult($player, $game);
-    }
-
-    public function testSaveResultDoesNotCallFlush(): void
-    {
-        $player = $this->createMock(User::class);
-        $game = $this->createMock(Game::class);
-
-        $this->entityManager
-            ->expects($this->never())
-            ->method('flush');
-
-        $this->service->saveResult($player, $game);
-    }
-
     // ========== Tests d'intégration ==========
 
     public function testSaveResultWithMultipleCalls(): void

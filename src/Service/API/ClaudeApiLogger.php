@@ -16,7 +16,7 @@ readonly class ClaudeApiLogger
 
     public function logRequest(?User $user, string $input): void
     {
-        $this->logger->notice('=== CLAUDE API REQUEST ===', [
+        $this->logger->info('=== CLAUDE API REQUEST ===', [
             'user_id' => $user?->getId()?->toRfc4122(),
             'username' => $user?->getUsername(),
             'input' => $input,
@@ -25,14 +25,14 @@ readonly class ClaudeApiLogger
 
     public function logRawResponse(string $raw): void
     {
-        $this->logger->notice('Claude API raw response', [
+        $this->logger->info('Claude API raw response', [
             'raw' => $raw,
         ]);
     }
 
     public function logExtractedJson(string $extracted): void
     {
-        $this->logger->notice('Claude API extracted JSON', [
+        $this->logger->info('Claude API extracted JSON', [
             'extracted' => $extracted,
         ]);
     }
@@ -42,7 +42,7 @@ readonly class ClaudeApiLogger
      */
     public function logParsedResult(array $result): void
     {
-        $this->logger->notice('Claude API parsed result', [
+        $this->logger->info('Claude API parsed result', [
             'result' => $result,
         ]);
     }
@@ -57,6 +57,6 @@ readonly class ClaudeApiLogger
 
     public function logEnd(): void
     {
-        $this->logger->notice('=== END CLAUDE API ===');
+        $this->logger->info('=== END CLAUDE API ===');
     }
 }

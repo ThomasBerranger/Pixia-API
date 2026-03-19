@@ -58,7 +58,7 @@ class PlayBotCommand extends Command
             $successCount = 0;
 
             foreach ($bots as $bot) {
-                if (rand(1, 100) <= $successRate) {
+                if (random_int(1, 100) <= $successRate) {
                     $this->gameSolutionService->handleAnswer($game, $game->getSolution(), $bot);
                     $successCount++;
                 }
