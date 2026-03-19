@@ -474,10 +474,8 @@ composer stan   # PHPStan
 
 ## 16. Points à adresser (TODO)
 
-- [ ] `ExceptionSubscriber` incomplet — 404/403/500 renvoient du HTML au lieu de JSON
 - [ ] Monitoring prod absent — intégrer Sentry
 - [ ] Stratégie de cache — leaderboards et game du jour (Redis)
-- [ ] `pnpm audit` à ajouter dans le CI
 - [ ] `infection/infection` installé mais non utilisé — envisager mutation testing sur `GameSolutionService`, `TokenService`
 - [ ] Fixtures — centraliser : 3 users + games dans chaque statut, factories partagées
 
