@@ -476,8 +476,6 @@ composer stan   # PHPStan
 
 - [ ] Monitoring prod absent — intégrer Sentry
 - [ ] Stratégie de cache — leaderboards et game du jour (Redis)
-- [ ] `infection/infection` installé mais non utilisé — envisager mutation testing sur `GameSolutionService`, `TokenService`
-- [ ] Fixtures — centraliser : 3 users + games dans chaque statut, factories partagées
 
 ---
 

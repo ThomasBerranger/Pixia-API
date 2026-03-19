@@ -12,7 +12,8 @@
       "WebFetch(domain:github.com)",
       "Bash(cd /c/Users/tberr/PhpstormProjects/Pixia-API && php bin/phpunit 2>&1)",
       "WebFetch(domain:docs.anthropic.com)",
-      "WebFetch(domain:docs.railway.com)"
+      "WebFetch(domain:docs.railway.com)",
+      "Bash(cd:*)"
     ]
   }
 }
