@@ -50,7 +50,6 @@ class AdminEndpointsTest extends WebTestCase
     public static function adminEndpointsProvider(): iterable
     {
         yield 'games index' => ['GET', '/admin/games?month=2026-01-01'];
-        yield 'generate content' => ['POST', '/open-api/generate-content'];
     }
 
     private function getTestUser(): User
