@@ -29,10 +29,10 @@ class AuthenticatedEndpointsTest extends WebTestCase
         $user = $this->getTestUser();
         $client->loginUser($user);
 
-        $client->jsonRequest($method, $url);
+        $client->jsonRequest($method, $url, []);
 
         $statusCode = $client->getResponse()->getStatusCode();
-        self::assertNotContains($statusCode, [401, 403, 500], "Endpoint {$method} {$url} returned {$statusCode}");
+        self::assertNotContains($statusCode, [401, 403, 500], "Endpoint {$method} {$url} returned {$statusCode}: " . $client->getResponse()->getContent());
     }
 
     /**
