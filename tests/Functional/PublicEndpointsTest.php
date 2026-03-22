@@ -17,7 +17,8 @@ class PublicEndpointsTest extends WebTestCase
 
         $client->jsonRequest($method, $url);
 
-        self::assertNotEquals(401, $client->getResponse()->getStatusCode());
+        $statusCode = $client->getResponse()->getStatusCode();
+        self::assertNotEquals(401, $statusCode, "Endpoint {$method} {$url} should not require auth");
     }
 
     /**

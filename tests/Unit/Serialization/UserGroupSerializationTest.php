@@ -92,6 +92,28 @@ class UserGroupSerializationTest extends KernelTestCase
         self::assertEquals(['score', 'month'], array_keys($data['monthlyLeaderboards'][0]));
     }
 
+    public function testPasswordNeverExposed(): void
+    {
+        $user = $this->createBaseUser();
+
+        foreach (['user:me', 'user:show', 'user:index'] as $group) {
+            $data = $this->serialize($user, [$group]);
+
+            self::assertArrayNotHasKey('password', $data, "Password exposed in group $group");
+        }
+    }
+
+    public function testEmailAbsentFromPublicGroups(): void
+    {
+        $user = $this->createBaseUser();
+
+        foreach (['user:show', 'user:index'] as $group) {
+            $data = $this->serialize($user, [$group]);
+
+            self::assertArrayNotHasKey('email', $data, "Email exposed in group $group");
+        }
+    }
+
     /**
      * @param array<string> $groups
      * @return array<string, mixed>

@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional;
 
+use App\Entity\Achievement;
 use App\Entity\Game;
 use App\Entity\User;
+use App\Enum\GameStatus;
 use App\Enum\GameType;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
@@ -133,12 +135,182 @@ class GameFlowTest extends WebTestCase
         self::assertArrayHasKey('author', $data);
     }
 
+    // ========== Daily game data ==========
+
+    public function testDailyGameExposesImageWhenApproved(): void
+    {
+        $client = static::createClient();
+        $game = $this->getTodayGame();
+
+        $client->jsonRequest('GET', '/games/daily?date=' . $game->getDate()->format('Y-m-d') . '&type=' . GameType::MULTIVERS->value);
+
+        self::assertResponseIsSuccessful();
+
+        $data = json_decode($client->getResponse()->getContent(), true);
+
+        self::assertArrayHasKey('image', $data['game']);
+        self::assertNotNull($data['game']['image']);
+    }
+
+    // ========== Win flow E2E ==========
+
+    public function testWinCreatesAchievement(): void
+    {
+        $client = static::createClient();
+        $user = $this->getTestUser();
+        $game = $this->getTodayGame();
+
+        $client->loginUser($user);
+        $client->jsonRequest('POST', "/games/{$game->getId()->toString()}/solution", ['answer' => $game->getSolution()]);
+
+        self::assertResponseIsSuccessful();
+
+        $achievement = $this->getEntityManager()
+            ->getRepository(Achievement::class)
+            ->findOneBy(['player' => $user, 'game' => $game]);
+
+        self::assertNotNull($achievement);
+        self::assertSame($game->getDifficulty(), $achievement->getDifficulty());
+    }
+
+    public function testWinCreditsScoreAndTokens(): void
+    {
+        $client = static::createClient();
+        $user = $this->getTestUser();
+        $game = $this->getTodayGame();
+
+        $scoreBefore = $user->getScore();
+        $tokensBefore = $user->getTokens();
+        $expectedPoints = $game->getDifficulty()->getPoints(false);
+
+        $client->loginUser($user);
+        $client->jsonRequest('POST', "/games/{$game->getId()->toString()}/solution", ['answer' => $game->getSolution()]);
+
+        self::assertResponseIsSuccessful();
+
+        $this->getEntityManager()->refresh($user);
+
+        self::assertSame($scoreBefore + $expectedPoints, $user->getScore());
+        self::assertSame($tokensBefore + $expectedPoints, $user->getTokens());
+    }
+
+    public function testWinIncrementsAttempts(): void
+    {
+        $client = static::createClient();
+        $game = $this->getTodayGame();
+        $attemptsBefore = $game->getAttempts();
+
+        $client->jsonRequest('POST', "/games/{$game->getId()->toString()}/solution", ['answer' => $game->getSolution()]);
+
+        self::assertResponseIsSuccessful();
+
+        $this->getEntityManager()->refresh($game);
+
+        self::assertSame($attemptsBefore + 1, $game->getAttempts());
+    }
+
+    public function testWinIsNotReplayable(): void
+    {
+        $client = static::createClient();
+        $user = $this->getTestUser();
+        $game = $this->getTodayGame();
+        $userId = $user->getId();
+        $gameId = $game->getId()->toString();
+        $solution = $game->getSolution();
+
+        $client->loginUser($user);
+
+        // Première soumission : victoire
+        $client->jsonRequest('POST', "/games/{$gameId}/solution", ['answer' => $solution]);
+        self::assertResponseIsSuccessful();
+
+        $em = $this->getEntityManager();
+        $userAfterFirst = $em->getRepository(User::class)->find($userId);
+        $scoreAfterFirstWin = $userAfterFirst->getScore();
+        $tokensAfterFirstWin = $userAfterFirst->getTokens();
+
+        // Deuxième soumission : ne doit rien créditer
+        $client->jsonRequest('POST', "/games/{$gameId}/solution", ['answer' => $solution]);
+        self::assertResponseIsSuccessful();
+
+        $em->clear();
+        $userAfterSecond = $em->getRepository(User::class)->find($userId);
+
+        $achievements = $em->getRepository(Achievement::class)
+            ->findBy(['player' => $userAfterSecond, 'game' => $em->getRepository(Game::class)->find($gameId)]);
+
+        self::assertCount(1, $achievements);
+        self::assertSame($scoreAfterFirstWin, $userAfterSecond->getScore(), 'Score should not increase on replay');
+        self::assertSame($tokensAfterFirstWin, $userAfterSecond->getTokens(), 'Tokens should not increase on replay');
+    }
+
+    // ========== Anonymous win ==========
+
+    public function testAnonymousCorrectAnswerDoesNotCreateAchievement(): void
+    {
+        $client = static::createClient();
+        $game = $this->getTodayGame();
+
+        $client->jsonRequest('POST', "/games/{$game->getId()->toString()}/solution", ['answer' => $game->getSolution()]);
+
+        self::assertResponseIsSuccessful();
+
+        $achievements = $this->getEntityManager()
+            ->getRepository(Achievement::class)
+            ->findBy(['game' => $game]);
+
+        // Aucun achievement ne doit être créé pour un joueur anonyme
+        self::assertCount(0, $achievements);
+    }
+
+    // ========== Token claim ==========
+
+    public function testClaimTokensAddsTokensToPlayer(): void
+    {
+        $client = static::createClient();
+        $user = $this->getTestUser();
+        $tokensBefore = $user->getTokens();
+
+        $client->loginUser($user);
+        $client->jsonRequest('POST', '/me/tokens/claim');
+
+        self::assertResponseIsSuccessful();
+
+        $data = json_decode($client->getResponse()->getContent(), true);
+
+        self::assertArrayHasKey('addedTokens', $data);
+        self::assertArrayHasKey('tokens', $data);
+        self::assertSame(0, $data['addedTokens'] % 5);
+        self::assertGreaterThan($tokensBefore, $data['tokens']);
+    }
+
+    public function testClaimTokensAdminRequiresAdminRole(): void
+    {
+        $client = static::createClient();
+        $user = $this->getTestUser();
+
+        $client->loginUser($user);
+        $client->jsonRequest('POST', '/me/tokens/claim?isAdminClaim=true');
+
+        self::assertResponseStatusCodeSame(403);
+    }
+
+    // ========== Helpers ==========
+
     private function getTestGame(): Game
     {
         return self::getContainer()
             ->get('doctrine')
             ->getRepository(Game::class)
             ->findOneBy([]);
+    }
+
+    private function getTodayGame(): Game
+    {
+        return self::getContainer()
+            ->get('doctrine')
+            ->getRepository(Game::class)
+            ->findOneBy(['date' => new \DateTimeImmutable('today'), 'status' => GameStatus::APPROVED]);
     }
 
     private function getTestUser(): User
@@ -163,5 +335,10 @@ class GameFlowTest extends WebTestCase
             ->get('doctrine')
             ->getRepository(User::class)
             ->findOneBy(['email' => 'superadmin@test.com']);
+    }
+
+    private function getEntityManager(): \Doctrine\ORM\EntityManagerInterface
+    {
+        return self::getContainer()->get('doctrine')->getManager();
     }
 }

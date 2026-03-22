@@ -54,11 +54,10 @@ class UserServiceTest extends TestCase
         $game->method('getDifficulty')->willReturn(GameDifficulty::EASY);
         $game->method('getDate')->willReturn(new \DateTimeImmutable());
 
+        // EASY sans hint = 10 points → score attendu 110
         $player->expects($this->once())
             ->method('setScore')
-            ->with($this->callback(function ($score) {
-                return $score > 100;
-            }));
+            ->with(110);
 
         $this->monthlyLeaderboardService
             ->expects($this->once())
@@ -79,11 +78,10 @@ class UserServiceTest extends TestCase
         $game->method('getDifficulty')->willReturn(GameDifficulty::EASY);
         $game->method('getDate')->willReturn(new \DateTimeImmutable());
 
+        // EASY avec hint = 5 points → score attendu 55 (pas 60)
         $player->expects($this->once())
             ->method('setScore')
-            ->with($this->callback(function ($score) {
-                return $score > 50;
-            }));
+            ->with(55);
 
         $this->monthlyLeaderboardService
             ->expects($this->once())
@@ -362,21 +360,6 @@ class UserServiceTest extends TestCase
         $this->service->getLeaderboard(1);
     }
 
-    public function testGetLeaderboardWithDifferentPages(): void
-    {
-        $this->userRepository
-            ->method('getLeaderboard')
-            ->willReturn([]);
-
-        $this->userRepository->method('setStreaksFor');
-
-        $this->service->getLeaderboard(1);
-        $this->service->getLeaderboard(2);
-        $this->service->getLeaderboard(5);
-
-        $this->addToAssertionCount(1);
-    }
-
     // ========== Tests getCurrentMonthLeaderboard() ==========
 
     public function testGetCurrentMonthLeaderboardReturnsPlayers(): void
@@ -417,21 +400,6 @@ class UserServiceTest extends TestCase
             ->with($players);
 
         $this->service->getCurrentMonthLeaderboard($date);
-    }
-
-    public function testGetCurrentMonthLeaderboardWithDifferentDates(): void
-    {
-        $this->userRepository
-            ->method('getMonthlyLeaderboard')
-            ->willReturn([]);
-
-        $this->userRepository->method('setStreaksFor');
-
-        $this->service->getCurrentMonthLeaderboard(new \DateTimeImmutable('2025-01-01'));
-        $this->service->getCurrentMonthLeaderboard(new \DateTimeImmutable('2025-02-01'));
-        $this->service->getCurrentMonthLeaderboard(new \DateTimeImmutable('2025-03-01'));
-
-        $this->addToAssertionCount(1);
     }
 
     // ========== Tests d'intégration ==========

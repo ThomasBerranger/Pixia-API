@@ -327,6 +327,53 @@ class GameVoterTest extends TestCase
         $this->assertEquals(VoterInterface::ACCESS_DENIED, $result);
     }
 
+    // ========== Tests REJECTED status ==========
+
+    public function testDeniesEditToAuthorWhenRejected(): void
+    {
+        $author = $this->createMock(User::class);
+        $author->method('isSuperAdmin')->willReturn(false);
+
+        $game = $this->createGameWithAccess(author: true, supervisor: false, status: \App\Enum\GameStatus::REJECTED);
+
+        $token = $this->createMock(TokenInterface::class);
+        $token->method('getUser')->willReturn($author);
+
+        $result = $this->voter->vote($token, $game, [GameVoter::EDIT]);
+
+        $this->assertEquals(VoterInterface::ACCESS_DENIED, $result);
+    }
+
+    public function testGrantsViewToAuthorWhenRejected(): void
+    {
+        $author = $this->createMock(User::class);
+        $author->method('isSuperAdmin')->willReturn(false);
+
+        $game = $this->createGameWithAccess(author: true, supervisor: false, status: \App\Enum\GameStatus::REJECTED);
+
+        $token = $this->createMock(TokenInterface::class);
+        $token->method('getUser')->willReturn($author);
+
+        $result = $this->voter->vote($token, $game, [GameVoter::VIEW]);
+
+        $this->assertEquals(VoterInterface::ACCESS_GRANTED, $result);
+    }
+
+    public function testGrantsViewToSupervisorWhenRejected(): void
+    {
+        $supervisor = $this->createMock(User::class);
+        $supervisor->method('isSuperAdmin')->willReturn(false);
+
+        $game = $this->createGameWithAccess(author: false, supervisor: true, status: \App\Enum\GameStatus::REJECTED);
+
+        $token = $this->createMock(TokenInterface::class);
+        $token->method('getUser')->willReturn($supervisor);
+
+        $result = $this->voter->vote($token, $game, [GameVoter::VIEW]);
+
+        $this->assertEquals(VoterInterface::ACCESS_GRANTED, $result);
+    }
+
     // ========== Helper ==========
 
     private function createGameWithAccess(

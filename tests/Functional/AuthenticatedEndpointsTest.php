@@ -29,9 +29,10 @@ class AuthenticatedEndpointsTest extends WebTestCase
         $user = $this->getTestUser();
         $client->loginUser($user);
 
-        $client->request($method, $url);
+        $client->jsonRequest($method, $url);
 
-        self::assertNotEquals(401, $client->getResponse()->getStatusCode());
+        $statusCode = $client->getResponse()->getStatusCode();
+        self::assertNotContains($statusCode, [401, 403, 500], "Endpoint {$method} {$url} returned {$statusCode}");
     }
 
     /**
@@ -44,6 +45,8 @@ class AuthenticatedEndpointsTest extends WebTestCase
         yield 'notifications' => ['GET', '/notifications'];
         yield 'has unread notifications' => ['GET', '/notifications/has-unread'];
         yield 'create contribution' => ['POST', '/contributions'];
+        yield 'tokens' => ['GET', '/me/tokens'];
+        yield 'claim tokens' => ['POST', '/me/tokens/claim'];
     }
 
     private function getTestUser(): User
@@ -72,7 +75,7 @@ class AuthenticatedEndpointsTest extends WebTestCase
 
         $client->request('GET', "/games/{$this->getTestGameId()}/hint");
 
-        self::assertNotEquals(401, $client->getResponse()->getStatusCode());
+        self::assertResponseIsSuccessful();
     }
 
     private function getTestGameId(): string

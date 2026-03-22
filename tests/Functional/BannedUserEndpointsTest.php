@@ -31,7 +31,7 @@ class BannedUserEndpointsTest extends WebTestCase
 
         $statusCode = $client->getResponse()->getStatusCode();
 
-        self::assertNotEquals(403, $statusCode);
+        self::assertNotContains($statusCode, [403, 500], "Banned user on public route {$method} {$url} returned {$statusCode}");
     }
 
     /**
@@ -48,7 +48,7 @@ class BannedUserEndpointsTest extends WebTestCase
      */
     public static function publicEndpointsProvider(): iterable
     {
-        yield 'daily game' => ['GET', '/games/daily?date=2026-01-01&type=multivers'];
+        yield 'daily game' => ['GET', '/games/daily'];
     }
 
     private function getBannedUser(): User

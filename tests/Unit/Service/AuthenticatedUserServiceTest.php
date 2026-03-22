@@ -29,66 +29,30 @@ class AuthenticatedUserServiceTest extends TestCase
         $user = $this->createMock(User::class);
 
         $this->security
-            ->expects($this->once())
             ->method('getUser')
             ->willReturn($user);
 
-        $result = $this->service->getUser();
-
-        $this->assertSame($user, $result);
+        $this->assertSame($user, $this->service->getUser());
     }
 
     public function testGetUserReturnsNullWhenNotAuthenticated(): void
     {
         $this->security
-            ->expects($this->once())
             ->method('getUser')
             ->willReturn(null);
 
-        $result = $this->service->getUser();
-
-        $this->assertNull($result);
+        $this->assertNull($this->service->getUser());
     }
 
     public function testGetUserReturnsNullWhenUserIsNotAppUser(): void
     {
-        // Simule un UserInterface qui n'est pas notre entité User
         $otherUser = $this->createMock(UserInterface::class);
 
         $this->security
-            ->expects($this->once())
             ->method('getUser')
             ->willReturn($otherUser);
 
-        $result = $this->service->getUser();
-
-        $this->assertNull($result);
-    }
-
-    public function testGetUserCallsSecurityOnce(): void
-    {
-        $this->security
-            ->expects($this->once())
-            ->method('getUser')
-            ->willReturn(null);
-
-        $this->service->getUser();
-    }
-
-    public function testGetUserWithDifferentUsers(): void
-    {
-        $user1 = $this->createMock(User::class);
-        $user2 = $this->createMock(User::class);
-
-        $this->security
-            ->method('getUser')
-            ->willReturnOnConsecutiveCalls($user1, $user2);
-
-        $result1 = $this->service->getUser();
-        $result2 = $this->service->getUser();
-
-        $this->assertSame($user1, $result1);
-        $this->assertSame($user2, $result2);
+        $this->assertNull($this->service->getUser());
     }
 
     // ========== Tests getUserOrThrow() ==========
@@ -98,19 +62,15 @@ class AuthenticatedUserServiceTest extends TestCase
         $user = $this->createMock(User::class);
 
         $this->security
-            ->expects($this->once())
             ->method('getUser')
             ->willReturn($user);
 
-        $result = $this->service->getUserOrThrow();
-
-        $this->assertSame($user, $result);
+        $this->assertSame($user, $this->service->getUserOrThrow());
     }
 
     public function testGetUserOrThrowThrowsExceptionWhenNotAuthenticated(): void
     {
         $this->security
-            ->expects($this->once())
             ->method('getUser')
             ->willReturn(null);
 
@@ -125,7 +85,6 @@ class AuthenticatedUserServiceTest extends TestCase
         $otherUser = $this->createMock(UserInterface::class);
 
         $this->security
-            ->expects($this->once())
             ->method('getUser')
             ->willReturn($otherUser);
 
@@ -133,79 +92,5 @@ class AuthenticatedUserServiceTest extends TestCase
         $this->expectExceptionMessage('User must be authenticated');
 
         $this->service->getUserOrThrow();
-    }
-
-    public function testGetUserOrThrowDoesNotThrowWhenUserExists(): void
-    {
-        $user = $this->createMock(User::class);
-
-        $this->security
-            ->method('getUser')
-            ->willReturn($user);
-
-        // Ne devrait pas throw
-        $result = $this->service->getUserOrThrow();
-
-        $this->assertInstanceOf(User::class, $result);
-    }
-
-    public function testExceptionMessageIsDescriptive(): void
-    {
-        $this->security
-            ->method('getUser')
-            ->willReturn(null);
-
-        try {
-            $this->service->getUserOrThrow();
-            $this->fail('Expected LogicException was not thrown');
-        } catch (\LogicException $e) {
-            $this->assertEquals('User must be authenticated', $e->getMessage());
-        }
-    }
-
-    // ========== Tests cas limites ==========
-
-    public function testGetUserHandlesNullGracefully(): void
-    {
-        $this->security
-            ->method('getUser')
-            ->willReturn(null);
-
-        // Ne devrait pas throw, juste retourner null
-        $result = $this->service->getUser();
-
-        $this->assertNull($result);
-    }
-
-    public function testGetUserOrThrowCanBeCaughtAndHandled(): void
-    {
-        $this->security
-            ->method('getUser')
-            ->willReturn(null);
-
-        $exceptionCaught = false;
-
-        try {
-            $this->service->getUserOrThrow();
-        } catch (\LogicException $e) {
-            $exceptionCaught = true;
-        }
-
-        $this->assertTrue($exceptionCaught);
-    }
-
-    public function testServiceWorksWithRealUserInstance(): void
-    {
-        // Simule un vrai User (pas un mock complet)
-        $user = new User();
-
-        $this->security
-            ->method('getUser')
-            ->willReturn($user);
-
-        $result = $this->service->getUser();
-
-        $this->assertInstanceOf(User::class, $result);
-        $this->assertSame($user, $result);
     }
 }

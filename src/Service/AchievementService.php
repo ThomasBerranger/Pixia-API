@@ -30,7 +30,7 @@ readonly class AchievementService
             ->setPlayer($player)
             ->setGame($game)
             ->setDate(new DateTimeImmutable())
-            ->setDifficulty(GameDifficulty::EASY);
+            ->setDifficulty($game->getDifficulty());
 
         $this->entityManager->persist($achievement);
     }

@@ -11,6 +11,7 @@ use App\Enum\BadgeName;
 use App\Enum\NotificationType;
 use App\Service\NotificationService;
 use Doctrine\ORM\EntityManagerInterface;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -25,76 +26,11 @@ class NotificationServiceTest extends TestCase
         $this->service = new NotificationService($this->entityManager);
     }
 
-    // ========== Tests createBadgeNotification() ==========
-
-    public function testCreateBadgeNotificationCreatesNotification(): void
+    #[DataProvider('badgeProvider')]
+    public function testCreateBadgeNotificationSetsAllFieldsCorrectly(BadgeName $badgeName): void
     {
         $player = $this->createMock(User::class);
-        $badge = new Badge(BadgeName::WINS_1);
-        $badge->setPlayer($player);
-
-        $this->entityManager
-            ->expects($this->once())
-            ->method('persist')
-            ->with($this->isInstanceOf(Notification::class));
-
-        $this->entityManager
-            ->expects($this->once())
-            ->method('flush');
-
-        $this->service->createBadgeNotification($badge);
-    }
-
-    public function testCreateBadgeNotificationSetsPlayer(): void
-    {
-        $player = $this->createMock(User::class);
-        $badge = new Badge(BadgeName::WINS_10);
-        $badge->setPlayer($player);
-
-        $capturedNotification = null;
-        $this->entityManager
-            ->expects($this->once())
-            ->method('persist')
-            ->with($this->callback(function ($notification) use (&$capturedNotification, $player) {
-                $capturedNotification = $notification;
-                return $notification instanceof Notification
-                    && $notification->getPlayer() === $player;
-            }));
-
-        $this->entityManager->expects($this->once())->method('flush');
-
-        $this->service->createBadgeNotification($badge);
-
-        $this->assertSame($player, $capturedNotification->getPlayer());
-    }
-
-    public function testCreateBadgeNotificationSetsTypeToBadge(): void
-    {
-        $player = $this->createMock(User::class);
-        $badge = new Badge(BadgeName::STREAK_10);
-        $badge->setPlayer($player);
-
-        $capturedNotification = null;
-        $this->entityManager
-            ->expects($this->once())
-            ->method('persist')
-            ->with($this->callback(function ($notification) use (&$capturedNotification) {
-                $capturedNotification = $notification;
-                return $notification instanceof Notification
-                    && $notification->getType() === NotificationType::BADGE;
-            }));
-
-        $this->entityManager->expects($this->once())->method('flush');
-
-        $this->service->createBadgeNotification($badge);
-
-        $this->assertSame(NotificationType::BADGE, $capturedNotification->getType());
-    }
-
-    public function testCreateBadgeNotificationSetsTitleFromBadgeName(): void
-    {
-        $player = $this->createMock(User::class);
-        $badge = new Badge(BadgeName::TOP_10_REACHED);
+        $badge = new Badge($badgeName);
         $badge->setPlayer($player);
 
         $capturedNotification = null;
@@ -110,232 +46,28 @@ class NotificationServiceTest extends TestCase
 
         $this->service->createBadgeNotification($badge);
 
-        $this->assertSame(BadgeName::TOP_10_REACHED->value, $capturedNotification->getTitle());
-    }
-
-    public function testCreateBadgeNotificationSetsContentFromBadgeName(): void
-    {
-        $player = $this->createMock(User::class);
-        $badge = new Badge(BadgeName::CREATOR);
-        $badge->setPlayer($player);
-
-        $capturedNotification = null;
-        $this->entityManager
-            ->expects($this->once())
-            ->method('persist')
-            ->with($this->callback(function ($notification) use (&$capturedNotification) {
-                $capturedNotification = $notification;
-                return $notification instanceof Notification;
-            }));
-
-        $this->entityManager->expects($this->once())->method('flush');
-
-        $this->service->createBadgeNotification($badge);
-
-        $this->assertSame(BadgeName::CREATOR->value, $capturedNotification->getContent());
-    }
-
-    public function testCreateBadgeNotificationCallsPersist(): void
-    {
-        $player = $this->createMock(User::class);
-        $badge = new Badge(BadgeName::SPONSOR);
-        $badge->setPlayer($player);
-
-        $this->entityManager
-            ->expects($this->once())
-            ->method('persist');
-
-        $this->entityManager->expects($this->once())->method('flush');
-
-        $this->service->createBadgeNotification($badge);
-    }
-
-    public function testCreateBadgeNotificationCallsFlush(): void
-    {
-        $player = $this->createMock(User::class);
-        $badge = new Badge(BadgeName::BUG_DETECTED);
-        $badge->setPlayer($player);
-
-        $this->entityManager->expects($this->once())->method('persist');
-
-        $this->entityManager
-            ->expects($this->once())
-            ->method('flush');
-
-        $this->service->createBadgeNotification($badge);
-    }
-
-    // ========== Tests avec différents badges ==========
-
-    public function testCreateBadgeNotificationWithWinsBadge(): void
-    {
-        $player = $this->createMock(User::class);
-        $badge = new Badge(BadgeName::WINS_50);
-        $badge->setPlayer($player);
-
-        $capturedNotification = null;
-        $this->entityManager
-            ->method('persist')
-            ->with($this->callback(function ($notification) use (&$capturedNotification) {
-                $capturedNotification = $notification;
-                return true;
-            }));
-
-        $this->entityManager->expects($this->once())->method('flush');
-
-        $this->service->createBadgeNotification($badge);
-
-        $this->assertSame(BadgeName::WINS_50->value, $capturedNotification->getTitle());
-        $this->assertSame(BadgeName::WINS_50->value, $capturedNotification->getContent());
-    }
-
-    public function testCreateBadgeNotificationWithStreakBadge(): void
-    {
-        $player = $this->createMock(User::class);
-        $badge = new Badge(BadgeName::STREAK_30);
-        $badge->setPlayer($player);
-
-        $capturedNotification = null;
-        $this->entityManager
-            ->method('persist')
-            ->with($this->callback(function ($notification) use (&$capturedNotification) {
-                $capturedNotification = $notification;
-                return true;
-            }));
-
-        $this->entityManager->expects($this->once())->method('flush');
-
-        $this->service->createBadgeNotification($badge);
-
-        $this->assertSame(BadgeName::STREAK_30->value, $capturedNotification->getTitle());
-        $this->assertSame(BadgeName::STREAK_30->value, $capturedNotification->getContent());
-    }
-
-    public function testCreateBadgeNotificationWithSponsorBadge(): void
-    {
-        $player = $this->createMock(User::class);
-        $badge = new Badge(BadgeName::SPONSOR_5);
-        $badge->setPlayer($player);
-
-        $capturedNotification = null;
-        $this->entityManager
-            ->method('persist')
-            ->with($this->callback(function ($notification) use (&$capturedNotification) {
-                $capturedNotification = $notification;
-                return true;
-            }));
-
-        $this->entityManager->expects($this->once())->method('flush');
-
-        $this->service->createBadgeNotification($badge);
-
-        $this->assertSame(BadgeName::SPONSOR_5->value, $capturedNotification->getTitle());
-        $this->assertSame(BadgeName::SPONSOR_5->value, $capturedNotification->getContent());
-    }
-
-    // ========== Tests d'intégration ==========
-
-    public function testCreateBadgeNotificationSetsAllFields(): void
-    {
-        $player = $this->createMock(User::class);
-        $badge = new Badge(BadgeName::GAME_SUGGESTION);
-        $badge->setPlayer($player);
-
-        $capturedNotification = null;
-        $this->entityManager
-            ->expects($this->once())
-            ->method('persist')
-            ->with($this->callback(function ($notification) use (&$capturedNotification) {
-                $capturedNotification = $notification;
-                return true;
-            }));
-
-        $this->entityManager->expects($this->once())->method('flush');
-
-        $this->service->createBadgeNotification($badge);
-
-        // Vérifie que tous les champs sont bien définis
-        $this->assertInstanceOf(Notification::class, $capturedNotification);
         $this->assertSame($player, $capturedNotification->getPlayer());
         $this->assertSame(NotificationType::BADGE, $capturedNotification->getType());
-        $this->assertSame(BadgeName::GAME_SUGGESTION->value, $capturedNotification->getTitle());
-        $this->assertSame(BadgeName::GAME_SUGGESTION->value, $capturedNotification->getContent());
+        $this->assertSame($badgeName->value, $capturedNotification->getTitle());
+        $this->assertSame($badgeName->value, $capturedNotification->getContent());
     }
 
-    public function testCreateBadgeNotificationTitleAndContentAreSame(): void
+    /**
+     * @return iterable<string, array<mixed>>
+     */
+    public static function badgeProvider(): iterable
     {
-        $player = $this->createMock(User::class);
-        $badge = new Badge(BadgeName::BETA_TESTER);
-        $badge->setPlayer($player);
-
-        $capturedNotification = null;
-        $this->entityManager
-            ->method('persist')
-            ->with($this->callback(function ($notification) use (&$capturedNotification) {
-                $capturedNotification = $notification;
-                return true;
-            }));
-
-        $this->entityManager->expects($this->once())->method('flush');
-
-        $this->service->createBadgeNotification($badge);
-
-        // Title et Content doivent être identiques
-        $this->assertSame(
-            $capturedNotification->getTitle(),
-            $capturedNotification->getContent()
-        );
-    }
-
-    public function testCreateBadgeNotificationWithMultipleBadges(): void
-    {
-        $player = $this->createMock(User::class);
-
-        $badge1 = new Badge(BadgeName::WINS_1);
-        $badge1->setPlayer($player);
-
-        $badge2 = new Badge(BadgeName::WINS_10);
-        $badge2->setPlayer($player);
-
-        $this->entityManager
-            ->expects($this->exactly(2))
-            ->method('persist');
-
-        $this->entityManager
-            ->expects($this->exactly(2))
-            ->method('flush');
-
-        $this->service->createBadgeNotification($badge1);
-        $this->service->createBadgeNotification($badge2);
-    }
-
-    public function testCreateBadgeNotificationUsesEnumValue(): void
-    {
-        $player = $this->createMock(User::class);
-        $badge = new Badge(BadgeName::WINS_100);
-        $badge->setPlayer($player);
-
-        $capturedNotification = null;
-        $this->entityManager
-            ->method('persist')
-            ->with($this->callback(function ($notification) use (&$capturedNotification) {
-                $capturedNotification = $notification;
-                return true;
-            }));
-
-        $this->entityManager->expects($this->once())->method('flush');
-
-        $this->service->createBadgeNotification($badge);
-
-        // Vérifie que c'est bien la valeur string de l'enum, pas l'enum lui-même
-        $this->assertIsString($capturedNotification->getTitle());
-        $this->assertIsString($capturedNotification->getContent());
+        yield 'wins' => [BadgeName::WINS_1];
+        yield 'streak' => [BadgeName::STREAK_30];
+        yield 'sponsor' => [BadgeName::SPONSOR_5];
+        yield 'contribution' => [BadgeName::GAME_SUGGESTION];
+        yield 'creator' => [BadgeName::CREATOR];
     }
 
     public function testCreateBadgeNotificationPersistsBeforeFlush(): void
     {
         $player = $this->createMock(User::class);
-        $badge = new Badge(BadgeName::CREATOR);
+        $badge = new Badge(BadgeName::WINS_1);
         $badge->setPlayer($player);
 
         $callOrder = [];
@@ -356,7 +88,6 @@ class NotificationServiceTest extends TestCase
 
         $this->service->createBadgeNotification($badge);
 
-        // Vérifie que persist est appelé avant flush
         $this->assertSame(['persist', 'flush'], $callOrder);
     }
 }

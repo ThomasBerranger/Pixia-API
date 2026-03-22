@@ -13,7 +13,10 @@
       "Bash(cd /c/Users/tberr/PhpstormProjects/Pixia-API && php bin/phpunit 2>&1)",
       "WebFetch(domain:docs.anthropic.com)",
       "WebFetch(domain:docs.railway.com)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(ls -1 /c/Users/tberr/PhpstormProjects/Pixia-API/src/Service/*.php)",
+      "Bash(xargs -I {} basename {} .php)",
+      "Bash(vendor/bin/phpunit)"
     ]
   }
 }

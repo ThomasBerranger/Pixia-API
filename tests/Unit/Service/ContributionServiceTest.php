@@ -325,30 +325,32 @@ class ContributionServiceTest extends TestCase
     {
         $author = $this->createMock(User::class);
 
-        // Contribution 1 : GAME_SUGGESTION
         $contribution1 = $this->createMock(Contribution::class);
         $contribution1->method('getAuthor')->willReturn($author);
         $contribution1->method('getType')->willReturn(ContributionType::GAME_SUGGESTION);
 
-        // Contribution 2 : BUG_REPORT
         $contribution2 = $this->createMock(Contribution::class);
         $contribution2->method('getAuthor')->willReturn($author);
-        $contribution2->method('getType')->willReturn(ContributionType::GAME_SUGGESTION);
+        $contribution2->method('getType')->willReturn(ContributionType::BUG_DETECTED);
 
         $this->entityManager
             ->method('getRepository')
             ->with(Contribution::class)
             ->willReturn($this->contributionRepository);
 
+        $queriedTypes = [];
         $this->contributionRepository
             ->method('findOneBy')
-            ->willReturn(null);
+            ->willReturnCallback(function (array $criteria) use (&$queriedTypes) {
+                $queriedTypes[] = $criteria['type'];
+                return null;
+            });
 
-        // Les deux devraient passer sans exception
         $this->service->validate($contribution1);
         $this->service->validate($contribution2);
 
-        $this->addToAssertionCount(1);
+        $this->assertContains(ContributionType::GAME_SUGGESTION, $queriedTypes);
+        $this->assertContains(ContributionType::BUG_DETECTED, $queriedTypes);
     }
 
     public function testRewardPlayerCreatesNewBadgeInstance(): void

@@ -128,7 +128,7 @@
 | VICIEUX | 15 | 10 |
 | TORDU | 25 | 15 |
 | DIABOLIQUE | 50 | 25 |
-| IMPOSSIBLE | 80 | 50 |
+| IMPOSSIBLE | 80 | 40 |
 
 - Une fois la bonne réponse trouvée, la partie est terminée et ne peut plus être rejouée
 - Les points contribuent au classement global et au classement mensuel
@@ -474,8 +474,7 @@ composer stan   # PHPStan
 
 ## 16. Points à adresser (TODO)
 
-- [ ] Monitoring prod absent — intégrer Sentry
-- [ ] Stratégie de cache — leaderboards et game du jour (Redis)
+- [ ] Refacto des tests en suivant les indications de ce fichier
 
 ---
 

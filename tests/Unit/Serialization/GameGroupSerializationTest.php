@@ -181,6 +181,20 @@ class GameGroupSerializationTest extends KernelTestCase
         self::assertStringContainsString('test.jpg', $data['image']);
     }
 
+    public function testGameWithoutImageDoesNotExposeImage(): void
+    {
+        $game = $this->createTestGame();
+        $game->setImage(null);
+
+        $json = $this->serializer->serialize($game, 'json', [
+            'groups' => ['game:show'],
+        ]);
+
+        $data = json_decode($json, true);
+
+        self::assertNull($data['image']);
+    }
+
     private function createTestGame(): Game
     {
         $author = new User();
