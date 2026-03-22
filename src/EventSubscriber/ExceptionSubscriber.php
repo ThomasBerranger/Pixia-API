@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\EventSubscriber;
 
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
@@ -14,6 +15,12 @@ use Symfony\Component\Validator\Exception\ValidationFailedException;
 
 class ExceptionSubscriber implements EventSubscriberInterface
 {
+    public function __construct(
+        #[Autowire('%kernel.environment%')]
+        private readonly string $environment,
+    ) {
+    }
+
     public static function getSubscribedEvents(): array
     {
         return [
@@ -47,7 +54,7 @@ class ExceptionSubscriber implements EventSubscriberInterface
 
         $event->setResponse(new JsonResponse([
             'error' => $this->getErrorLabel($statusCode),
-            'message' => $statusCode >= 500 ? 'Erreur interne' : $exception->getMessage(),
+            'message' => $statusCode >= 500 && $this->environment === 'prod' ? 'Erreur interne' : $exception->getMessage(),
         ], $statusCode));
     }
 
