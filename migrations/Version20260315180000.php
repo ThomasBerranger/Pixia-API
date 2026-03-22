@@ -30,11 +30,11 @@ final class Version20260315180000 extends AbstractMigration
         }
 
         $achievementTable = $schema->getTable('achievement');
-        if ($achievementTable->hasIndex('IDX_96737FF199E6F5DF')) {
-            $this->addSql('DROP INDEX IDX_96737FF199E6F5DF ON achievement');
-        }
         if (!$achievementTable->hasIndex('IDX_achievement_player')) {
             $this->addSql('CREATE INDEX IDX_achievement_player ON achievement (player_id)');
+        }
+        if ($achievementTable->hasIndex('IDX_96737FF199E6F5DF')) {
+            $this->addSql('DROP INDEX IDX_96737FF199E6F5DF ON achievement');
         }
 
         $userTable = $schema->getTable('user');
