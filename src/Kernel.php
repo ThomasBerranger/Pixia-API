@@ -13,8 +13,6 @@ class Kernel extends BaseKernel
 
     public function __construct(string $environment, bool $debug)
     {
-        // Toute la logique métier (Pixia du jour, classement mensuel) repose
-        // sur le calendrier civil français.
         date_default_timezone_set('Europe/Paris');
 
         parent::__construct($environment, $debug);
