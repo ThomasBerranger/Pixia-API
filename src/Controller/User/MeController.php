@@ -168,6 +168,8 @@ class MeController extends AbstractController
     #[IsGranted('view', 'game')]
     public function gameShow(Game $game): JsonResponse
     {
+        $game->setWinnerCount($this->achievementRepository->count(['game' => $game]));
+
         return $this->json($game, context: ['groups' => ['game:user:show']]);
     }
 

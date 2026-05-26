@@ -47,7 +47,7 @@ class Game
     private DateTimeImmutable $date;
 
     #[ORM\Column(enumType: GameDifficulty::class)]
-    #[Groups(['game:show', 'game:index', 'game:show:admin', 'game:index:admin'])]
+    #[Groups(['game:show', 'game:index', 'game:show:admin', 'game:index:admin', 'game:user:show'])]
     private GameDifficulty $difficulty = GameDifficulty::EASY;
 
     #[ORM\ManyToOne]
@@ -72,6 +72,7 @@ class Game
     private string $englishSolution;
 
     #[ORM\Column]
+    #[Groups(['game:user:show'])]
     private int $attempts = 0;
 
     #[ORM\Column]
@@ -87,6 +88,9 @@ class Game
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $supervisorMessage = null;
+
+    #[Groups(['game:user:show'])]
+    private int $winnerCount = 0;
 
     public function __construct()
     {
@@ -243,6 +247,18 @@ class Game
     public function setAttempts(int $attempts): static
     {
         $this->attempts = $attempts;
+
+        return $this;
+    }
+
+    public function getWinnerCount(): int
+    {
+        return $this->winnerCount;
+    }
+
+    public function setWinnerCount(int $winnerCount): static
+    {
+        $this->winnerCount = $winnerCount;
 
         return $this;
     }
