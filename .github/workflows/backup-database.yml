@@ -42,6 +42,13 @@ jobs:
         run: |
           test -s "$BACKUP_FILE" || { echo "Backup file is empty"; exit 1; }
           ls -lh "$BACKUP_FILE"
+          if ! gunzip -c "$BACKUP_FILE" | grep -q "CREATE TABLE"; then
+            echo "::error::Le dump ne contient aucun CREATE TABLE — base vide, mauvais nom de base ou privilèges insuffisants."
+            echo "----- début du dump (debug) -----"
+            gunzip -c "$BACKUP_FILE" | head -40
+            echo "----- fin du dump (debug) -----"
+            exit 1
+          fi
 
       - name: Upload backup as artifact
         uses: actions/upload-artifact@v4
