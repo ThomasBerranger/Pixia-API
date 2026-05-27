@@ -13,6 +13,20 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
+      - name: Debug — présence des secrets (longueurs, pas de valeurs)
+        env:
+          BACKUP_DB_HOST: ${{ secrets.BACKUP_DB_HOST }}
+          BACKUP_DB_PORT: ${{ secrets.BACKUP_DB_PORT }}
+          BACKUP_DB_USER: ${{ secrets.BACKUP_DB_USER }}
+          BACKUP_DB_PASSWORD: ${{ secrets.BACKUP_DB_PASSWORD }}
+          BACKUP_DB_NAME: ${{ secrets.BACKUP_DB_NAME }}
+        run: |
+          echo "HOST len:     ${#BACKUP_DB_HOST}"
+          echo "PORT len:     ${#BACKUP_DB_PORT}"
+          echo "USER len:     ${#BACKUP_DB_USER}"
+          echo "PASSWORD len: ${#BACKUP_DB_PASSWORD}"
+          echo "NAME len:     ${#BACKUP_DB_NAME}"
+
       - name: Dump database
         env:
           BACKUP_DB_HOST: ${{ secrets.BACKUP_DB_HOST }}
