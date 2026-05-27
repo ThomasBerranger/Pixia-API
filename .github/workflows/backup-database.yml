@@ -5,30 +5,36 @@ on:
     - cron: '0 1 * * *'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   backup:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - name: Install MySQL client
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y mysql-client
-
       - name: Dump database
         env:
-          MYSQL_PWD: ${{ secrets.BACKUP_DB_PASSWORD }}
+          BACKUP_DB_HOST: ${{ secrets.BACKUP_DB_HOST }}
+          BACKUP_DB_PORT: ${{ secrets.BACKUP_DB_PORT }}
+          BACKUP_DB_USER: ${{ secrets.BACKUP_DB_USER }}
+          BACKUP_DB_PASSWORD: ${{ secrets.BACKUP_DB_PASSWORD }}
+          BACKUP_DB_NAME: ${{ secrets.BACKUP_DB_NAME }}
         run: |
           FILENAME="pixia-$(date -u +%Y-%m-%d).sql"
-          mysqldump \
-            --host="${{ secrets.BACKUP_DB_HOST }}" \
-            --port="${{ secrets.BACKUP_DB_PORT }}" \
-            --user="${{ secrets.BACKUP_DB_USER }}" \
-            --single-transaction \
-            --quick \
-            --no-tablespaces \
-            --set-gtid-purged=OFF \
-            --default-character-set=utf8mb4 \
-            "${{ secrets.BACKUP_DB_NAME }}" \
+          docker run --rm \
+            -e MYSQL_PWD="$BACKUP_DB_PASSWORD" \
+            mysql:9.4 \
+            mysqldump \
+              --host="$BACKUP_DB_HOST" \
+              --port="$BACKUP_DB_PORT" \
+              --user="$BACKUP_DB_USER" \
+              --single-transaction \
+              --quick \
+              --no-tablespaces \
+              --set-gtid-purged=OFF \
+              --default-character-set=utf8mb4 \
+              "$BACKUP_DB_NAME" \
             | gzip > "$FILENAME.gz"
           echo "BACKUP_FILE=$FILENAME.gz" >> "$GITHUB_ENV"
 
