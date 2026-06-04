@@ -9,6 +9,7 @@ use App\Entity\User;
 use App\Enum\ActivityType;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Tools\Pagination\Paginator;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bridge\Doctrine\Types\UuidType;
 
@@ -20,6 +21,35 @@ class ActivityRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Activity::class);
+    }
+
+    /**
+     * @return array{items: list<Activity>, total: int}
+     */
+    public function findPaginated(?string $search, int $page, int $perPage): array
+    {
+        $queryBuilder = $this->createQueryBuilder('a')
+            ->leftJoin('a.player', 'p')
+            ->addSelect('p')
+            ->orderBy('a.createdAt', 'DESC')
+            ->setFirstResult(($page - 1) * $perPage)
+            ->setMaxResults($perPage);
+
+        if ($search !== null && $search !== '') {
+            $queryBuilder
+                ->andWhere('p.username LIKE :search')
+                ->setParameter('search', '%'.$search.'%');
+        }
+
+        $paginator = new Paginator($queryBuilder->getQuery(), false);
+
+        /** @var list<Activity> $items */
+        $items = array_values(iterator_to_array($paginator));
+
+        return [
+            'items' => $items,
+            'total' => count($paginator),
+        ];
     }
 
     public function findLastByPlayerAndType(User $player, ActivityType $type): ?Activity

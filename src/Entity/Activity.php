@@ -11,6 +11,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\IdGenerator\UuidGenerator;
 use Symfony\Bridge\Doctrine\Types\UuidType;
+use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: ActivityRepository::class)]
@@ -25,16 +26,20 @@ class Activity
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+    #[Groups(['activity:index:super_admin'])]
     private User $player;
 
     #[ORM\Column(enumType: ActivityType::class)]
+    #[Groups(['activity:index:super_admin'])]
     private ActivityType $type;
 
     /** @var array<string, mixed>|null */
     #[ORM\Column(type: Types::JSON, nullable: true)]
+    #[Groups(['activity:index:super_admin'])]
     private ?array $data;
 
     #[ORM\Column]
+    #[Groups(['activity:index:super_admin'])]
     private DateTimeImmutable $createdAt;
 
     /** @param array<string, mixed>|null $data */

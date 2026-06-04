@@ -50,7 +50,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private int $score;
 
     #[ORM\Column(length: 255, unique: true)]
-    #[Groups(['user:me', 'user:show', 'user:index', 'user:index:admin', 'game:show', 'game:index:admin', 'game:show:admin', 'user:index:super_admin'])]
+    #[Groups(['user:me', 'user:show', 'user:index', 'user:index:admin', 'game:show', 'game:index:admin', 'game:show:admin', 'user:index:super_admin', 'activity:index:super_admin'])]
     private string $username;
 
     #[ORM\Column]
