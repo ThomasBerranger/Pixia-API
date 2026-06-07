@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Repository;
 
 use App\Entity\User;
+use App\Enum\UserRole;
 use DateTimeImmutable;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\DBAL\ArrayParameterType;
@@ -351,6 +352,26 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         $result = $this->createQueryBuilder('u')
             ->where('u.roles LIKE :role')
             ->setParameter('role', '%"' . $role . '"%')
+            ->getQuery()
+            ->getResult();
+
+        return $result;
+    }
+
+    /**
+     * Recipients for the monthly recap email: users who gave email consent and are not bots or banned.
+     *
+     * @return list<User>
+     */
+    public function findEmailNotificationRecipients(): array
+    {
+        /** @var list<User> $result */
+        $result = $this->createQueryBuilder('u')
+            ->where('u.emailConsent = true')
+            ->andWhere('u.roles NOT LIKE :bot')
+            ->andWhere('u.roles NOT LIKE :banned')
+            ->setParameter('bot', '%"' . UserRole::BOT->value . '"%')
+            ->setParameter('banned', '%"' . UserRole::BANNED->value . '"%')
             ->getQuery()
             ->getResult();
 

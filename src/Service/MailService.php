@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\DTO\MonthlyRecap;
 use App\Entity\Contribution;
 use App\Entity\User;
 use App\Enum\ContributionType;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
+use Symfony\Component\HttpFoundation\UriSigner;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use SymfonyCasts\Bundle\ResetPassword\Exception\ResetPasswordExceptionInterface;
 use SymfonyCasts\Bundle\ResetPassword\Exception\TooManyPasswordRequestsException;
 use SymfonyCasts\Bundle\ResetPassword\ResetPasswordHelperInterface;
@@ -23,8 +26,10 @@ readonly class MailService
     public const string NO_REPLY_MAIL = 'noreply@pixia.fun';
 
     public function __construct(
-        private MailerInterface     $mailer,
+        private MailerInterface              $mailer,
         private ResetPasswordHelperInterface $resetPasswordHelper,
+        private UrlGeneratorInterface        $urlGenerator,
+        private UriSigner                    $uriSigner,
     )
     {
     }
@@ -71,5 +76,36 @@ readonly class MailService
             ]);
 
         $this->mailer->send($email);
+    }
+
+    /**
+     * @throws TransportExceptionInterface
+     */
+    public function sendMonthlyRecapMail(User $user, MonthlyRecap $recap): void
+    {
+        $email = new TemplatedEmail()
+            ->from(new Address(self::NO_REPLY_MAIL, self::NAME))
+            ->replyTo(new Address(self::PIXIA_MAIL, self::NAME))
+            ->to($user->getEmail())
+            ->subject($user->getUsername() . ' ton récap de ' . $recap->monthName . ' est là 🍿')
+            ->htmlTemplate('mail/monthly_recap.html.twig')
+            ->context([
+                'user' => $user,
+                'recap' => $recap,
+                'unsubscribeUrl' => $this->generateUnsubscribeUrl($user),
+            ]);
+
+        $this->mailer->send($email);
+    }
+
+    private function generateUnsubscribeUrl(User $user): string
+    {
+        $url = $this->urlGenerator->generate(
+            'unsubscribe',
+            ['id' => (string) $user->getId()],
+            UrlGeneratorInterface::ABSOLUTE_URL,
+        );
+
+        return $this->uriSigner->sign($url);
     }
 }

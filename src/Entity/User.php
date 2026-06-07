@@ -123,6 +123,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(['user:me', 'user:index:super_admin'])]
     private int $tokens = 0;
 
+    #[ORM\Column]
+    #[Groups(['user:me'])]
+    private bool $emailConsent = true;
+
     public function __construct()
     {
         $this->roles = [];
@@ -505,6 +509,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         }
 
         $this->tokens -= $amount;
+
+        return $this;
+    }
+
+    public function hasEmailConsent(): bool
+    {
+        return $this->emailConsent;
+    }
+
+    public function setEmailConsent(bool $emailConsent): static
+    {
+        $this->emailConsent = $emailConsent;
 
         return $this;
     }

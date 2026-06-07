@@ -120,6 +120,34 @@ class GameRepository extends ServiceEntityRepository
     }
 
     /**
+     * @return list<array{game: Game, winners: int}>
+     */
+    public function findAuthoredInMonthWithWinners(User $author, DateTimeImmutable $month): array
+    {
+        /** @var list<array{game: Game, winners: int|numeric-string}> $rows */
+        $rows = $this->createQueryBuilder('g')
+            ->select('g AS game')
+            ->addSelect('COUNT(a.id) AS winners')
+            ->leftJoin(Achievement::class, 'a', 'WITH', 'a.game = g')
+            ->where('g.author = :author')
+            ->andWhere('g.status = :status')
+            ->andWhere('g.date BETWEEN :start AND :end')
+            ->setParameter('author', $author->getId(), UuidType::NAME)
+            ->setParameter('status', GameStatus::APPROVED)
+            ->setParameter('start', $month->modify('first day of this month')->format('Y-m-d'))
+            ->setParameter('end', $month->modify('last day of this month')->format('Y-m-d'))
+            ->groupBy('g.id')
+            ->orderBy('winners', 'DESC')
+            ->getQuery()
+            ->getResult();
+
+        return array_map(
+            static fn (array $row): array => ['game' => $row['game'], 'winners' => (int) $row['winners']],
+            $rows,
+        );
+    }
+
+    /**
      * @param list<GameDifficulty> $difficulties
      * @return list<array{month: string, difficulty: GameDifficulty, total: int, won: int}>
      */

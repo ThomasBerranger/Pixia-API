@@ -207,6 +207,7 @@ src/
 ### Règles universelles
 - `declare(strict_types=1)` en tête de chaque fichier PHP
 - Typage retour et paramètres obligatoire partout — pas de `mixed` sauf exception justifiée et commentée
+- **Dates** : ne jamais instancier `new \DateTimeImmutable('now')` directement dans la logique métier. Injecter `Symfony\Component\Clock\ClockInterface` et utiliser `$this->clock->now()` (retourne un `DatePoint`) — testable via `MockClock`. Les dates explicites (ex : `'first day of last month'`) se dérivent de `$this->clock->now()->modify(...)`.
 
 ### Controllers
 - `final class`, étendent `AbstractController`

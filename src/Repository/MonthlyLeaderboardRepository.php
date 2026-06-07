@@ -20,6 +20,23 @@ class MonthlyLeaderboardRepository extends ServiceEntityRepository
         parent::__construct($registry, MonthlyLeaderboard::class);
     }
 
+    public function findChampionForMonth(DateTimeImmutable $month): ?MonthlyLeaderboard
+    {
+        $firstDay = $month->modify('first day of this month')->setTime(0, 0);
+
+        /** @var MonthlyLeaderboard|null $champion */
+        $champion = $this->createQueryBuilder('ml')
+            ->where('ml.month = :month')
+            ->setParameter('month', $firstDay)
+            ->orderBy('ml.score', 'DESC')
+            ->addOrderBy('ml.updatedAt', 'ASC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        return $champion;
+    }
+
     public function getMonthlyRank(User $player, DateTimeImmutable $date): ?int
     {
         $month = $date->modify('first day of this month')->setTime(0, 0);

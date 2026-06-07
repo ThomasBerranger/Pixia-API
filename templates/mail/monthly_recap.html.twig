@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ton récap de {{ recap.monthLabel }}</title>
+<style>
+  body { margin:0; padding:0; background:#03045e; -webkit-font-smoothing:antialiased; }
+  .ff { font-family:'Trebuchet MS', Verdana, Arial, sans-serif; }
+  .mono { font-family:'Courier New', Courier, monospace; }
+  a { text-decoration:none; }
+  @media (max-width:620px){ .container{ width:100% !important; } .px{ padding-left:20px !important; padding-right:20px !important; } }
+</style>
+</head>
+<body>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#03045e;">
+<tr><td align="center" style="padding:24px 12px;">
+
+  <table role="presentation" class="container" width="600" cellpadding="0" cellspacing="0" style="width:600px; max-width:600px; background:#0a0e27; border:3px solid #a76eff;">
+
+    <!-- HEADER (aligné à gauche) -->
+    <tr><td class="px" style="padding:34px 40px 22px; text-align:left;">
+      <div class="mono" style="font-size:44px; line-height:1; letter-spacing:5px; color:#ff006e; font-weight:bold;">PIXIA</div>
+      <div class="ff" style="font-size:12px; letter-spacing:3px; text-transform:uppercase; color:#a76eff; margin-top:3px;">ton récap de {{ recap.monthLabel }}</div>
+    </td></tr>
+
+    <!-- USERNAME + PHRASE (centrés) -->
+    <tr><td class="px" style="padding:4px 40px 0; text-align:center;">
+      <div class="ff" style="font-size:30px; line-height:1.2; text-transform:uppercase; color:#ffbe0b; font-weight:bold;">{{ user.username }}</div>
+      <p class="ff" style="font-size:15px; line-height:1.6; color:#ffffff; margin:14px 0 0;">
+        Voilà à quoi a ressemblé ton mois de {{ recap.monthName }}.<br>{{ recap.tier.punchline }}
+      </p>
+    </td></tr>
+
+    <!-- CLASSEMENT & STATS (fusionnés) -->
+    <tr><td class="px" style="padding:30px 40px 0;">
+      <div class="ff" style="font-size:13px; letter-spacing:2px; text-transform:uppercase; color:#a76eff; margin-bottom:14px; font-weight:bold;">🏆 Ton classement &amp; tes stats</div>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#03045e; border:2px solid #ff006e; box-shadow:4px 4px 0 #ffbe0b;">
+        <tr>
+          <td width="50%" style="padding:18px 22px; text-align:center; border-right:2px solid #a76eff; border-bottom:2px solid #a76eff;">
+            <div class="ff" style="font-size:11px; letter-spacing:1px; text-transform:uppercase; color:#a76eff;">Ton rang</div>
+            <div class="mono" style="font-size:34px; color:#ffbe0b; margin-top:4px; font-weight:bold;">{{ recap.rank ? '#' ~ recap.rank : '—' }}</div>
+          </td>
+          <td width="50%" style="padding:18px 22px; text-align:center; border-bottom:2px solid #a76eff;">
+            <div class="ff" style="font-size:11px; letter-spacing:1px; text-transform:uppercase; color:#a76eff;">Champion du mois</div>
+            {% if recap.championUsername %}
+              <div class="ff" style="font-size:18px; color:#ffffff; margin-top:6px; font-weight:bold;">{{ recap.championUsername }}</div>
+              <div class="ff" style="font-size:12px; color:#fb5607; margin-top:4px;"><span class="mono">{{ recap.championGap|number_format(0, ',', ' ') }}</span> pts devant toi</div>
+            {% else %}
+              <div class="ff" style="font-size:18px; color:#ffffff; margin-top:6px; font-weight:bold;">—</div>
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td width="50%" style="padding:18px 22px; text-align:center; border-right:2px solid #a76eff;">
+            <div class="mono" style="font-size:30px; color:#22c55e; font-weight:bold;">{{ recap.won }}</div>
+            <div class="ff" style="font-size:11px; letter-spacing:1px; text-transform:uppercase; color:#a76eff; margin-top:4px;">parties gagnées</div>
+          </td>
+          <td width="50%" style="padding:18px 22px; text-align:center;">
+            <div class="mono" style="font-size:30px; color:#ff006e; font-weight:bold;">+{{ recap.points|number_format(0, ',', ' ') }}</div>
+            <div class="ff" style="font-size:11px; letter-spacing:1px; text-transform:uppercase; color:#a76eff; margin-top:4px;">points marqués</div>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+
+    {% if recap.badges is not empty %}
+    <!-- BADGES (tous la même DA) -->
+    <tr><td class="px" style="padding:30px 40px 0;">
+      <div class="ff" style="font-size:13px; letter-spacing:2px; text-transform:uppercase; color:#a76eff; margin-bottom:14px; font-weight:bold;">🎖️ Badges débloqués</div>
+      <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+        {% for badge in recap.badges %}
+        <td style="padding:0 8px 8px 0;"><span class="ff" style="display:inline-block; background:#ff006e; color:#ffffff; font-size:12px; letter-spacing:1px; text-transform:uppercase; font-weight:bold; padding:7px 12px; border:2px solid #ffffff; box-shadow:3px 3px 0 #ffbe0b;">{{ badge.icon }} {{ badge.label }}</span></td>
+        {% endfor %}
+      </tr></table>
+    </td></tr>
+    {% endif %}
+
+    {% if recap.createdPixias is not empty %}
+    <!-- PIXIAS CRÉÉS -->
+    <tr><td class="px" style="padding:30px 40px 0;">
+      <div class="ff" style="font-size:13px; letter-spacing:2px; text-transform:uppercase; color:#a76eff; margin-bottom:14px; font-weight:bold;">🎨 Tes Pixias créés</div>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#03045e; border:2px solid #a76eff;">
+        {% for pixia in recap.createdPixias %}
+        <tr><td style="padding:14px 18px; {% if not loop.last %}border-bottom:2px solid #a76eff;{% endif %}">
+          <div class="ff" style="font-size:14px; line-height:1.5; color:#ffffff;"><span class="mono" style="font-weight:bold; color:#ffbe0b;">{{ pixia.guessers|number_format(0, ',', ' ') }}</span> joueurs ont deviné ton Pixia <span style="color:#ff006e;">{{ pixia.label }}</span> en <span class="mono" style="font-weight:bold; color:#ffbe0b;">{{ pixia.attempts|number_format(0, ',', ' ') }}</span> tentatives.</div>
+        </td></tr>
+        {% endfor %}
+      </table>
+    </td></tr>
+    {% endif %}
+
+    <!-- TOKENS -->
+    <tr><td class="px" style="padding:30px 40px 0;">
+      <div class="ff" style="font-size:13px; letter-spacing:2px; text-transform:uppercase; color:#a76eff; margin-bottom:14px; font-weight:bold;">🪙 Ton solde de tokens</div>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#03045e; border:2px solid #ffbe0b;"><tr><td style="padding:18px 20px;">
+        <div class="ff" style="font-size:14px; color:#ffffff;">
+          {% if recap.tokensMissing > 0 %}
+            Il te manque <span class="mono" style="color:#ff006e; font-size:18px; font-weight:bold;">{{ recap.tokensMissing|number_format(0, ',', ' ') }}</span> tokens pour générer ton prochain Pixia.
+          {% else %}
+            Tu as de quoi générer ton prochain Pixia 🎉
+          {% endif %}
+        </div>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px; background:#0a0e27; border:1px solid #a76eff;"><tr>
+          {% if recap.tokensPercent > 0 %}<td width="{{ recap.tokensPercent }}%" style="background:#ff006e; height:14px; line-height:14px; font-size:0;">&nbsp;</td>{% endif %}
+          {% if recap.tokensPercent < 100 %}<td width="{{ 100 - recap.tokensPercent }}%" style="height:14px; line-height:14px; font-size:0;">&nbsp;</td>{% endif %}
+        </tr></table>
+        <div class="mono" style="font-size:11px; color:#a76eff; margin-top:6px;">{{ recap.tokens|number_format(0, ',', ' ') }} / {{ constant('App\\Enum\\TokenCost::CREATION_MINIMUM')|number_format(0, ',', ' ') }} tokens</div>
+      </td></tr></table>
+    </td></tr>
+
+    <!-- CTA + CITATION -->
+    <tr><td class="px" style="padding:34px 40px 0; text-align:center;">
+      <a href="https://pixia.fun" class="ff" style="display:inline-block; background:#22c55e; color:#03045e; font-size:16px; text-transform:uppercase; letter-spacing:1px; font-weight:bold; padding:15px 38px; border:2px solid #ffffff; box-shadow:4px 4px 0 #03045e;">Découvrir l'image du jour</a>
+    </td></tr>
+
+    <tr><td class="px" style="padding:26px 40px 34px; text-align:center;">
+      <div class="ff" style="font-size:13px; font-style:italic; color:#ffffff; line-height:1.5;">{{ recap.quote }}</div>
+    </td></tr>
+
+    <!-- FOOTER discret -->
+    <tr><td style="padding:16px 40px; border-top:1px solid rgba(167,110,255,0.25); text-align:center;">
+      <a href="{{ unsubscribeUrl }}" class="ff" style="font-size:10px; color:#6f63a6; text-decoration:underline;">Ne plus recevoir de mails automatiques</a>
+    </td></tr>
+
+  </table>
+
+</td></tr>
+</table>
+</body>
+</html>
