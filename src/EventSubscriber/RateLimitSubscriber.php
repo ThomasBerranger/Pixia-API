@@ -69,13 +69,13 @@ readonly class RateLimitSubscriber implements EventSubscriberInterface
     {
         $controller = $event->getController();
 
-        if (!is_array($controller) || 2 !== count($controller)) {
+        if (!is_array($controller)) {
             return;
         }
 
         [$controllerObject, $methodName] = $controller;
 
-        if (!is_object($controllerObject) || !is_string($methodName)) {
+        if (!is_object($controllerObject)) {
             return;
         }
 
