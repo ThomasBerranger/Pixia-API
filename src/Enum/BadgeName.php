@@ -22,4 +22,48 @@ enum BadgeName: string
     case STREAK_30 = 'STREAK_30';
     case STREAK_90 = 'STREAK_90';
     case STREAK_200 = 'STREAK_200';
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::CREATOR => 'Créateur',
+            self::BETA_TESTER => 'Bêta-Testeur',
+            self::WINS_1 => 'Débutant',
+            self::WINS_10 => 'Cinéphile',
+            self::WINS_50 => 'Expert',
+            self::WINS_100 => 'Maître',
+            self::WINS_300 => 'Légendaire',
+            self::TOP_10_REACHED => 'Top 10',
+            self::GAME_SUGGESTION => 'Génie',
+            self::BUG_DETECTED => 'Débugger',
+            self::SPONSOR => 'Ambassadeur',
+            self::SPONSOR_5 => 'Influenceur',
+            self::STREAK_10 => 'En feu',
+            self::STREAK_30 => 'Inarrêtable',
+            self::STREAK_90 => 'Astre flamboyant',
+            self::STREAK_200 => 'Perfectionniste',
+        };
+    }
+
+    public function icon(): string
+    {
+        return match ($this) {
+            self::CREATOR => '🎨',
+            self::BETA_TESTER => '⏱️',
+            self::WINS_1 => '🐣',
+            self::WINS_10 => '🎬',
+            self::WINS_50 => '🎓',
+            self::WINS_100 => '💯',
+            self::WINS_300 => '💎',
+            self::TOP_10_REACHED => '🔝',
+            self::GAME_SUGGESTION => '💡',
+            self::BUG_DETECTED => '🪲',
+            self::SPONSOR => '🤝',
+            self::SPONSOR_5 => '📣',
+            self::STREAK_10 => '🔥',
+            self::STREAK_30 => '⚡',
+            self::STREAK_90 => '☄️',
+            self::STREAK_200 => '💫',
+        };
+    }
 }

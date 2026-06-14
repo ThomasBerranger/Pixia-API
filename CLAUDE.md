@@ -207,6 +207,7 @@ src/
 ### Règles universelles
 - `declare(strict_types=1)` en tête de chaque fichier PHP
 - Typage retour et paramètres obligatoire partout — pas de `mixed` sauf exception justifiée et commentée
+- **Dates** : ne jamais instancier `new \DateTimeImmutable('now')` directement dans la logique métier. Injecter `Symfony\Component\Clock\ClockInterface` et utiliser `$this->clock->now()` (retourne un `DatePoint`) — testable via `MockClock`. Les dates explicites (ex : `'first day of last month'`) se dérivent de `$this->clock->now()->modify(...)`.
 
 ### Controllers
 - `final class`, étendent `AbstractController`
@@ -485,6 +486,7 @@ composer stan   # PHPStan
 - **Unicité de date — PHP only** : validée via `GameDateService`. Pas de contrainte BDD. Plusieurs DRAFT/PENDING sur la même date sont légitimes.
 - **`GameListener` — behaviors automatiques** : supervisor auto-assigné et date calculée dans le listener Doctrine — pas dans le controller ni le service.
 - **Tokens — jamais négatifs** : `User::removeTokens()` lève une `LogicException`. `TokenService` la catch et relève en `UnprocessableEntityHttpException`. Ne jamais appeler `removeTokens()` directement depuis un controller.
+- **Récap mensuel par mail** : feature documentée dans [`docs/monthly-recap-mail.md`](docs/monthly-recap-mail.md) (commande cron, idempotence, désinscription signée, piège de précédence `OR` Doctrine à ne pas retirer).
 
 ---
 

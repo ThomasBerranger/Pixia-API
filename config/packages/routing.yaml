@@ -1,8 +1,9 @@
 framework:
     router:
-        # Configure how to generate URLs in non-HTTP contexts, such as CLI commands.
-        # See https://symfony.com/doc/current/routing.html#generating-urls-in-commands
-        #default_uri: http://localhost
+#         Host used to generate absolute URLs in non-HTTP contexts such as CLI commands (e.g. the monthly recap cron).
+#         Without it, generated URLs fall back to http://localhost. See:
+#         https://symfony.com/doc/current/routing.html#generating-urls-in-commands
+        default_uri: '%env(DEFAULT_URI)%'
 
 when@prod:
     framework:

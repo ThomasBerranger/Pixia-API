@@ -36,6 +36,25 @@ class AchievementRepository extends ServiceEntityRepository
     }
 
     /**
+     * Count games won by a player within a given month (based on the achievement date).
+     */
+    public function countByPlayerForMonth(User $user, \DateTimeImmutable $month): int
+    {
+        /** @var int $count */
+        $count = $this->createQueryBuilder('a')
+            ->select('COUNT(a.id)')
+            ->where('a.player = :userId')
+            ->andWhere('a.date BETWEEN :start AND :end')
+            ->setParameter('userId', $user->getId(), UuidType::NAME)
+            ->setParameter('start', $month->modify('first day of this month')->format('Y-m-d'))
+            ->setParameter('end', $month->modify('last day of this month')->format('Y-m-d'))
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return $count;
+    }
+
+    /**
      * @return list<array{date: string, difficulty: string, won: string, hinted: string}>
      * @throws Exception
      */
