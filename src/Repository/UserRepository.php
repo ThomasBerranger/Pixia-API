@@ -359,19 +359,22 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     }
 
     /**
-     * Recipients for the monthly recap email: users who gave email consent and are not bots or banned.
+     * Recipients for the monthly recap email: consenting, non-bot, non-banned users who have not
+     * already been sent the recap since $sentAfter (idempotent / resumable mailing).
      *
      * @return list<User>
      */
-    public function findEmailNotificationRecipients(): array
+    public function findEmailNotificationRecipients(DateTimeImmutable $sentAfter): array
     {
         /** @var list<User> $result */
         $result = $this->createQueryBuilder('u')
             ->where('u.emailConsent = true')
             ->andWhere('u.roles NOT LIKE :bot')
             ->andWhere('u.roles NOT LIKE :banned')
+            ->andWhere('(u.monthlyRecapSentAt IS NULL OR u.monthlyRecapSentAt < :sentAfter)')
             ->setParameter('bot', '%"' . UserRole::BOT->value . '"%')
             ->setParameter('banned', '%"' . UserRole::BANNED->value . '"%')
+            ->setParameter('sentAfter', $sentAfter)
             ->getQuery()
             ->getResult();
 

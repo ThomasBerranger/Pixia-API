@@ -23,8 +23,6 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 )]
 class SendMonthlyRecapCommand extends Command
 {
-    private const int BATCH_SIZE = 50;
-
     public function __construct(
         private readonly UserRepository               $userRepository,
         private readonly MonthlyLeaderboardRepository $monthlyLeaderboardRepository,
@@ -48,8 +46,9 @@ class SendMonthlyRecapCommand extends Command
         $dryRun = (bool)$input->getOption('dry-run');
 
         $month = $this->clock->now()->modify('first day of last month');
+        $sentAfter = $this->clock->now()->modify('first day of this month midnight');
 
-        $recipients = $this->userRepository->findEmailNotificationRecipients();
+        $recipients = $this->userRepository->findEmailNotificationRecipients($sentAfter);
 
         if (count($recipients) === 0) {
             $io->warning('No recipient to send the monthly recap to.');
@@ -64,7 +63,7 @@ class SendMonthlyRecapCommand extends Command
         $sent = 0;
         $failed = 0;
 
-        foreach ($recipients as $i => $recipient) {
+        foreach ($recipients as $recipient) {
             $recap = $this->monthlyRecapService->getRecapFor($recipient, $month, $champion?->getPlayer()->getUsername(), $champion?->getScore() ?? 0);
 
             if ($dryRun) {
@@ -74,16 +73,15 @@ class SendMonthlyRecapCommand extends Command
             }
 
             try {
-                $this->mailService->sendMonthlyRecapMail($recipient, $recap);
+                // todo: finalize the recap mail feature
+//                $this->mailService->sendMonthlyRecapMail($recipient, $recap);
+
+//                $recipient->setMonthlyRecapSentAt($this->clock->now());
+//                $this->entityManager->flush();
                 $sent++;
             } catch (\Throwable $e) {
                 $failed++;
                 $io->error(sprintf('Failed to send to %s: %s', $recipient->getEmail(), $e->getMessage()));
-            }
-
-            // Keep Doctrine's identity map from growing across the whole batch.
-            if (($i + 1) % self::BATCH_SIZE === 0) {
-                $this->entityManager->clear();
             }
         }
 

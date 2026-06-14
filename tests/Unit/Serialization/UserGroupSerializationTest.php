@@ -35,7 +35,7 @@ class UserGroupSerializationTest extends KernelTestCase
         $data = $this->serialize($user, ['user:me']);
 
         self::assertEquals(
-            ['email', 'score', 'username', 'badges', 'contributions', 'avatarUrl', 'slug', 'monthlyLeaderboards', 'rank', 'tokens'],
+            ['email', 'score', 'username', 'badges', 'contributions', 'avatarUrl', 'slug', 'monthlyLeaderboards', 'rank', 'tokens', 'emailConsent'],
             array_keys($data)
         );
 

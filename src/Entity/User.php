@@ -127,6 +127,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(['user:me'])]
     private bool $emailConsent = true;
 
+    #[ORM\Column(nullable: true)]
+    private ?DateTimeImmutable $monthlyRecapSentAt = null;
+
     public function __construct()
     {
         $this->roles = [];
@@ -521,6 +524,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setEmailConsent(bool $emailConsent): static
     {
         $this->emailConsent = $emailConsent;
+
+        return $this;
+    }
+
+    public function getMonthlyRecapSentAt(): ?DateTimeImmutable
+    {
+        return $this->monthlyRecapSentAt;
+    }
+
+    public function setMonthlyRecapSentAt(?DateTimeImmutable $monthlyRecapSentAt): static
+    {
+        $this->monthlyRecapSentAt = $monthlyRecapSentAt;
 
         return $this;
     }
