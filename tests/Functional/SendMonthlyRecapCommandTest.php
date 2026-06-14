@@ -26,24 +26,27 @@ class SendMonthlyRecapCommandTest extends KernelTestCase
 
     public function testSendMarksRecipientsAndIsIdempotentOnReRun(): void
     {
-        self::bootKernel();
+        self::markTestSkipped("Envoi désactivé tant que la feature notif n'est pas finalisée (cf. SendMonthlyRecapCommand).");
 
-        // Fixtures: test / admin / superadmin consent + non-bot/banned + jamais servis → 3 destinataires.
-        $tester = $this->tester();
-        $tester->execute([]);
-        $tester->assertCommandIsSuccessful();
-        self::assertStringContainsString('email(s) sent', $tester->getDisplay());
-
-        // Effet de bord métier : chaque destinataire est marqué comme servi.
-        $user = $this->userRepository()->findOneBy(['email' => 'test@test.com']);
-        self::assertInstanceOf(User::class, $user);
-        self::assertNotNull($user->getMonthlyRecapSentAt());
-
-        // Idempotence : un second run ne retrouve plus aucun destinataire → aucun doublon.
-        $rerun = $this->tester();
-        $rerun->execute([]);
-        $rerun->assertCommandIsSuccessful();
-        self::assertStringContainsString('No recipient', $rerun->getDisplay());
+        // TODO (v finale notif) — réactiver quand l'envoi est rebranché dans la commande :
+        // self::bootKernel();
+        //
+        // // Fixtures: test / admin / superadmin consent + non-bot/banned + jamais servis → 3 destinataires.
+        // $tester = $this->tester();
+        // $tester->execute([]);
+        // $tester->assertCommandIsSuccessful();
+        // self::assertStringContainsString('email(s) sent', $tester->getDisplay());
+        //
+        // // Effet de bord métier : chaque destinataire est marqué comme servi.
+        // $user = $this->userRepository()->findOneBy(['email' => 'test@test.com']);
+        // self::assertInstanceOf(User::class, $user);
+        // self::assertNotNull($user->getMonthlyRecapSentAt());
+        //
+        // // Idempotence : un second run ne retrouve plus aucun destinataire → aucun doublon.
+        // $rerun = $this->tester();
+        // $rerun->execute([]);
+        // $rerun->assertCommandIsSuccessful();
+        // self::assertStringContainsString('No recipient', $rerun->getDisplay());
     }
 
     public function testDryRunSendsNothingAndDoesNotMarkRecipients(): void

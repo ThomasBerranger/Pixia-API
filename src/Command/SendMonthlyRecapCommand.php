@@ -6,9 +6,10 @@ namespace App\Command;
 
 use App\Repository\MonthlyLeaderboardRepository;
 use App\Repository\UserRepository;
-use App\Service\MailService;
 use App\Service\MonthlyRecapService;
-use Doctrine\ORM\EntityManagerInterface;
+// TODO (v finale notif) — réactiver avec l'envoi :
+// use App\Service\MailService;
+// use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Clock\ClockInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -27,8 +28,9 @@ class SendMonthlyRecapCommand extends Command
         private readonly UserRepository               $userRepository,
         private readonly MonthlyLeaderboardRepository $monthlyLeaderboardRepository,
         private readonly MonthlyRecapService          $monthlyRecapService,
-        private readonly MailService                  $mailService,
-        private readonly EntityManagerInterface       $entityManager,
+        // TODO (v finale notif) — réactiver avec l'envoi :
+        // private readonly MailService                  $mailService,
+        // private readonly EntityManagerInterface       $entityManager,
         private readonly ClockInterface               $clock,
     )
     {
@@ -60,39 +62,23 @@ class SendMonthlyRecapCommand extends Command
 
         $champion = $this->monthlyLeaderboardRepository->findChampionForMonth($month);
 
-        $sent = 0;
-        $failed = 0;
-
         foreach ($recipients as $recipient) {
             $recap = $this->monthlyRecapService->getRecapFor($recipient, $month, $champion?->getPlayer()->getUsername(), $champion?->getScore() ?? 0);
 
-            if ($dryRun) {
-                $io->writeln(sprintf('%s — won: %d, points: %d', $recipient->getEmail(), $recap->won, $recap->points));
+            $io->writeln(sprintf('%s — won: %d, points: %d', $recipient->getEmail(), $recap->won, $recap->points));
 
-                continue;
-            }
-
-            try {
-                // todo: finalize the recap mail feature
-//                $this->mailService->sendMonthlyRecapMail($recipient, $recap);
-
-//                $recipient->setMonthlyRecapSentAt($this->clock->now());
-//                $this->entityManager->flush();
-                $sent++;
-            } catch (\Throwable $e) {
-                $failed++;
-                $io->error(sprintf('Failed to send to %s: %s', $recipient->getEmail(), $e->getMessage()));
-            }
+            // TODO (v finale notif) — réactiver l'envoi + le marquage idempotent :
+            // try {
+            //     $this->mailService->sendMonthlyRecapMail($recipient, $recap);
+            //     $recipient->setMonthlyRecapSentAt($this->clock->now());
+            //     $this->entityManager->flush();
+            // } catch (\Throwable $e) {
+            //     $io->error(sprintf('Failed to send to %s: %s', $recipient->getEmail(), $e->getMessage()));
+            // }
         }
 
-        if ($dryRun) {
-            $io->success('Dry run complete.');
+        $io->success(sprintf('%d recap(s) computed — sending is disabled (notif feature WIP).', count($recipients)));
 
-            return Command::SUCCESS;
-        }
-
-        $io->success(sprintf('%d email(s) sent, %d failure(s).', $sent, $failed));
-
-        return $failed > 0 ? Command::FAILURE : Command::SUCCESS;
+        return Command::SUCCESS;
     }
 }
