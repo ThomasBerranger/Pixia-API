@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Deserialization\Game;
 
 use App\DTO\Game\GameShowRequest;
-use App\Enum\GameType;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -21,25 +20,17 @@ class GameShowRequestTest extends KernelTestCase
 
     // ========== Tests de validation complète ==========
 
-    public function testValidDataWithDateAndType(): void
+    public function testValidDataWithDate(): void
     {
-        $dto = new GameShowRequest('2024-01-15', GameType::MULTIVERS);
+        $dto = new GameShowRequest('2024-01-15');
 
         $errors = $this->validator->validate($dto);
         $this->assertCount(0, $errors);
     }
 
-    public function testValidDataWithOnlyDate(): void
+    public function testValidDataWithNullDate(): void
     {
-        $dto = new GameShowRequest('2024-01-15', null);
-
-        $errors = $this->validator->validate($dto);
-        $this->assertCount(0, $errors);
-    }
-
-    public function testValidDataWithNullValues(): void
-    {
-        $dto = new GameShowRequest(null, null);
+        $dto = new GameShowRequest(null);
 
         $errors = $this->validator->validate($dto);
         $this->assertCount(0, $errors);
@@ -49,7 +40,7 @@ class GameShowRequestTest extends KernelTestCase
 
     public function testDateIsOptional(): void
     {
-        $dto = new GameShowRequest(null, GameType::MULTIVERS);
+        $dto = new GameShowRequest(null);
 
         $errors = $this->validator->validate($dto);
         $this->assertCount(0, $errors);
@@ -65,7 +56,7 @@ class GameShowRequestTest extends KernelTestCase
         ];
 
         foreach ($validDates as $date) {
-            $dto = new GameShowRequest($date, null);
+            $dto = new GameShowRequest($date);
 
             $errors = $this->validator->validate($dto);
             $this->assertCount(0, $errors, "Date '{$date}' devrait être valide");
@@ -86,7 +77,7 @@ class GameShowRequestTest extends KernelTestCase
         ];
 
         foreach ($invalidDates as $date) {
-            $dto = new GameShowRequest($date, null);
+            $dto = new GameShowRequest($date);
 
             $errors = $this->validator->validate($dto);
             $this->assertGreaterThan(0, $errors, "Date '{$date}' ne devrait pas être valide");
@@ -95,41 +86,18 @@ class GameShowRequestTest extends KernelTestCase
 
     public function testDateFormatMessage(): void
     {
-        $dto = new GameShowRequest('invalid-date', null);
+        $dto = new GameShowRequest('invalid-date');
 
         $errors = $this->validator->validate($dto);
         $this->assertGreaterThan(0, $errors);
         $this->assertStringContainsString('YYYY-MM-DD', $errors[0]->getMessage());
     }
 
-    // ========== Tests type (Enum) ==========
-
-    public function testTypeIsOptional(): void
-    {
-        $dto = new GameShowRequest('2024-01-15', null);
-
-        $errors = $this->validator->validate($dto);
-        $this->assertCount(0, $errors);
-    }
-
-    public function testTypeAcceptsValidEnum(): void
-    {
-        // Test tous les cas de l'enum GameType
-        $validTypes = GameType::cases();
-
-        foreach ($validTypes as $type) {
-            $dto = new GameShowRequest('2024-01-15', $type);
-
-            $errors = $this->validator->validate($dto);
-            $this->assertCount(0, $errors, "Type '{$type->value}' devrait être valide");
-        }
-    }
-
     // ========== Tests méthode getDate() ==========
 
     public function testGetDateReturnsDateTimeImmutable(): void
     {
-        $dto = new GameShowRequest('2024-01-15', null);
+        $dto = new GameShowRequest('2024-01-15');
 
         $date = $dto->getDate();
 
@@ -138,7 +106,7 @@ class GameShowRequestTest extends KernelTestCase
 
     public function testGetDateReturnsCorrectDate(): void
     {
-        $dto = new GameShowRequest('2024-01-15', null);
+        $dto = new GameShowRequest('2024-01-15');
 
         $date = $dto->getDate();
 
@@ -147,7 +115,7 @@ class GameShowRequestTest extends KernelTestCase
 
     public function testGetDateReturnsTodayWhenNull(): void
     {
-        $dto = new GameShowRequest(null, null);
+        $dto = new GameShowRequest(null);
 
         $date = $dto->getDate();
 
@@ -157,7 +125,7 @@ class GameShowRequestTest extends KernelTestCase
 
     public function testGetDateReturnsTodayWhenInvalidFormat(): void
     {
-        $dto = new GameShowRequest('invalid-date', null);
+        $dto = new GameShowRequest('invalid-date');
 
         $date = $dto->getDate();
 
@@ -174,51 +142,10 @@ class GameShowRequestTest extends KernelTestCase
         ];
 
         foreach ($dates as $dateString) {
-            $dto = new GameShowRequest($dateString, null);
+            $dto = new GameShowRequest($dateString);
             $date = $dto->getDate();
 
             $this->assertEquals($dateString, $date->format('Y-m-d'));
-        }
-    }
-
-    // ========== Tests méthode getType() ==========
-
-    public function testGetTypeReturnsGameType(): void
-    {
-        $dto = new GameShowRequest(null, GameType::MULTIVERS);
-
-        $type = $dto->getType();
-
-        $this->assertInstanceOf(GameType::class, $type);
-    }
-
-    public function testGetTypeReturnsProvidedType(): void
-    {
-        $dto = new GameShowRequest(null, GameType::MULTIVERS);
-
-        $type = $dto->getType();
-
-        $this->assertEquals(GameType::MULTIVERS, $type);
-    }
-
-    public function testGetTypeReturnsDefaultWhenNull(): void
-    {
-        $dto = new GameShowRequest(null, null);
-
-        $type = $dto->getType();
-
-        $this->assertEquals(GameType::MULTIVERS, $type);
-    }
-
-    public function testGetTypeWithDifferentTypes(): void
-    {
-        $types = GameType::cases();
-
-        foreach ($types as $gameType) {
-            $dto = new GameShowRequest(null, $gameType);
-            $type = $dto->getType();
-
-            $this->assertEquals($gameType, $type);
         }
     }
 
@@ -227,61 +154,9 @@ class GameShowRequestTest extends KernelTestCase
     public function testConstructorPromotionWorks(): void
     {
         $date = '2024-01-15';
-        $type = GameType::MULTIVERS;
 
-        $dto = new GameShowRequest($date, $type);
+        $dto = new GameShowRequest($date);
 
         $this->assertEquals($date, $dto->date);
-        $this->assertEquals($type, $dto->type);
-    }
-
-    public function testDTOWithBothNullReturnsDefaults(): void
-    {
-        $dto = new GameShowRequest(null, null);
-
-        $date = $dto->getDate();
-        $type = $dto->getType();
-
-        // Date devrait être aujourd'hui
-        $this->assertEquals(
-            (new \DateTimeImmutable('today'))->format('Y-m-d'),
-            $date->format('Y-m-d')
-        );
-
-        // Type devrait être MULTIVERS par défaut
-        $this->assertEquals(GameType::MULTIVERS, $type);
-    }
-
-    public function testDTOStructureMatchesExpectedFormat(): void
-    {
-        // Simule ce que le frontend envoie en query string
-        $dto = new GameShowRequest('2024-01-15', GameType::MULTIVERS);
-
-        $errors = $this->validator->validate($dto);
-        $this->assertCount(0, $errors);
-
-        // Vérifie que les méthodes retournent les bonnes valeurs
-        $this->assertEquals('2024-01-15', $dto->getDate()->format('Y-m-d'));
-        $this->assertEquals(GameType::MULTIVERS, $dto->getType());
-    }
-
-    public function testTypicalUsageScenarios(): void
-    {
-        // Scénario 1 : Date spécifique, type par défaut
-        $dto1 = new GameShowRequest('2024-01-15', null);
-        $this->assertEquals('2024-01-15', $dto1->getDate()->format('Y-m-d'));
-        $this->assertEquals(GameType::MULTIVERS, $dto1->getType());
-
-        // Scénario 2 : Aujourd'hui, type spécifique
-        $dto2 = new GameShowRequest(null, GameType::MULTIVERS);
-        $this->assertEquals(
-            (new \DateTimeImmutable('today'))->format('Y-m-d'),
-            $dto2->getDate()->format('Y-m-d')
-        );
-
-        // Scénario 3 : Tout par défaut
-        $dto3 = new GameShowRequest(null, null);
-        $this->assertInstanceOf(\DateTimeImmutable::class, $dto3->getDate());
-        $this->assertEquals(GameType::MULTIVERS, $dto3->getType());
     }
 }

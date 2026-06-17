@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\DTO\Game;
 
-use App\Enum\GameType;
 use DateTimeImmutable;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -15,9 +14,7 @@ class GameShowRequest
             format: 'Y-m-d',
             message: 'La date doit être au format YYYY-MM-DD'
         )]
-        public ?string   $date,
-
-        public ?GameType $type,
+        public ?string $date,
     )
     {
     }
@@ -31,10 +28,5 @@ class GameShowRequest
         }
 
         return new DateTimeImmutable('today');
-    }
-
-    public function getType(): GameType
-    {
-        return $this->type ?? GameType::MULTIVERS;
     }
 }

@@ -9,7 +9,7 @@ Tester ce qui peut **casser silencieusement** en production. Un test qui ne peut
 - Fuzzy match : accents, ordre des mots, typos, FR/EN, chiffres
 - Transitions de statut : autorisées par rôle, interdites → exception
 - Tokens pixia : jamais négatifs, remboursement, cooldown
-- Unicité des dates : une seule Game APPROVED par (date, type)
+- Unicité des dates : une seule Game APPROVED par date (tous types confondus)
 - Scoring : points par difficulté avec/sans hint, non rejouable
 - Permissions : `GameVoter` et `UserVoter` — matrice complète
 

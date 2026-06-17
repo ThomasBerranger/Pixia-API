@@ -29,7 +29,7 @@
 
 ## Unicité
 
-- Une seule Game APPROVED par (date, type).
+- Une seule Game APPROVED par date (tous types confondus).
 - Validée en PHP via `GameDateService`, pas de contrainte BDD.
 - Plusieurs DRAFT/PENDING sur la même date sont légitimes ; seule la présence d'un APPROVED bloque.
 

@@ -46,7 +46,7 @@ Point d'entrée du projet. La documentation détaillée est découpée par domai
 
 ## Règles métier critiques
 
-- **Unicité** : une seule Game APPROVED par (date, type)
+- **Unicité** : une seule Game APPROVED par date (tous types confondus)
 - **Images** : jamais exposées hors statut APPROVED
 - **Tokens pixia** : jamais négatifs (monnaie interne du jeu, ≠ JWT / tokens Claude)
 - **Notoriété minimale combinée** : 50
@@ -62,7 +62,7 @@ Point d'entrée du projet. La documentation détaillée est découpée par domai
 - **`GameNormalizer` — pattern `ALREADY_CALLED`** : sans ce flag, le normalizer s'appelle récursivement à l'infini. Ne jamais retirer cette ligne.
 - **`GameNormalizer` — groupes obligatoires avec `image`** : si `image` est sérialisé, `type` et `date` doivent l'être aussi — sinon `LogicException` au runtime.
 - **Stockage image — type-dépendant** : `ImageService::getDirectoryPath()` construit le chemin `{base}/{type}/{Y/m}/{fichier}`. Le `type` lu est toujours celui porté par le Game, jamais celui de la requête.
-- **Unicité de date — PHP only** : validée via `GameDateService`. Pas de contrainte BDD. Plusieurs DRAFT/PENDING sur la même date sont légitimes ; seule la présence d'un APPROVED bloque.
+- **Unicité de date — PHP only** : 1 APPROVED max par date, vérifié par `GameDateService::assertUniqueApprovedDate()` appelé depuis `GameListener` à chaque passage/persist en APPROVED (sans bypass, super-admin inclus → 422). Pas de contrainte BDD. Plusieurs DRAFT/PENDING sur la même date sont légitimes ; seule la présence d'un APPROVED bloque.
 - **`GameListener` — behaviors automatiques** : supervisor auto-assigné et date calculée dans le listener Doctrine — pas dans le controller ni le service.
 - **Tokens pixia — jamais négatifs** : `User::removeTokens()` lève une `LogicException`. `TokenService` la catch et relève en `UnprocessableEntityHttpException`. Ne jamais appeler `removeTokens()` directement depuis un controller.
 - **Récap mensuel par mail** : feature documentée dans [`docs/monthly-recap-mail.md`](docs/monthly-recap-mail.md) (commande cron, idempotence, désinscription signée, piège de précédence `OR` Doctrine à ne pas retirer).

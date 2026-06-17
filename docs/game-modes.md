@@ -1,6 +1,6 @@
 # Nouveaux modes de jeu — spec & implémentation
 
-Statut : **en cours d'ajout**. À ce jour seul **MULTIVERS** est implémenté (`GameType` ne contient que ce case). Ce document spécifie les 3 nouveaux modes et liste le footprint d'implémentation.
+Ce document spécifie les 3 nouveaux modes (Kawaii, Polychrome, Convergence), qui s'ajoutent à MULTIVERS, et le découpage technique côté backend.
 
 ## Modes
 
@@ -15,7 +15,7 @@ Statut : **en cours d'ajout**. À ce jour seul **MULTIVERS** est implémenté (`
 
 - **MULTIVERS = 2 films ; les 3 nouveaux = 1 seule cible** (film ou personnage). Conséquence : plus de notoriété « combinée », solution mono-cible, prompt Claude et DTO d'analyse spécifiques par mode.
 - **Rythme** : 1 Pixia publié par jour, tous types confondus. Le type tourne de façon **irrégulière**, choisi manuellement par l'admin (≠ un type fixe par jour de la semaine).
-- **Unicité** : devient « **au plus 1 Game APPROVED par date** » (tous types confondus), au lieu de `(date, type)`.
+- **Unicité** : au plus 1 Game APPROVED par date (tous types confondus).
 - **Scoring** : grille difficulté/points identique pour tous les modes (cf. [concept-et-modes.md](concept-et-modes.md)).
 - **Hint** : fonctionnement identique pour tous les modes.
 - **Réponse FR/EN** : `englishSolution` conservé pour tous les modes (utile aussi pour les personnages, ex. « Dark Vador » / « Darth Vader »).
@@ -26,31 +26,28 @@ Statut : **en cours d'ajout**. À ce jour seul **MULTIVERS** est implémenté (`
 
 ## Footprint d'implémentation
 
-### Couplage MULTIVERS à généraliser
-| Élément | État actuel | Action |
-|---------|-------------|--------|
-| `GameType` enum | un seul case `MULTIVERS` | ajouter `KAWAII`, `POLYCHROME`, `CONVERGENCE` |
+### Socle multi-modes (backend)
+- `GameType` : les 4 cases (`MULTIVERS`, `KAWAII`, `POLYCHROME`, `CONVERGENCE`).
+- `SuperAdminGameCreateRequest` exige un `type` (requis) → un SUPER_ADMIN choisit explicitement le mode à la création (`POST /super-admin/games`).
+- `GameListener::prePersist` fixe auteur + supervisor (admin/superadmin) à la création.
+- `daily` repose sur la **date seule** (`GameRepository::findGameWithUserAchievement()`, `GameShowRequest`) — le `type` n'est plus un critère de recherche.
+- Unicité « 1 APPROVED par date » : `GameDateService::assertUniqueApprovedDate()`, appelée par `GameListener` dès qu'un game devient/est APPROVED (prePersist + preUpdate), sans bypass (super-admin inclus). Renvoie un 422 en cas de conflit.
+
+> **Invariant** : au plus 1 Game APPROVED par date, tous types confondus. Le `type` reste une **donnée** du Game (stockage image, chemin, affichage du mode).
+
+### Génération de contenu — spécifique à MULTIVERS
+| Élément | Couplage actuel | Pour les nouveaux modes |
+|---------|-----------------|-------------------------|
 | `ClaudeApiService::analyzeMovieIdea()` + prompt système | 100% cinéma / fusion 2 films | prompt système par mode |
 | `MovieAnalysisResult` DTO | `films[]` + notoriété combinée | DTO par mode ou abstraction |
 | `GameImageGenerationService::resolvePrompt()` | rappelle `analyzeMovieIdea()` | dépend des points ci-dessus |
-| Remboursement notoriété < 50 | logique 2 films | conditionner au type / au barème mono-cible |
+| Remboursement notoriété < 50 | logique 2 films | barème mono-cible / conditionné au type |
 
-### Déjà mode-agnostique (rien à toucher)
+### Mode-agnostique
 - `GameSolutionService` — fuzzy match sur la string `solution` / `englishSolution`, quel que soit le contenu.
 - Scoring `GameDifficulty::getPoints()` — par difficulté, pas par type.
 - `GameNormalizer` — reconstruit le chemin image depuis le `type` porté par le Game.
 - `ImageService` — stockage `{base}/{type}/{Y/m}/{fichier}` ; lit toujours `$game->getType()`.
-
-### Migration « 1 APPROVED par date » (unicité + daily)
-| Fichier | Changement |
-|---------|------------|
-| `GameDateService::isDateAvailable()` | retirer le param/filtre `type` → check `(date, APPROVED)` ; ajuster le message d'erreur |
-| `GameRepository::getTakenDates()` | ✅ déjà type-agnostique |
-| `GameRepository::getApprovedDatesByType()` | code mort (non appelé dans le projet) → suppression |
-| `GameRepository::findGameWithUserAchievement()` | retirer `g.type = :type`, le param `?GameType $type`, et `g2.type` / `g3.type` des sous-requêtes prev/next |
-| `GameShowRequest` | le paramètre `type` devient inutile pour `daily` |
-
-> **Invariant cible** : au plus 1 Game APPROVED par date, tous types confondus. Le `type` reste une **donnée** du Game (stockage image, chemin, affichage du mode), plus jamais un critère d'unicité ni de recherche du daily.
 
 ## Points à clarifier
 

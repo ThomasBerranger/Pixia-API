@@ -9,13 +9,14 @@ use App\Entity\Game;
 use App\Entity\User;
 use App\Enum\GameDifficulty;
 use App\Enum\GameStatus;
-use App\Enum\GameType;
 use DateTimeImmutable;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use Exception;
 use Symfony\Bridge\Doctrine\Types\UuidType;
+use Symfony\Component\Uid\Uuid;
 
 /**
  * @extends ServiceEntityRepository<Game>
@@ -31,7 +32,7 @@ class GameRepository extends ServiceEntityRepository
      * @return array{game: Game, achievement: Achievement|null|Game, hintRequested: bool, previousGameDate: mixed, nextGameDate: mixed}
      * @throws Exception
      */
-    public function findGameWithUserAchievement(?DateTimeImmutable $date, ?GameType $type, ?User $user): array
+    public function findGameWithUserAchievement(?DateTimeImmutable $date, ?User $user): array
     {
         $formattedDate = $date ? $date->format('Y-m-d') : new DateTimeImmutable('now')->format('Y-m-d');
 
@@ -43,9 +44,8 @@ class GameRepository extends ServiceEntityRepository
                 ->addSelect('COUNT(DISTINCT hp.id) as playerHasHint')
                 ->leftJoin(Achievement::class, 'a', 'ON', 'g.id = a.game AND a.player = :userId')
                 ->addSelect('a')
-                ->addSelect('(SELECT MAX(g2.date) FROM ' . Game::class . ' g2 WHERE g2.type = :type AND g2.status = :status AND g2.date < g.date) as previous_game_date')
-                ->addSelect('(SELECT MIN(g3.date) FROM ' . Game::class . ' g3 WHERE g3.type = :type AND g3.status = :status AND g3.date > g.date) as next_game_date')
-                ->andWhere('g.type = :type')
+                ->addSelect('(SELECT MAX(g2.date) FROM ' . Game::class . ' g2 WHERE g2.status = :status AND g2.date < g.date) as previous_game_date')
+                ->addSelect('(SELECT MIN(g3.date) FROM ' . Game::class . ' g3 WHERE g3.status = :status AND g3.date > g.date) as next_game_date')
                 ->andWhere('g.status = :status')
                 ->andWhere('g.date <= :date')
                 ->groupBy('g.id')
@@ -53,7 +53,6 @@ class GameRepository extends ServiceEntityRepository
                 ->orderBy('priority', 'ASC')
                 ->addOrderBy('g.date', 'DESC')
                 ->setParameter('date', $formattedDate)
-                ->setParameter('type', $type)
                 ->setParameter('status', GameStatus::APPROVED)
                 ->setParameter('userId', $user?->getId(), UuidType::NAME)
                 ->setMaxResults(1)
@@ -285,22 +284,23 @@ class GameRepository extends ServiceEntityRepository
     }
 
     /**
-     * @return list<DateTimeImmutable>
+     * Recherche un Game APPROVED à une date donnée, en excluant éventuellement un game (lui-même).
      */
-    public function getApprovedDatesByType(GameType $type, DateTimeImmutable $startDate, int $limit = 90): array
+    public function findApprovedByDate(DateTimeImmutable $date, ?Uuid $excludeId = null): ?Game
     {
-        /** @var list<DateTimeImmutable> */
-        return $this->createQueryBuilder('g')
-            ->select('g.date')
-            ->where('g.type = :type')
-            ->andWhere('g.date >= :start')
+        $qb = $this->createQueryBuilder('g')
+            ->where('g.date = :date')
             ->andWhere('g.status = :status')
-            ->setParameter('type', $type)
-            ->setParameter('start', $startDate)
+            ->setParameter('date', $date, Types::DATE_IMMUTABLE)
             ->setParameter('status', GameStatus::APPROVED)
-            ->orderBy('g.date', 'ASC')
-            ->setMaxResults($limit)
-            ->getQuery()
-            ->getSingleColumnResult();
+            ->setMaxResults(1);
+
+        if ($excludeId instanceof Uuid) {
+            $qb->andWhere('g.id != :excludeId')
+                ->setParameter('excludeId', $excludeId, UuidType::NAME);
+        }
+
+        /** @var Game|null */
+        return $qb->getQuery()->getOneOrNullResult();
     }
 }

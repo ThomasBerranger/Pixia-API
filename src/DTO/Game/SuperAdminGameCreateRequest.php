@@ -23,7 +23,8 @@ class SuperAdminGameCreateRequest
     #[Assert\Length(max: 255)]
     public string $hint;
 
-    public ?GameType $type = null;
+    #[Assert\NotBlank(message: 'Un type est requis.')]
+    public GameType $type;
 
     public ?GameDifficulty $difficulty = null;
 
@@ -32,11 +33,8 @@ class SuperAdminGameCreateRequest
         $game = (new Game())
             ->setSolution($this->solution)
             ->setEnglishSolution($this->englishSolution)
-            ->setHint($this->hint);
-
-        if ($this->type !== null) {
-            $game->setType($this->type);
-        }
+            ->setHint($this->hint)
+            ->setType($this->type);
 
         if ($this->difficulty !== null) {
             $game->setDifficulty($this->difficulty);
