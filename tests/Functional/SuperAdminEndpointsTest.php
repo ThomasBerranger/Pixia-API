@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Functional;
 
 use App\Entity\User;
+use App\Enum\GameType;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
@@ -53,6 +54,38 @@ class SuperAdminEndpointsTest extends WebTestCase
         $statusCode = $client->getResponse()->getStatusCode();
 
         self::assertNotContains($statusCode, [401, 403]);
+    }
+
+    public function testSuperAdminCreatesGameWithSpecifiedType(): void
+    {
+        $client = static::createClient();
+        $client->loginUser($this->getSuperAdminUser());
+
+        $client->jsonRequest('POST', '/super-admin/games', [
+            'solution' => 'Totoro',
+            'englishSolution' => 'Totoro',
+            'hint' => 'Une créature des bois veille sur deux sœurs.',
+            'type' => GameType::KAWAII->value,
+        ]);
+
+        self::assertResponseStatusCodeSame(201);
+
+        $data = json_decode($client->getResponse()->getContent(), true);
+        self::assertSame(GameType::KAWAII->value, $data['type']);
+    }
+
+    public function testSuperAdminCannotCreateGameWithoutType(): void
+    {
+        $client = static::createClient();
+        $client->loginUser($this->getSuperAdminUser());
+
+        $client->jsonRequest('POST', '/super-admin/games', [
+            'solution' => 'Totoro',
+            'englishSolution' => 'Totoro',
+            'hint' => 'Une créature des bois veille sur deux sœurs.',
+        ]);
+
+        self::assertResponseStatusCodeSame(422);
     }
 
     /**

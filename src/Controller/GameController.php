@@ -43,7 +43,7 @@ final class GameController extends AbstractController
         $player = $this->authenticatedUserService->getUser();
 
         $gameWithUserAchievement = $this->gameRepository->findGameWithUserAchievement(
-            $request->getDate(), $request->getType(), $player
+            $request->getDate(), $player
         );
 
         return $this->json(data: $gameWithUserAchievement, context: [

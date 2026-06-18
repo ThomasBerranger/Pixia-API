@@ -13,7 +13,7 @@ sans le spammer. Il doit :
 - **Flatter / motiver** par la performance du mois passé : classement (rang + écart au champion),
   parties gagnées, points, **badges** débloqués → entretient la compétition et le sentiment de progression.
 - **Valoriser les créateurs** : combien de joueurs ont deviné leurs Pixias, en combien de tentatives.
-- **Pousser à créer** : solde de tokens + ce qu'il manque pour générer le prochain Pixia.
+- **Pousser à créer** : solde de tokens pixia + ce qu'il manque pour générer le prochain Pixia.
 - **Respecter le joueur** : consentement explicite, désinscription en 1 clic, et **jamais deux fois le
   même mail** (confiance + délivrabilité de l'expéditeur).
 
@@ -41,7 +41,7 @@ Le **ton** (punchline selon le rang, citation de film par mois) sert la **DA / l
 | Champion + écart calculés sur le score `MonthlyLeaderboard` **du mois** | Compétition mensuelle, pas le score global figé |
 | Si le destinataire **est** le champion : on affiche quand même son nom (« 0 pts devant toi ») | Choix assumé « affichage identique pour tous » (simplicité) |
 | Pixias créés = games de l'auteur **APPROVED et datés dans le mois** ; `winners`/`attempts` depuis `Game` | Seuls les Pixias publiés ont des devineurs ; valorise le créateur |
-| Seuil création = `TokenCost::CREATION_MINIMUM` (1000) → `tokensMissing`/`tokensPercent` | Inciter à accumuler/dépenser des tokens |
+| Seuil création = `TokenCost::CREATION_MINIMUM` (1000) → `tokensMissing`/`tokensPercent` | Inciter à accumuler/dépenser des tokens pixia |
 | **Bots inclus** dans champion / rang / compteurs de devineurs | Les bots animent les leaderboards in-app ; le mail reste **cohérent** avec ce que voit le joueur (voulu) |
 
 ## Fichiers

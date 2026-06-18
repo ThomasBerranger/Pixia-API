@@ -8,6 +8,7 @@ use App\Entity\Badge;
 use App\Entity\Game;
 use App\Entity\User;
 use App\Enum\BadgeName;
+use App\Enum\GameStatus;
 use App\Service\Game\GameDateService;
 use App\Service\ImageService;
 use DateTimeImmutable;
@@ -45,6 +46,10 @@ readonly class GameListener
                 $game->setSupervisor($user);
             }
         }
+
+        if ($game->getStatus() === GameStatus::APPROVED) {
+            $this->gameDateService->assertUniqueApprovedDate($game);
+        }
     }
 
     public function preUpdate(Game $game, PreUpdateEventArgs $event): void
@@ -61,6 +66,12 @@ readonly class GameListener
             if ($newDate instanceof DateTimeImmutable) {
                 $this->gameDateService->validateDateChange($newDate, $game, $user);
             }
+        }
+
+        if ($game->getStatus() === GameStatus::APPROVED
+            && ($event->hasChangedField('status') || $event->hasChangedField('date'))
+        ) {
+            $this->gameDateService->assertUniqueApprovedDate($game);
         }
     }
 

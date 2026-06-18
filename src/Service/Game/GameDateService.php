@@ -6,25 +6,29 @@ namespace App\Service\Game;
 
 use App\Entity\Game;
 use App\Entity\User;
-use App\Enum\GameStatus;
-use App\Enum\GameType;
 use App\Repository\GameRepository;
 use DateTimeImmutable;
+use Symfony\Component\Clock\ClockInterface;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 
 readonly class GameDateService
 {
     public function __construct(
         private GameRepository $gameRepository,
+        private ClockInterface $clock,
     ) {
     }
 
-    private function isDateAvailable(DateTimeImmutable $date, GameType $type): bool
+    /**
+     * Invariant : au plus 1 Game APPROVED par date, tous types confondus.
+     * À appeler dès qu'un game devient (ou reste) APPROVED.
+     */
+    public function assertUniqueApprovedDate(Game $game): void
     {
-        return $this->gameRepository->findOneBy([
-            'date' => $date,
-            'type' => $type,
-            'status' => GameStatus::APPROVED
-        ]) === null;
+        if ($this->gameRepository->findApprovedByDate($game->getDate(), $game->getId()) !== null) {
+            throw new UnprocessableEntityHttpException('Une partie est déjà publiée à cette date');
+        }
     }
 
     public function validateDateChange(DateTimeImmutable $newDate, Game $game, ?User $user): void
@@ -38,15 +42,11 @@ readonly class GameDateService
         }
 
         if (!$game->isSupervisedBy($user)) {
-            throw new \LogicException('Seul le superviseur du Pixia peut modifier la date');
+            throw new AccessDeniedHttpException('Seul le superviseur du Pixia peut modifier la date');
         }
 
-        if ($newDate < new DateTimeImmutable('+1 week')->setTime(0, 0)) {
-            throw new \LogicException('La date doit être au minimum dans une semaine');
-        }
-
-        if (!$this->isDateAvailable($newDate, $game->getType())) {
-            throw new \LogicException('Cette date est déjà prise pour ce type de Pixia');
+        if ($newDate < $this->clock->now()->modify('+1 week')->setTime(0, 0)) {
+            throw new UnprocessableEntityHttpException('La date doit être au minimum dans une semaine');
         }
     }
 }

@@ -8,7 +8,6 @@ use App\Entity\Achievement;
 use App\Entity\Game;
 use App\Entity\User;
 use App\Enum\GameStatus;
-use App\Enum\GameType;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 class GameFlowTest extends WebTestCase
@@ -18,7 +17,7 @@ class GameFlowTest extends WebTestCase
         $client = static::createClient();
         $game = $this->getTestGame();
 
-        $client->jsonRequest('GET', '/games/daily?date=' . $game->getDate()->format('Y-m-d') . '&type='. GameType::MULTIVERS->value);
+        $client->jsonRequest('GET', '/games/daily?date=' . $game->getDate()->format('Y-m-d'));
 
         self::assertResponseIsSuccessful();
 
@@ -39,7 +38,7 @@ class GameFlowTest extends WebTestCase
         $game = $this->getTestGame();
 
         $client->loginUser($user);
-        $client->jsonRequest('GET', '/games/daily?date=' . $game->getDate()->format('Y-m-d') . '&type=' . GameType::MULTIVERS->value);
+        $client->jsonRequest('GET', '/games/daily?date=' . $game->getDate()->format('Y-m-d'));
 
         self::assertResponseIsSuccessful();
 
@@ -142,7 +141,7 @@ class GameFlowTest extends WebTestCase
         $client = static::createClient();
         $game = $this->getTodayGame();
 
-        $client->jsonRequest('GET', '/games/daily?date=' . $game->getDate()->format('Y-m-d') . '&type=' . GameType::MULTIVERS->value);
+        $client->jsonRequest('GET', '/games/daily?date=' . $game->getDate()->format('Y-m-d'));
 
         self::assertResponseIsSuccessful();
 
