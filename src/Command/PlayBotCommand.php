@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace App\Command;
 
 use App\Enum\GameDifficulty;
-use App\Enum\GameType;
+use App\Enum\GameStatus;
 use App\Repository\GameRepository;
 use App\Repository\UserRepository;
 use App\Service\Game\GameSolutionService;
+use Symfony\Component\Clock\ClockInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -25,6 +26,7 @@ class PlayBotCommand extends Command
         private readonly UserRepository      $userRepository,
         private readonly GameRepository      $gameRepository,
         private readonly GameSolutionService $gameSolutionService,
+        private readonly ClockInterface      $clock,
     )
     {
         parent::__construct();
@@ -37,9 +39,10 @@ class PlayBotCommand extends Command
         try {
             $bots = $this->userRepository->findByRole('ROLE_BOT');
 
-            $game = $this->gameRepository->findOneBy(
-                ['type' => GameType::MULTIVERS, 'date' => new \DateTimeImmutable('today')],
-            );
+            $game = $this->gameRepository->findOneBy([
+                'date' => $this->clock->now()->modify('today'),
+                'status' => GameStatus::APPROVED,
+            ]);
 
             if (!$game) {
                 $io->warning('No game found');
