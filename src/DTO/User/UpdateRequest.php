@@ -24,6 +24,8 @@ class UpdateRequest
     #[Assert\Regex(pattern: '/^https:\/\/api\.dicebear\.com\/[\d]+\.x\/[a-z]+\/svg\?/')]
     public ?string $avatarUrl = null;
 
+    public ?bool $emailConsent = null;
+
     public function update(User $user): void
     {
         if ($this->email && $this->email !== $user->getEmail()) {
@@ -36,6 +38,10 @@ class UpdateRequest
 
         if ($this->avatarUrl && $this->avatarUrl !== $user->getAvatarUrl()) {
             $user->setAvatarUrl($this->avatarUrl);
+        }
+
+        if ($this->emailConsent !== null && $this->emailConsent !== $user->hasEmailConsent()) {
+            $user->setEmailConsent($this->emailConsent);
         }
     }
 }

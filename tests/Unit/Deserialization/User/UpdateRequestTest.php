@@ -329,4 +329,52 @@ class UpdateRequestTest extends KernelTestCase
         $this->assertEquals('test@example.com', $user->getEmail());
         $this->assertEquals('user123', $user->getUsername());
     }
+
+    public function testUpdateEmailConsentToFalse(): void
+    {
+        $user = new User();
+        $user->setEmail('test@example.com');
+        $user->setUsername('user123');
+        $user->setPassword('password');
+
+        $this->assertTrue($user->hasEmailConsent());
+
+        $dto = new UpdateRequest();
+        $dto->emailConsent = false;
+
+        $dto->update($user);
+
+        $this->assertFalse($user->hasEmailConsent());
+    }
+
+    public function testUpdateEmailConsentToTrue(): void
+    {
+        $user = new User();
+        $user->setEmail('test@example.com');
+        $user->setUsername('user123');
+        $user->setPassword('password');
+        $user->setEmailConsent(false);
+
+        $dto = new UpdateRequest();
+        $dto->emailConsent = true;
+
+        $dto->update($user);
+
+        $this->assertTrue($user->hasEmailConsent());
+    }
+
+    public function testUpdateNullEmailConsentLeavesItUnchanged(): void
+    {
+        $user = new User();
+        $user->setEmail('test@example.com');
+        $user->setUsername('user123');
+        $user->setPassword('password');
+        $user->setEmailConsent(false);
+
+        $dto = new UpdateRequest();
+
+        $dto->update($user);
+
+        $this->assertFalse($user->hasEmailConsent());
+    }
 }
