@@ -8,6 +8,16 @@ framework:
     #esi: true
     #fragments: true
 
+when@prod:
+    framework:
+        # Railway termine le TLS à son edge et forwarde en http : sans confiance au proxy,
+        # Symfony reconstruit les URL en http et casse la signature des liens (ex. désinscription).
+        # REMOTE_ADDR = on ne fait confiance qu'au peer immédiat (l'edge Railway, seul à pouvoir
+        # joindre le conteneur), insensible à la plage IP interne. x-forwarded-host volontairement
+        # exclu (host header poisoning) : Railway préserve déjà l'en-tête Host, seul le scheme manquait.
+        trusted_proxies: 'REMOTE_ADDR'
+        trusted_headers: ['x-forwarded-for', 'x-forwarded-proto', 'x-forwarded-port']
+
 when@test:
     framework:
         test: true
