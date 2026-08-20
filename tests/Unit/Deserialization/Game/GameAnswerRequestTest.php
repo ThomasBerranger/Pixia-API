@@ -30,7 +30,7 @@ class GameAnswerRequestTest extends KernelTestCase
 
     public function testValidDataWithMinimumLength(): void
     {
-        $dto = new GameAnswerRequest('12345'); // Exactement 5 caractères
+        $dto = new GameAnswerRequest('12'); // Exactement 2 caractères (minimum)
 
         $errors = $this->validator->validate($dto);
         $this->assertCount(0, $errors);
@@ -64,7 +64,7 @@ class GameAnswerRequestTest extends KernelTestCase
 
     public function testAnswerMinLength(): void
     {
-        $dto = new GameAnswerRequest('1234'); // 4 caractères < 5 min
+        $dto = new GameAnswerRequest('a'); // 1 caractère < 2 min
 
         $errors = $this->validator->validate($dto);
         $this->assertGreaterThan(0, $errors);
@@ -74,7 +74,7 @@ class GameAnswerRequestTest extends KernelTestCase
             fn ($error) => $error->getPropertyPath() === 'answer'
         );
 
-        $this->assertGreaterThan(0, $answerErrors);
+        $this->assertNotEmpty($answerErrors);
         $this->assertStringContainsString('au moins', array_values($answerErrors)[0]->getMessage());
     }
 
