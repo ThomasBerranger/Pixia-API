@@ -34,3 +34,5 @@ phpstan.dist.neon
 /.phpunit.cache/
 .phpunit.result.cache
 ###< phpunit/phpunit ###
+
+.claude/settings.local.json
