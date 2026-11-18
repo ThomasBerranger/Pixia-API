@@ -33,6 +33,26 @@ Pixia publie **une image par jour**, jouable par tous, connecté ou non. Le type
 - **PHPUnit 12**, **PHPStan niveau max** et **PHP-CS-Fixer**
 - Déployé sur **Railway**, CI sur **GitHub Actions**
 
+## Symfony en pratique
+
+L'API s'appuie sur les composants Symfony plutôt que sur du code maison, en suivant leurs conventions (attributs PHP 8, autowiring, injection par constructeur).
+
+| Besoin | Composant et mise en œuvre |
+|---|---|
+| **Autorisations** | `GameVoter` et `UserVoter` pilotent les droits selon le statut d'une partie et le rôle de l'utilisateur. 20 contrôles `#[IsGranted]` dans les controllers, avec une hiérarchie de rôles (`ROLE_SUPER_ADMIN` hérite de `ROLE_ADMIN`). |
+| **Entrées validées** | Les requêtes sont désérialisées dans des DTO typés avec `#[MapRequestPayload]` et validées par les contraintes `#[Assert\...]`. `ExceptionSubscriber` renvoie un `422` au format uniforme avec la liste des `violations`. |
+| **Sorties maîtrisées** | `GameNormalizer` (Serializer) décide des champs exposés selon des groupes et un contexte : la solution et l'indice ne sortent que si le contexte l'autorise. |
+| **Effets de bord** | `#[AsEntityListener]` sur les événements Doctrine (`prePersist`, `preUpdate`, `postPersist`, `postUpdate`) pour `GameListener`, et `#[AsEventListener]` pour les badges, les succès et les claims du JWT. |
+| **Cycle requête/réponse** | 4 subscribers : rate limiting, headers de sécurité (CSP, `X-Frame-Options`, `nosniff`), gestion des erreurs, et refus en `426` des fronts trop anciens. |
+| **Rate limiting** | Composant RateLimiter avec trois politiques adaptées à l'usage : `sliding_window` (800 requêtes par heure) pour l'API, `token_bucket` (50 par 10 minutes) pour les réponses de jeu, `fixed_window` (30 par jour) pour les formulaires d'authentification. Un attribut `#[RateLimit('nom')]` les branche sur les routes. |
+| **Tâches planifiées** | 2 commandes Console : récapitulatif mensuel (avec `--dry-run`) et bots joueurs. |
+| **Temps testable** | `ClockInterface` injecté dans les commandes et dans `GameDateService`, pour contrôler la date dans les tests. |
+| **Mails** | Mailer avec transport Brevo, templates Twig, et lien de désinscription signé avec `UriSigner`. |
+| **Authentification** | Lexik JWT enrichi par un listener, Google OAuth et réinitialisation de mot de passe via `symfonycasts/reset-password-bundle`. |
+| **Données** | Doctrine ORM 3 avec 29 migrations versionnées, et 11 enums PHP (`GameType`, `GameStatus`, `UserRole`…) mappés en base. |
+
+La base de code est homogène : 102 fichiers PHP, tous en `declare(strict_types=1)`, 29 classes `readonly`, analysés par **PHPStan niveau max** et formatés par **PHP-CS-Fixer**.
+
 ## Qualité
 
 ```bash
