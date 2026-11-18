@@ -4,6 +4,8 @@
 
 🖥️ **Application web : [Pixia](https://github.com/ThomasBerranger/Pixia)** (captures et démo)
 
+![Démo de Pixia](docs/media/demo.gif)
+
 Ce dépôt est l'**API** de Pixia : jeu quotidien, comptes, jetons, scoring, classements, badges, modération et génération de contenu par IA.
 
 ## Le concept
