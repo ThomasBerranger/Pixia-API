@@ -2,13 +2,15 @@
 
 > Chaque jour, une image générée par IA cache **deux films mélangés**. À toi de les retrouver.
 
-🎮 **Jouer : [pixia.fun](https://pixia.fun)** · 🖥️ **Application web : [Pixia](https://github.com/ThomasBerranger/Pixia)** (captures et démo)
+> ⚠️ Le site n'est plus en ligne : ce dépôt présente le projet.
+
+🖥️ **Application web : [Pixia](https://github.com/ThomasBerranger/Pixia)** (captures et démo)
 
 Ce dépôt est l'**API** de Pixia : jeu quotidien, comptes, jetons, scoring, classements, badges, modération et génération de contenu par IA.
 
 ## Le concept
 
-Pixia publie **une image par jour**, jouable par tous, connecté ou non. Dans le mode actuel, **Multivers**, l'image fusionne deux films en une seule scène : il faut identifier les deux titres, dans n'importe quel ordre.
+Pixia publie **une image par jour**, jouable par tous, connecté ou non. Dans le mode actuel, **Multivers**, l'image fusionne deux films en une seule scène : il faut identifier les deux titres.
 
 - **Tentatives illimitées**, avec une reconnaissance tolérante : accents, ordre des mots, fautes de frappe, titres FR ou EN.
 - **Un indice** par partie pour les joueurs connectés, au prix d'environ la moitié des points.
@@ -26,7 +28,7 @@ D'autres modes sont en préparation : Kawaii, Polychrome et Convergence.
 - **Brevo** pour les mails (récapitulatif mensuel, notifications)
 - **Claude** (analyse des idées, notoriété, indices) et **OpenAI** (génération d'images)
 - **PHPUnit 12**, **PHPStan niveau max** et **PHP-CS-Fixer**
-- Déployé sur **Railway**, CI sur **GitHub Actions**
+- Déployé sur **Railway** (hors ligne aujourd'hui), CI sur **GitHub Actions**
 
 ## Points d'architecture
 
@@ -102,4 +104,4 @@ La CI bloque le merge sur tout test en échec, toute violation de style et toute
 
 ## Auteur
 
-Projet conçu et développé par [Thomas Berranger](https://github.com/ThomasBerranger).
+Projet conçu et développé par [Thomas Berranger](https://github.com/ThomasBerranger) aka Mirage.
