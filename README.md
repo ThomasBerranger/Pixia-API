@@ -28,24 +28,6 @@ D'autres modes sont en préparation : Kawaii, Polychrome et Convergence.
 - **PHPUnit 12**, **PHPStan niveau max** et **PHP-CS-Fixer**
 - Déployé sur **Railway**, CI sur **GitHub Actions**
 
-## Points techniques
-
-**Pipeline de création assisté par IA.** `ClaudeApiService` analyse l'idée du joueur (notoriété des films, prompt d'image, indice), puis `OpenApiService` génère l'image, et `ImageService` la range selon le type et la date. Tout échec de la chaîne rembourse automatiquement les jetons, et chaque mouvement est tracé par `ActivityService` (audit trail).
-
-**Reconnaissance tolérante des réponses.** `GameSolutionService` normalise le texte (Unicode NFD, suppression des accents, tokenisation) et compare les mots avec une distance de Levenshtein : l'ordre des mots, les fautes de frappe et les titres FR ou EN sont acceptés.
-
-**Machine à états et autorisations.** Une partie passe de `DRAFT` à `PENDING`, puis `APPROVED` ou `REJECTED`. Les transitions sont gouvernées par une matrice de Voters (`GameVoter`, `UserVoter`) sur cinq rôles, avec héritage. Les listeners Doctrine (`GameListener`, `BadgeListener`, `AchievementListener`) portent les effets de bord : superviseur auto-assigné, badges, succès.
-
-**Invariants métier garantis dans le code.** Un seul Pixia `APPROVED` par date, vérifié par `GameDateService` à chaque passage en `APPROVED`. Le solde de jetons ne peut jamais être négatif : `User::removeTokens()` lève une exception, convertie en 422 par `TokenService`.
-
-**Sécurité par défaut.** `GameNormalizer` masque la solution, l'indice et l'image tant que le contexte ne l'autorise pas, et les endpoints publics filtrent sur `APPROVED` dès le repository. L'API pose des headers de sécurité (CSP, `X-Frame-Options`, `nosniff`…), applique un rate limiting par attribut `#[RateLimit]` et refuse en `426` les fronts trop anciens (`AppVersionSubscriber`).
-
-**Récapitulatif mensuel par mail.** Une commande cron envoie un récapitulatif personnalisé selon le rang (`RecapTier`). Elle est **idempotente et reprenable** : un re-run n'écrit qu'aux destinataires restants. Le consentement est vérifié, la désinscription se fait en un clic via une URL signée (`UriSigner`), et un test de non-régression protège la précédence des `OR` Doctrine qui aurait sinon écrit à des utilisateurs désinscrits ou bannis.
-
-**Joueurs bots.** Une commande (`app:make-bots-play`) fait jouer des utilisateurs fictifs, avec un taux de réussite qui dépend de la difficulté, pour animer les classements.
-
-**Exploitation.** Un workflow GitHub Actions sauvegarde la base MySQL chaque nuit (rétention de 30 jours) et envoie un mail d'alerte en cas d'échec. Les mails de dev et de test sont verrouillés vers une boîte unique, ce qui rend impossible l'envoi à un vrai joueur hors production.
-
 ## Chiffres clés
 
 - Environ 8 000 lignes de PHP dans `src/`
